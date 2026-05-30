@@ -10,8 +10,8 @@
   --color-charcoal: #0F1B30;     /* navy muy oscuro — textos fuertes */
   --color-muted: #9CA0AD;        /* gris plateado — "74" */
   --color-border: #D5DAE8;       /* borde suave con tinte azul */
-  --font-serif: var(--font-playfair);
-  --font-sans: var(--font-inter);
+  --font-serif: var(--font-poppins);
+  --font-sans: var(--font-poppins);
 }
 
 :root {
@@ -22,16 +22,16 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-poppins), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-playfair), Georgia, serif;
+  font-family: var(--font-poppins), system-ui, sans-serif;
 }
 
 input, textarea, select {
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-poppins), system-ui, sans-serif;
 }
 
 .btn-primary {
