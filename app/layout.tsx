@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+const poppins = localFont({
+  src: [
+    { path: "../font/poppins/Poppins-Regular.ttf",   weight: "400", style: "normal" },
+    { path: "../font/poppins/Poppins-Italic.ttf",    weight: "400", style: "italic" },
+    { path: "../font/poppins/Poppins-Medium.ttf",    weight: "500", style: "normal" },
+    { path: "../font/poppins/Poppins-SemiBold.ttf",  weight: "600", style: "normal" },
+    { path: "../font/poppins/Poppins-Bold.ttf",      weight: "700", style: "normal" },
+    { path: "../font/poppins/Poppins-ExtraBold.ttf", weight: "800", style: "normal" },
+    { path: "../font/poppins/Poppins-Black.ttf",     weight: "900", style: "normal" },
+  ],
+  variable: "--font-poppins",
   display: "swap",
 });
 
@@ -25,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={`${playfair.variable} ${inter.variable}`}>
+    <html lang="es" className={poppins.variable}>
       <body className="min-h-screen bg-cream text-charcoal antialiased">
         {children}
       </body>

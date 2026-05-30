@@ -1,6 +1,6 @@
 "use client";
 
-import { Truck, Home } from "lucide-react";
+import { Truck, Home, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Slot {
@@ -59,7 +59,9 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             </p>
 
             {disabled ? (
-              <p className="text-xs mt-1 font-bold text-muted/60 uppercase tracking-wide">Sin stock</p>
+              <p className="text-xs mt-1 font-bold text-muted/60 uppercase tracking-wide flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Próximamente
+              </p>
             ) : (
               <p className={cn("text-xs mt-1 font-medium", isSelected ? "text-amber" : "text-muted/70")}>
                 {slot.isDelivery ? "Delivery" : "Retiro"}
