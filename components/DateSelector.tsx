@@ -59,8 +59,8 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             </p>
 
             {disabled ? (
-              <p className="text-xs mt-1 font-bold text-muted/60 uppercase tracking-wide flex items-center gap-1">
-                <Clock className="w-3 h-3" /> Próximamente
+              <p className="text-[10px] mt-1 font-bold text-muted/60 uppercase tracking-wide flex items-center gap-0.5 leading-tight">
+                <Clock className="w-3 h-3 shrink-0" /> Próximamente
               </p>
             ) : (
               <p className={cn("text-xs mt-1 font-medium", isSelected ? "text-amber" : "text-muted/70")}>
