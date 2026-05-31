@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 
 function ConfirmacionContent() {
   const params = useSearchParams();
@@ -17,11 +17,11 @@ function ConfirmacionContent() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 text-center">
       <div className="max-w-sm w-full">
-        <Link href="/" className="flex justify-center mb-8">
-          <Image src="/logo.png" alt="BROT.74" width={72} height={72} className="object-contain" />
-        </Link>
-
         <div className="bg-white rounded-3xl border-2 border-border p-8 shadow-sm">
+          <Link href="/" className="flex justify-center mb-6">
+            <Image src="/logo.png" alt="BROT.74" width={64} height={64} className="object-contain" />
+          </Link>
+
           {isSuccess ? (
             <>
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -38,7 +38,7 @@ function ConfirmacionContent() {
             </>
           ) : isFailure ? (
             <>
-              <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <XCircle className="w-14 h-14 text-red-400 mx-auto mb-4" />
               <h2 className="font-serif text-2xl font-bold text-brown mb-2">Pago no completado</h2>
               <p className="text-muted text-sm leading-relaxed mb-6">
                 Hubo un problema con el pago. Podés intentarlo de nuevo o contactarnos por WhatsApp.
@@ -46,7 +46,6 @@ function ConfirmacionContent() {
             </>
           ) : (
             <>
-              <Clock className="w-16 h-16 text-amber mx-auto mb-4" />
               <h2 className="font-serif text-2xl font-bold text-brown mb-2">Pedido recibido</h2>
               <p className="text-muted text-sm leading-relaxed mb-2">
                 Recibimos tu pedido. El pago está siendo procesado.
