@@ -45,6 +45,11 @@ export default function OrderModal({
       setError("Nombre y teléfono son requeridos");
       return;
     }
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 8 || digits.length > 15) {
+      setError("El teléfono debe tener entre 8 y 15 dígitos");
+      return;
+    }
     if (isDelivery && !address.trim()) {
       setError("La dirección es requerida para delivery");
       return;
@@ -57,7 +62,7 @@ export default function OrderModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerName: name.trim(),
-          customerPhone: phone.trim(),
+          customerPhone: phone.replace(/\D/g, ""),
           customerAddress: address.trim(),
           deliverySlotId: slotId,
           notes: notes.trim(),

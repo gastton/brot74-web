@@ -1,20 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 import { prisma } from "@/lib/db";
+
+function verifySignature(req: NextRequest, rawBody: string, dataId: string): boolean {
+  const secret = process.env.MP_WEBHOOK_SECRET;
+  if (!secret) return true; // si no hay secret configurado, no bloqueamos (MP no configurado)
+
+  const xSignature = req.headers.get("x-signature") ?? "";
+  const xRequestId = req.headers.get("x-request-id") ?? "";
+
+  // Formato: ts=<timestamp>,v1=<hash>
+  const ts = xSignature.match(/ts=([^,]+)/)?.[1] ?? "";
+  const v1 = xSignature.match(/v1=([^,]+)/)?.[1] ?? "";
+
+  if (!ts || !v1) return false;
+
+  // Manifest según documentación de MP
+  const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+  const computed = createHmac("sha256", secret).update(manifest).digest("hex");
+
+  return computed === v1;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.text();
+    let body: { type?: string; data?: { id?: string | number } };
+
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    }
+
     const { type, data } = body;
 
     if (type !== "payment" || !data?.id) {
       return NextResponse.json({ ok: true });
     }
 
+    // Validar firma de MP
+    if (!verifySignature(req, rawBody, String(data.id))) {
+      console.warn("Webhook MP: firma inválida");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     if (!process.env.MP_ACCESS_TOKEN) {
       return NextResponse.json({ ok: true });
     }
 
-    // Fetch payment details from MP
+    // Fetch payment details from MP (fuente de verdad)
     const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
       headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
     });
@@ -37,7 +72,7 @@ export async function POST(req: NextRequest) {
       data: { status: newStatus, mpPaymentId: String(data.id) },
     });
 
-    // Release stock if cancelled
+    // Liberar stock si se canceló
     if (newStatus === "cancelled") {
       const order = await prisma.order.findUnique({
         where: { id: orderId },
