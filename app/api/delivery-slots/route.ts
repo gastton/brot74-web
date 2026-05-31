@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 const CUTOFF_HOURS = 20;  // horas antes del slot en que se cierran los pedidos
-const OPEN_HOURS   = 48;  // horas antes del slot en que se abren los pedidos (2 días)
 
 // Computes Mon/Wed/Sat at noon for a given week offset (0 = this week, 1 = next week)
 function getWeekDates(weekOffset = 0): { monday: Date; wednesday: Date; saturday: Date } {
@@ -32,11 +31,6 @@ function isExpired(slotDate: Date, now: Date): boolean {
   return now >= cutoff;
 }
 
-function isNotYetOpen(slotDate: Date, now: Date): boolean {
-  // Todavía no abrió la ventana de pedidos (4 días antes)
-  const opensAt = new Date(slotDate.getTime() - OPEN_HOURS * 60 * 60 * 1000);
-  return now < opensAt;
-}
 
 async function findSlotForDate(date: Date) {
   const start = new Date(date); start.setHours(0, 0, 0, 0);
@@ -79,7 +73,7 @@ export async function GET() {
       date: date.toISOString(),
       dayLabel: label,
       isDelivery,
-      disabled: isExpired(date, now) || isNotYetOpen(date, now) || !slot,
+      disabled: isExpired(date, now) || !slot,
     };
   }
 
