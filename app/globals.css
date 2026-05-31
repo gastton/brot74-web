@@ -10,13 +10,16 @@
   --color-charcoal: #0F1B30;     /* navy muy oscuro — textos fuertes */
   --color-muted: #9CA0AD;        /* gris plateado — "74" */
   --color-border: #D5DAE8;       /* borde suave con tinte azul */
-  --font-serif: var(--font-poppins);
-  --font-sans: var(--font-poppins);
 }
 
 :root {
   --background: #F0F3F8;
   --foreground: #0F1B30;
+}
+
+html {
+  --font-serif: var(--font-poppins);
+  --font-sans: var(--font-poppins);
 }
 
 body {
