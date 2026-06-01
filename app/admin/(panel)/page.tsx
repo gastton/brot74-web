@@ -61,7 +61,7 @@ export default async function AdminDashboard() {
                       <p className="font-semibold text-charcoal">{slot.dayLabel}</p>
                       <p className="text-xs text-muted">
                         {new Date(slot.date).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}
-                        {slot.isDelivery ? " · Delivery" : " · Retiro"}
+                        {slot.deliveryMode === "delivery" ? " · Delivery" : slot.deliveryMode === "both" ? " · Retiro o delivery" : " · Retiro"}
                       </p>
                     </div>
                   </div>

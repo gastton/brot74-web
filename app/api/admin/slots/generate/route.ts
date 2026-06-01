@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
-const DAY_MAP: Record<number, string> = { 1: "lunes", 3: "miercoles", 6: "sabado" };
-const DELIVERY_DAYS = new Set([6]); // Sábado = delivery
-const TARGET_DAYS = [1, 3, 6];     // Lunes, Miércoles, Sábado
+const DAY_MAP: Record<number, string> = { 1: "lunes", 6: "sabado" };
+const DELIVERY_DAYS = new Set<number>(); // Por defecto todo es retiro, el admin lo cambia manualmente
+const TARGET_DAYS = [1, 6];        // Lunes, Sábado
 const DEFAULT_STOCK = 5;
 
 export async function POST(req: NextRequest) {
@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
 
     const dayOfWeek = date.getDay();
     const dayName = DAY_MAP[dayOfWeek];
-    const isDelivery = DELIVERY_DAYS.has(dayOfWeek);
 
     const label = date
       .toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
@@ -59,7 +58,7 @@ export async function POST(req: NextRequest) {
     slotDate.setHours(12, 0, 0, 0);
 
     const slot = await prisma.deliverySlot.create({
-      data: { date: slotDate, dayLabel: label, isDelivery, active: true },
+      data: { date: slotDate, dayLabel: label, deliveryMode: "pickup", active: true },
     });
 
     // Init stock for products that have this day available

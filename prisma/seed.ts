@@ -73,11 +73,11 @@ async function main() {
       .replace(/^\w/, (c) => c.toUpperCase());
 
   const mondaySlot = await prisma.deliverySlot.create({
-    data: { date: nextMonday, dayLabel: fmt(nextMonday), isDelivery: false, active: true },
+    data: { date: nextMonday, dayLabel: fmt(nextMonday), deliveryMode: "pickup", active: true },
   });
 
   const saturdaySlot = await prisma.deliverySlot.create({
-    data: { date: nextSaturday, dayLabel: fmt(nextSaturday), isDelivery: true, active: true },
+    data: { date: nextSaturday, dayLabel: fmt(nextSaturday), deliveryMode: "pickup", active: true },
   });
 
   for (const product of allProducts) {

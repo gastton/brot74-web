@@ -6,7 +6,7 @@ import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { customerName, customerPhone, customerAddress, deliverySlotId, items, notes } = body;
+    const { customerName, customerPhone, customerAddress, deliverySlotId, items, notes, isDelivery } = body;
 
     if (!customerName || !customerPhone || !deliverySlotId || !items?.length) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -19,7 +19,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Fecha no disponible" }, { status: 400 });
     }
 
-    if (slot.isDelivery && !customerAddress) {
+    // Validar que la elección del cliente sea válida según el modo del slot
+    const wantsDelivery = isDelivery ?? (slot.deliveryMode === "delivery");
+    if (wantsDelivery && slot.deliveryMode === "pickup") {
+      return NextResponse.json({ error: "Este slot no tiene delivery disponible" }, { status: 400 });
+    }
+    if (!wantsDelivery && slot.deliveryMode === "delivery") {
+      return NextResponse.json({ error: "Este slot es solo delivery" }, { status: 400 });
+    }
+    if (wantsDelivery && !customerAddress) {
       return NextResponse.json({ error: "Dirección requerida para delivery" }, { status: 400 });
     }
 
@@ -133,7 +141,7 @@ export async function POST(req: NextRequest) {
         customerPhone,
         customerAddress,
         total,
-        isDelivery: slot.isDelivery,
+        isDelivery: wantsDelivery,
         slotLabel: slot.dayLabel,
         notes,
         items: enrichedItems,

@@ -14,7 +14,7 @@ interface Slot {
   id: number | null;
   date: string;
   dayLabel: string;
-  isDelivery: boolean;
+  deliveryMode: "pickup" | "delivery" | "both";
   disabled: boolean;
 }
 
@@ -145,8 +145,8 @@ export default function Home() {
             Elegí la fecha
           </h3>
           {loadingSlots ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {[1, 2, 3].map((i) => (
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2].map((i) => (
                 <div key={i} className="h-24 bg-white rounded-2xl border-2 border-border animate-pulse" />
               ))}
             </div>
@@ -236,7 +236,7 @@ export default function Home() {
         <OrderModal
           items={cartItems}
           slotId={selectedSlotId}
-          isDelivery={selectedSlot.isDelivery}
+          deliveryMode={selectedSlot.deliveryMode}
           slotLabel={selectedSlot.dayLabel}
           onClose={() => setShowModal(false)}
           onSuccess={handleOrderSuccess}

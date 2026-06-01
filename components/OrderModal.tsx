@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, ShoppingBag } from "lucide-react";
+import { X, Loader2, ShoppingBag, Home, Truck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface CartItem {
   id: number;
@@ -14,7 +15,7 @@ interface CartItem {
 interface OrderModalProps {
   items: CartItem[];
   slotId: number;
-  isDelivery: boolean;
+  deliveryMode: "pickup" | "delivery" | "both";
   slotLabel: string;
   onClose: () => void;
   onSuccess: (orderId: number, mpUrl?: string) => void;
@@ -23,7 +24,7 @@ interface OrderModalProps {
 export default function OrderModal({
   items,
   slotId,
-  isDelivery,
+  deliveryMode,
   slotLabel,
   onClose,
   onSuccess,
@@ -34,6 +35,10 @@ export default function OrderModal({
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Cuando el modo es "both", el cliente elige; si no, es fijo
+  const [wantsDelivery, setWantsDelivery] = useState(deliveryMode === "delivery");
+  const isDelivery = deliveryMode === "delivery" ? true : deliveryMode === "pickup" ? false : wantsDelivery;
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
@@ -46,7 +51,7 @@ export default function OrderModal({
       return;
     }
     const digits = phone.replace(/\D/g, "");
-    if (digits.length < 8 || digits.length > 15) {
+    if (phone.trim() && (digits.length < 8 || digits.length > 15)) {
       setError("El teléfono debe tener entre 8 y 15 dígitos");
       return;
     }
@@ -63,9 +68,10 @@ export default function OrderModal({
         body: JSON.stringify({
           customerName: name.trim(),
           customerPhone: phone.replace(/\D/g, ""),
-          customerAddress: address.trim(),
+          customerAddress: isDelivery ? address.trim() : "",
           deliverySlotId: slotId,
           notes: notes.trim(),
+          isDelivery,
           items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
       });
@@ -84,6 +90,10 @@ export default function OrderModal({
     }
   }
 
+  const modeLabel = deliveryMode === "both"
+    ? (isDelivery ? "Delivery" : "Retiro en casa")
+    : deliveryMode === "delivery" ? "Delivery" : "Retiro en casa";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-charcoal/60 backdrop-blur-sm" onClick={onClose} />
@@ -93,7 +103,7 @@ export default function OrderModal({
         <div className="sticky top-0 bg-cream border-b border-border px-6 py-4 flex items-center justify-between rounded-t-3xl">
           <div>
             <h2 className="font-serif text-xl font-bold text-brown">Tu pedido</h2>
-            <p className="text-xs text-muted mt-0.5">{slotLabel} · {isDelivery ? "Delivery" : "Retiro en casa"}</p>
+            <p className="text-xs text-muted mt-0.5">{slotLabel} · {modeLabel}</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-border transition-colors">
             <X className="w-5 h-5 text-muted" />
@@ -116,6 +126,39 @@ export default function OrderModal({
               <span className="text-brown text-lg">{formatCurrency(total)}</span>
             </div>
           </div>
+
+          {/* Selector retiro / delivery (solo cuando el slot acepta ambos) */}
+          {deliveryMode === "both" && (
+            <div>
+              <label className="block text-sm font-semibold text-charcoal mb-2">¿Cómo querés recibirlo?</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setWantsDelivery(false)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                    !wantsDelivery
+                      ? "border-amber bg-amber/10 text-brown"
+                      : "border-border bg-white text-muted"
+                  )}
+                >
+                  <Home className="w-4 h-4" /> Retiro en casa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWantsDelivery(true)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                    wantsDelivery
+                      ? "border-amber bg-amber/10 text-brown"
+                      : "border-border bg-white text-muted"
+                  )}
+                >
+                  <Truck className="w-4 h-4" /> Delivery
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Datos del cliente */}
           <div className="space-y-3">

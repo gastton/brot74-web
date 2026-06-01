@@ -32,7 +32,7 @@ model DeliverySlot {
   id         Int      @id @default(autoincrement())
   date       DateTime
   dayLabel   String
-  isDelivery Boolean  @default(false)
+  deliveryMode String  @default("pickup") // "pickup" | "delivery" | "both"
   active     Boolean  @default(true)
   createdAt  DateTime @default(now())
 

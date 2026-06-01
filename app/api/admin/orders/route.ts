@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     where: slotId ? { deliverySlotId: parseInt(slotId) } : undefined,
     orderBy: { createdAt: "desc" },
     include: {
-      deliverySlot: { select: { dayLabel: true, date: true, isDelivery: true } },
+      deliverySlot: { select: { dayLabel: true, date: true, deliveryMode: true } },
       items: {
         include: { product: { select: { name: true } } },
       },
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       status: o.status,
       total: o.total,
       notes: o.notes,
-      isDelivery: o.deliverySlot.isDelivery,
+      deliveryMode: o.deliverySlot.deliveryMode,
       slotLabel: o.deliverySlot.dayLabel,
       slotDate: o.deliverySlot.date,
       createdAt: o.createdAt,
