@@ -1,36 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-const CUTOFF_HOURS = 20;  // horas antes del slot en que se cierran los pedidos
+const CUTOFF_HOURS = 20;
 
-// Computes Mon/Wed/Sat at noon for a given week offset (0 = this week, 1 = next week)
-function getWeekDates(weekOffset = 0): { monday: Date; wednesday: Date; saturday: Date } {
+function getWeekDates(weekOffset = 0): { monday: Date; saturday: Date } {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const dow = today.getDay(); // 0=Sun
-
-  // Distance to this week's Monday
+  const dow = today.getDay();
   const daysToMonday = dow === 0 ? 1 : -(dow - 1);
 
   const monday = new Date(today);
   monday.setDate(today.getDate() + daysToMonday + weekOffset * 7);
-  monday.setHours(12, 0, 0, 0); // noon — matches slot generation
-
-  const wednesday = new Date(monday);
-  wednesday.setDate(monday.getDate() + 2);
+  monday.setHours(12, 0, 0, 0);
 
   const saturday = new Date(monday);
   saturday.setDate(monday.getDate() + 5);
 
-  return { monday, wednesday, saturday };
+  return { monday, saturday };
 }
 
 function isExpired(slotDate: Date, now: Date): boolean {
-  // Pasó el cutoff → ya no se puede pedir
   const cutoff = new Date(slotDate.getTime() - CUTOFF_HOURS * 60 * 60 * 1000);
   return now >= cutoff;
 }
-
 
 async function findSlotForDate(date: Date) {
   const start = new Date(date); start.setHours(0, 0, 0, 0);
@@ -42,28 +34,18 @@ async function findSlotForDate(date: Date) {
 
 export async function GET() {
   const now = new Date();
-
-  // Try this week; if all slots are closed, advance to next week
   let week = getWeekDates(0);
-  const { monday, wednesday, saturday } = week;
+  const { monday, saturday } = week;
 
-  // Avanzar a la semana siguiente solo cuando TODOS los slots expiraron
-  const allClosed =
-    isExpired(monday, now) &&
-    isExpired(wednesday, now) &&
-    isExpired(saturday, now);
+  const allClosed = isExpired(monday, now) && isExpired(saturday, now);
+  const { monday: mon, saturday: sat } = allClosed ? getWeekDates(1) : week;
 
-  const { monday: mon, wednesday: wed, saturday: sat } = allClosed
-    ? getWeekDates(1)
-    : week;
-
-  const [mondaySlot, wednesdaySlot, saturdaySlot] = await Promise.all([
+  const [mondaySlot, saturdaySlot] = await Promise.all([
     findSlotForDate(mon),
-    findSlotForDate(wed),
     findSlotForDate(sat),
   ]);
 
-  function buildEntry(date: Date, slot: Awaited<ReturnType<typeof findSlotForDate>>, isDelivery: boolean) {
+  function buildEntry(date: Date, slot: Awaited<ReturnType<typeof findSlotForDate>>) {
     const label = slot?.dayLabel ?? date.toLocaleDateString("es-AR", {
       weekday: "long", day: "numeric", month: "long",
     }).replace(/^\w/, (c) => c.toUpperCase());
@@ -72,14 +54,13 @@ export async function GET() {
       id: slot?.id ?? null,
       date: date.toISOString(),
       dayLabel: label,
-      isDelivery,
+      deliveryMode: slot?.deliveryMode ?? "pickup",
       disabled: isExpired(date, now) || !slot,
     };
   }
 
   return NextResponse.json([
-    buildEntry(mon, mondaySlot,    false),
-    buildEntry(wed, wednesdaySlot, false),
-    buildEntry(sat, saturdaySlot,  true),
+    buildEntry(mon, mondaySlot),
+    buildEntry(sat, saturdaySlot),
   ]);
 }

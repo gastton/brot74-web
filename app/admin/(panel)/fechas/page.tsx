@@ -7,7 +7,7 @@ interface Slot {
   id: number;
   date: string;
   dayLabel: string;
-  isDelivery: boolean;
+  deliveryMode: "pickup" | "delivery" | "both";
   active: boolean;
   stocks: { id: number; productName: string; totalStock: number; reservedStock: number; productId: number; deliverySlotId: number }[];
 }
@@ -29,7 +29,7 @@ export default function FechasPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
-  const [form, setForm] = useState({ date: "", dayLabel: "", isDelivery: false, active: true });
+  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", active: true });
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
 
   // Default generate month: next month
@@ -65,7 +65,7 @@ export default function FechasPage() {
     const cursor = new Date(genYear, genMonth, 1);
     while (cursor.getMonth() === genMonth) {
       const d = cursor.getDay();
-      if (d === 1 || d === 3 || d === 6) days.push(new Date(cursor));
+      if (d === 1 || d === 6) days.push(new Date(cursor));
       cursor.setDate(cursor.getDate() + 1);
     }
     return days;
@@ -74,10 +74,8 @@ export default function FechasPage() {
   function handleDateChange(dateStr: string) {
     if (!dateStr) return;
     const d = new Date(dateStr + "T12:00:00");
-    const day = d.getDay();
-    const isDelivery = day === 6;
     const label = d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, (c) => c.toUpperCase());
-    setForm((f) => ({ ...f, date: dateStr, dayLabel: label, isDelivery }));
+    setForm((f) => ({ ...f, date: dateStr, dayLabel: label }));
   }
 
   async function handleCreate() {
@@ -86,12 +84,12 @@ export default function FechasPage() {
     await fetch("/api/admin/slots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, active: form.active }),
     });
     await fetchAll();
     setShowForm(false);
     setSaving(false);
-    setForm({ date: "", dayLabel: "", isDelivery: false, active: true });
+    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", active: true });
   }
 
   async function handleGenerate() {
@@ -112,7 +110,16 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...slot, active: !slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, active: !slot.active }),
+    });
+    fetchAll();
+  }
+
+  async function changeDeliveryMode(slot: Slot, mode: "pickup" | "delivery" | "both") {
+    await fetch(`/api/admin/slots/${slot.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: mode, active: slot.active }),
     });
     fetchAll();
   }
@@ -173,6 +180,7 @@ export default function FechasPage() {
             onToggle={toggleActive}
             onDelete={handleDelete}
             onSaveStock={saveStock}
+            onChangeMode={changeDeliveryMode}
           />
 
           {past.length > 0 && (
@@ -195,6 +203,7 @@ export default function FechasPage() {
                     onToggle={toggleActive}
                     onDelete={handleDelete}
                     onSaveStock={saveStock}
+                    onChangeMode={changeDeliveryMode}
                     muted
                   />
                 </div>
@@ -219,9 +228,7 @@ export default function FechasPage() {
                 <input type="date" value={form.date} onChange={(e) => handleDateChange(e.target.value)}
                   className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
                 {form.date && (
-                  <p className="text-xs text-muted mt-1">
-                    {form.dayLabel} · {form.isDelivery ? "Sábado → Delivery" : "Lunes/Miércoles → Retiro"}
-                  </p>
+                  <p className="text-xs text-muted mt-1">{form.dayLabel}</p>
                 )}
               </div>
               <div>
@@ -230,10 +237,18 @@ export default function FechasPage() {
                   placeholder="Ej: Lunes 26 de mayo"
                   className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.isDelivery} onChange={(e) => setForm({ ...form, isDelivery: e.target.checked })} className="w-4 h-4 accent-amber" />
-                <span className="text-sm font-medium text-charcoal">Es delivery</span>
-              </label>
+              <div>
+                <label className="block text-sm font-semibold text-charcoal mb-1">Tipo de entrega</label>
+                <select
+                  value={form.deliveryMode}
+                  onChange={(e) => setForm({ ...form, deliveryMode: e.target.value as "pickup"|"delivery"|"both" })}
+                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white"
+                >
+                  <option value="pickup">🏠 Retiro en casa</option>
+                  <option value="delivery">🚚 Delivery</option>
+                  <option value="both">🏠🚚 Ambos (cliente elige)</option>
+                </select>
+              </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowForm(false)} className="flex-1 btn-secondary rounded-xl py-3 text-sm">Cancelar</button>
                 <button onClick={handleCreate} disabled={saving || !form.date} className="flex-1 btn-primary flex items-center justify-center gap-2 rounded-xl py-3 text-sm">
@@ -305,17 +320,12 @@ export default function FechasPage() {
                   </p>
                   <div className="bg-white rounded-xl border border-border p-3 max-h-48 overflow-y-auto space-y-1">
                     {previewDates.map((d, i) => {
-                      const dayOfWeek = d.getDay();
                       const label = d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
                         .replace(/^\w/, (c) => c.toUpperCase());
-                      const isDelivery = dayOfWeek === 6;
                       return (
                         <div key={i} className="flex items-center justify-between text-sm py-0.5">
                           <span className="text-charcoal">{label}</span>
-                          {isDelivery
-                            ? <span className="text-xs text-amber font-medium">Delivery</span>
-                            : <span className="text-xs text-muted">Retiro</span>
-                          }
+                          <span className="text-xs text-muted">Retiro</span>
                         </div>
                       );
                     })}
@@ -344,11 +354,12 @@ export default function FechasPage() {
   );
 }
 
-function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, muted }: {
+function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, muted }: {
   title: string; slots: Slot[]; products: Product[];
   stockEdits: Record<string, string>; setStockEdits: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
   onToggle: (s: Slot) => void; onDelete: (id: number) => void;
   onSaveStock: (productId: number, deliverySlotId: number, key: string) => void;
+  onChangeMode: (s: Slot, mode: "pickup"|"delivery"|"both") => void;
   muted?: boolean;
 }) {
   if (slots.length === 0) return null;
@@ -360,11 +371,11 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
           <div key={slot.id} className={`bg-white rounded-2xl border-2 p-5 ${muted ? "border-border opacity-70" : "border-border"}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                {slot.isDelivery ? <Truck className="w-5 h-5 text-amber" /> : <Home className="w-5 h-5 text-amber" />}
+                {slot.deliveryMode === "delivery" ? <Truck className="w-5 h-5 text-amber" /> : slot.deliveryMode === "both" ? <div className="flex gap-0.5"><Home className="w-4 h-4 text-amber" /><Truck className="w-4 h-4 text-amber" /></div> : <Home className="w-5 h-5 text-amber" />}
                 <div>
                   <p className="font-semibold text-charcoal">{slot.dayLabel}</p>
                   <p className="text-xs text-muted">
-                    {slot.isDelivery ? "Delivery" : "Retiro"}
+                    {slot.deliveryMode === "pickup" ? "Retiro" : slot.deliveryMode === "delivery" ? "Delivery" : "Retiro o delivery"}
                     {!slot.active && " · Inactivo"}
                   </p>
                 </div>
@@ -377,6 +388,19 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
+            </div>
+
+            <div className="border-t border-border pt-4 mb-4">
+              <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Tipo de entrega</p>
+              <select
+                value={slot.deliveryMode}
+                onChange={(e) => onChangeMode(slot, e.target.value as "pickup"|"delivery"|"both")}
+                className="w-full border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
+              >
+                <option value="pickup">🏠 Retiro en casa</option>
+                <option value="delivery">🚚 Delivery</option>
+                <option value="both">🏠🚚 Ambos (cliente elige)</option>
+              </select>
             </div>
 
             <div className="border-t border-border pt-4">

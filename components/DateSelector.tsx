@@ -7,7 +7,7 @@ interface Slot {
   id: number | null;
   date: string;
   dayLabel: string;
-  isDelivery: boolean;
+  deliveryMode: "pickup" | "delivery" | "both";
   disabled: boolean;
 }
 
@@ -19,11 +19,13 @@ interface DateSelectorProps {
 
 export default function DateSelector({ slots, selectedId, onChange }: DateSelectorProps) {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 gap-3">
       {slots.map((slot, i) => {
         const date = new Date(slot.date);
         const isSelected = slot.id !== null && selectedId === slot.id;
         const disabled = slot.disabled;
+        const canPickup  = slot.deliveryMode === "pickup"  || slot.deliveryMode === "both";
+        const canDeliver = slot.deliveryMode === "delivery" || slot.deliveryMode === "both";
 
         return (
           <button
@@ -31,7 +33,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             disabled={disabled}
             onClick={() => { if (slot.id !== null) onChange(slot.id); }}
             className={cn(
-              "p-3 rounded-2xl border-2 text-left transition-all duration-200 relative",
+              "p-3 rounded-2xl border-2 text-left transition-all duration-200",
               disabled
                 ? "border-border bg-white opacity-50 cursor-not-allowed"
                 : isSelected
@@ -39,12 +41,28 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
                 : "border-border bg-white hover:border-amber/50"
             )}
           >
-            <div className={cn(
-              "w-7 h-7 rounded-full flex items-center justify-center mb-2",
-              disabled ? "bg-cream text-muted/50"
-                : isSelected ? "bg-amber text-white" : "bg-cream text-muted"
-            )}>
-              {slot.isDelivery ? <Truck className="w-3.5 h-3.5" /> : <Home className="w-3.5 h-3.5" />}
+            {/* Íconos siempre visibles, habilitados/deshabilitados según modo */}
+            <div className="flex gap-1.5 mb-2">
+              <div className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center",
+                disabled
+                  ? "bg-cream text-muted/30"
+                  : canPickup
+                  ? isSelected ? "bg-amber text-white" : "bg-cream text-muted"
+                  : "bg-cream text-muted/25"
+              )}>
+                <Home className="w-3.5 h-3.5" />
+              </div>
+              <div className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center",
+                disabled
+                  ? "bg-cream text-muted/30"
+                  : canDeliver
+                  ? isSelected ? "bg-amber text-white" : "bg-cream text-muted"
+                  : "bg-cream text-muted/25"
+              )}>
+                <Truck className="w-3.5 h-3.5" />
+              </div>
             </div>
 
             <p className={cn(
@@ -59,7 +77,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             </p>
 
             <p className={cn("text-xs mt-1 font-medium", disabled ? "text-muted/40" : isSelected ? "text-amber" : "text-muted/70")}>
-              {slot.isDelivery ? "Delivery" : "Retiro"}
+              {slot.deliveryMode === "both" ? "Retiro o delivery" : slot.deliveryMode === "delivery" ? "Delivery" : "Retiro"}
             </p>
           </button>
         );

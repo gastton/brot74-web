@@ -26,12 +26,11 @@ export async function POST(req: NextRequest) {
     data: {
       date: new Date(data.date),
       dayLabel: data.dayLabel,
-      isDelivery: data.isDelivery ?? false,
+      deliveryMode: data.deliveryMode ?? "pickup",
       active: data.active ?? true,
     },
   });
 
-  // Create default stock entries for all active products
   const products = await prisma.product.findMany({ where: { active: true } });
   for (const p of products) {
     await prisma.productStock.create({
