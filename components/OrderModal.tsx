@@ -226,15 +226,11 @@ export default function OrderModal({
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4 rounded-xl"
+            disabled={true}
+            className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4 rounded-xl opacity-50 cursor-not-allowed"
           >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <ShoppingBag className="w-5 h-5" />
-            )}
-            {loading ? "Procesando..." : "Confirmar y pagar"}
+            <ShoppingBag className="w-5 h-5" />
+            Confirmar y pagar (próximamente)
           </button>
         </form>
       </div>
