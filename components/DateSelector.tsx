@@ -87,7 +87,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             )}
           >
             {/* Hero image with date overlay */}
-            <div className="relative h-64 sm:h-72">
+            <div className="relative h-72 sm:h-80">
               <Image
                 src={HERO_IMAGE}
                 alt="Pan artesanal"
@@ -126,46 +126,38 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             </div>
 
             {/* Info section */}
-            <div className="bg-white px-5 py-4 space-y-3">
+            <div className="bg-white px-5 py-3 space-y-2">
               {slot.pickupTime && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-cream flex items-center justify-center shrink-0">
-                    <Clock className="w-4.5 h-4.5 text-brown" strokeWidth={1.75} />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-cream flex items-center justify-center shrink-0">
+                    <Clock className="w-4 h-4 text-brown" strokeWidth={1.75} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted">
-                      Horario de retiro
-                    </p>
-                    <p className="text-sm font-semibold text-charcoal">{slot.pickupTime}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted">Horario de retiro</p>
+                    <p className="text-sm font-semibold text-charcoal leading-tight">{slot.pickupTime}</p>
                   </div>
                 </div>
               )}
 
               {slot.location && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-cream flex items-center justify-center shrink-0">
-                    <MapPin className="w-4.5 h-4.5 text-brown" strokeWidth={1.75} />
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-cream flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4 text-brown" strokeWidth={1.75} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted">
-                      Lugar de retiro
-                    </p>
-                    <p className="text-sm font-semibold text-charcoal">{slot.location}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted">Lugar de retiro</p>
+                    <p className="text-sm font-semibold text-charcoal leading-tight">{slot.location}</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-cream flex items-center justify-center shrink-0">
-                  <Calendar className="w-4.5 h-4.5 text-brown" strokeWidth={1.75} />
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-cream flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-brown" strokeWidth={1.75} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted">
-                    Pedidos hasta
-                  </p>
-                  <p className="text-sm font-semibold text-charcoal">
-                    {formatCutoff(slot.date)}
-                  </p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted">Pedidos hasta</p>
+                  <p className="text-sm font-semibold text-charcoal leading-tight">{formatCutoff(slot.date)}</p>
                 </div>
               </div>
 
