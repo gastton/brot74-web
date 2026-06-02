@@ -87,7 +87,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             )}
           >
             {/* Hero image with date overlay */}
-            <div className="relative h-52 sm:h-60">
+            <div className="relative h-64 sm:h-72">
               <Image
                 src={HERO_IMAGE}
                 alt="Pan artesanal"
