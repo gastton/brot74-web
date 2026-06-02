@@ -147,10 +147,13 @@ export default function Home() {
             Elegí la fecha
           </h3>
           {loadingSlots ? (
-            <div className="grid grid-cols-2 gap-3">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-24 bg-white rounded-2xl border-2 border-border animate-pulse" />
-              ))}
+            <div className="rounded-3xl overflow-hidden border-2 border-border animate-pulse">
+              <div className="h-52 bg-gray-200" />
+              <div className="bg-white p-5 space-y-3">
+                <div className="h-10 bg-gray-100 rounded-2xl" />
+                <div className="h-10 bg-gray-100 rounded-2xl" />
+                <div className="h-12 bg-gray-200 rounded-2xl" />
+              </div>
             </div>
           ) : (
             <DateSelector slots={slots} selectedId={selectedSlotId} onChange={setSelectedSlotId} />
