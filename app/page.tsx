@@ -129,12 +129,11 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <main className="max-w-2xl mx-auto px-4 py-2">
         {view === "date" ? (
           <div className="space-y-5">
             {/* Hero */}
-            <section className="text-center pt-0">
-              <p className="text-sm uppercase tracking-widest text-amber font-semibold mb-1">Pedidos online</p>
+            <section className="text-center pt-1">
               <h2 className="font-serif text-4xl sm:text-5xl font-bold text-brown leading-tight">
                 Elegí tu BROT
               </h2>
@@ -257,18 +256,9 @@ export default function Home() {
 
       {cartItems.length > 0 && <div className="h-24" />}
 
-      <footer className="border-t border-border py-8 mt-16">
+      <footer className="border-t border-border py-6 mt-16">
         <div className="max-w-2xl mx-auto px-4 text-center">
-          <p className="font-serif text-brown font-bold text-lg">BROT.74</p>
-          <p className="text-xs text-muted mt-1">Pan artesanal de fermentación natural</p>
-          <a
-            href="https://instagram.com/brot.74"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-muted hover:text-brown mt-2 transition-colors"
-          >
-            <InstagramIcon className="w-3 h-3" /> @brot.74
-          </a>
+          <p className="text-xs text-muted">Pan artesanal de fermentación natural</p>
         </div>
       </footer>
     </div>
