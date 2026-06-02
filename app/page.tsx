@@ -17,6 +17,8 @@ interface Slot {
   deliveryMode: "pickup" | "delivery" | "both";
   pickupTime: string;
   location: string;
+  imageUrl: string;
+  orderCutoff: string | null;
   disabled: boolean;
 }
 

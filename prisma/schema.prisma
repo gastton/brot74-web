@@ -35,6 +35,8 @@ model DeliverySlot {
   deliveryMode String   @default("pickup") // "pickup" | "delivery" | "both"
   pickupTime   String   @default("")
   location     String   @default("")
+  imageUrl     String   @default("")
+  orderCutoff  DateTime?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 

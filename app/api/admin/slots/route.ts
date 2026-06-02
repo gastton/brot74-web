@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
       deliveryMode: data.deliveryMode ?? "pickup",
       pickupTime: data.pickupTime ?? "",
       location: data.location ?? "",
+      imageUrl: data.imageUrl ?? "",
+      orderCutoff: data.orderCutoff ? new Date(data.orderCutoff) : null,
       active: data.active ?? true,
     },
   });
