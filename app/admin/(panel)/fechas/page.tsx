@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Slot {
   id: number;
@@ -10,6 +11,8 @@ interface Slot {
   deliveryMode: "pickup" | "delivery" | "both";
   pickupTime: string;
   location: string;
+  imageUrl: string;
+  orderCutoff: string | null;
   active: boolean;
   stocks: { id: number; productName: string; totalStock: number; reservedStock: number; productId: number; deliverySlotId: number }[];
 }
@@ -24,6 +27,7 @@ const MONTHS = [
 export default function FechasPage() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -42,12 +46,15 @@ export default function FechasPage() {
   const [genYear, setGenYear] = useState(nextYear);
 
   async function fetchAll() {
-    const [slotsRes, productsRes] = await Promise.all([
+    const [slotsRes, productsRes, imagesRes] = await Promise.all([
       fetch("/api/admin/slots"),
       fetch("/api/admin/products"),
+      fetch("/api/admin/images"),
     ]);
     const slotsData = await slotsRes.json();
     const productsData = await productsRes.json();
+    const imagesData = await imagesRes.json();
+    setImages(imagesData);
     setSlots(slotsData.map((s: Slot & { stocks: { product: { name: string }, totalStock: number, reservedStock: number, id: number, productId: number, deliverySlotId: number }[] }) => ({
       ...s,
       stocks: s.stocks.map((st) => ({
@@ -130,7 +137,25 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, imageUrl: slot.imageUrl, orderCutoff: slot.orderCutoff, active: slot.active }),
+    });
+    fetchAll();
+  }
+
+  async function updateImage(slot: Slot, imageUrl: string) {
+    await fetch(`/api/admin/slots/${slot.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl, orderCutoff: slot.orderCutoff, active: slot.active }),
+    });
+    fetchAll();
+  }
+
+  async function updateCutoff(slot: Slot, orderCutoff: string | null) {
+    await fetch(`/api/admin/slots/${slot.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl: slot.imageUrl, orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
@@ -186,6 +211,7 @@ export default function FechasPage() {
             title="Próximas fechas"
             slots={upcoming}
             products={products}
+            images={images}
             stockEdits={stockEdits}
             setStockEdits={setStockEdits}
             onToggle={toggleActive}
@@ -193,6 +219,8 @@ export default function FechasPage() {
             onSaveStock={saveStock}
             onChangeMode={changeDeliveryMode}
             onUpdateDetails={updateDetails}
+            onUpdateImage={updateImage}
+            onUpdateCutoff={updateCutoff}
           />
 
           {past.length > 0 && (
@@ -217,6 +245,9 @@ export default function FechasPage() {
                     onSaveStock={saveStock}
                     onChangeMode={changeDeliveryMode}
                     onUpdateDetails={updateDetails}
+                    onUpdateImage={updateImage}
+                    onUpdateCutoff={updateCutoff}
+                    images={images}
                     muted
                   />
                 </div>
@@ -379,13 +410,15 @@ export default function FechasPage() {
   );
 }
 
-function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, onUpdateDetails, muted }: {
-  title: string; slots: Slot[]; products: Product[];
+function SlotList({ title, slots, products, images, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, onUpdateDetails, onUpdateImage, onUpdateCutoff, muted }: {
+  title: string; slots: Slot[]; products: Product[]; images: string[];
   stockEdits: Record<string, string>; setStockEdits: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
   onToggle: (s: Slot) => void; onDelete: (id: number) => void;
   onSaveStock: (productId: number, deliverySlotId: number, key: string) => void;
   onChangeMode: (s: Slot, mode: "pickup"|"delivery"|"both") => void;
   onUpdateDetails: (s: Slot, pickupTime: string, location: string) => void;
+  onUpdateImage: (s: Slot, imageUrl: string) => void;
+  onUpdateCutoff: (s: Slot, orderCutoff: string | null) => void;
   muted?: boolean;
 }) {
   if (slots.length === 0) return null;
@@ -433,6 +466,41 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
                 onSave={(v) => onUpdateDetails(slot, v, slot.location)} />
               <SlotDetailField label="Lugar de retiro" placeholder="Ej: Av. Corrientes 1234, CABA" initial={slot.location}
                 onSave={(v) => onUpdateDetails(slot, slot.pickupTime, v)} />
+
+              {/* Cutoff */}
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Pedidos hasta</p>
+                <input
+                  type="date"
+                  defaultValue={slot.orderCutoff ? new Date(slot.orderCutoff).toISOString().slice(0, 10) : ""}
+                  onChange={(e) => onUpdateCutoff(slot, e.target.value ? new Date(e.target.value + "T12:00:00Z").toISOString() : null)}
+                  className="w-full border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
+                />
+              </div>
+
+              {/* Image picker */}
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Imagen de la card</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {images.map((url) => (
+                    <button
+                      key={url}
+                      onClick={() => onUpdateImage(slot, url)}
+                      className={cn(
+                        "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
+                        slot.imageUrl === url ? "border-amber shadow-sm" : "border-border hover:border-amber/50"
+                      )}
+                    >
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      {slot.imageUrl === url && (
+                        <div className="absolute inset-0 bg-amber/20 flex items-center justify-center">
+                          <Check className="w-5 h-5 text-amber drop-shadow" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="border-t border-border pt-4">

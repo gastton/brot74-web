@@ -57,6 +57,8 @@ export async function GET() {
       deliveryMode: slot?.deliveryMode ?? "pickup",
       pickupTime: slot?.pickupTime ?? "",
       location: slot?.location ?? "",
+      imageUrl: slot?.imageUrl ?? "",
+      orderCutoff: slot?.orderCutoff ?? null,
       disabled: isExpired(date, now) || !slot,
     };
   }

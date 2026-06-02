@@ -16,6 +16,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       deliveryMode: data.deliveryMode ?? "pickup",
       pickupTime: data.pickupTime ?? "",
       location: data.location ?? "",
+      imageUrl: data.imageUrl ?? "",
+      orderCutoff: data.orderCutoff ? new Date(data.orderCutoff) : null,
       active: data.active,
     },
   });

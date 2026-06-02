@@ -11,6 +11,8 @@ interface Slot {
   deliveryMode: "pickup" | "delivery" | "both";
   pickupTime: string;
   location: string;
+  imageUrl: string;
+  orderCutoff: string | null;
   disabled: boolean;
 }
 
@@ -89,7 +91,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             {/* Hero image with date overlay */}
             <div className="relative h-72 sm:h-80">
               <Image
-                src={HERO_IMAGE}
+                src={slot.imageUrl || HERO_IMAGE}
                 alt="Pan artesanal"
                 fill
                 className="object-cover"
@@ -157,7 +159,11 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
                 </div>
                 <div>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-muted">Pedidos hasta</p>
-                  <p className="text-sm font-semibold text-charcoal leading-tight">{formatCutoff(slot.date)}</p>
+                  <p className="text-sm font-semibold text-charcoal leading-tight">
+                    {slot.orderCutoff
+                      ? new Date(slot.orderCutoff).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, c => c.toUpperCase())
+                      : formatCutoff(slot.date)}
+                  </p>
                 </div>
               </div>
 
