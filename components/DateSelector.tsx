@@ -115,10 +115,10 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
 
               {/* Date centered on image */}
               <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                <p className="text-sm font-semibold tracking-widest uppercase opacity-90">
+                <p className="text-xl font-bold tracking-widest uppercase opacity-90">
                   {weekday}
                 </p>
-                <p className="text-xs tracking-widest uppercase opacity-70 mt-0.5">
+                <p className="text-base tracking-widest uppercase opacity-70 mt-0.5">
                   {month}
                 </p>
                 <p className="text-7xl font-bold leading-none mt-1">{day}</p>
@@ -127,18 +127,6 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
 
             {/* Info section */}
             <div className="bg-white px-5 py-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-cream flex items-center justify-center shrink-0">
-                  <ModeIcon className="w-4.5 h-4.5 text-brown" strokeWidth={1.75} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted">
-                    {slot.deliveryMode === "both" ? "Retiro / Delivery" : slot.deliveryMode === "delivery" ? "Delivery" : "Retiro"}
-                  </p>
-                  <p className="text-sm font-semibold text-charcoal">{modeLabel}</p>
-                </div>
-              </div>
-
               {slot.pickupTime && (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-cream flex items-center justify-center shrink-0">
