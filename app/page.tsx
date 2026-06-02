@@ -15,6 +15,8 @@ interface Slot {
   date: string;
   dayLabel: string;
   deliveryMode: "pickup" | "delivery" | "both";
+  pickupTime: string;
+  location: string;
   disabled: boolean;
 }
 

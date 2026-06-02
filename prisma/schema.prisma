@@ -29,12 +29,14 @@ model Product {
 }
 
 model DeliverySlot {
-  id         Int      @id @default(autoincrement())
-  date       DateTime
-  dayLabel   String
-  deliveryMode String  @default("pickup") // "pickup" | "delivery" | "both"
-  active     Boolean  @default(true)
-  createdAt  DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  date         DateTime
+  dayLabel     String
+  deliveryMode String   @default("pickup") // "pickup" | "delivery" | "both"
+  pickupTime   String   @default("")
+  location     String   @default("")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
 
   stocks ProductStock[]
   orders Order[]
