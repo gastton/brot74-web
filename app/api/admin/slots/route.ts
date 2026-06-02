@@ -24,9 +24,11 @@ export async function POST(req: NextRequest) {
   const data = await req.json();
   const slot = await prisma.deliverySlot.create({
     data: {
-      date: new Date(data.date),
+      date: new Date(data.date + "T12:00:00Z"),
       dayLabel: data.dayLabel,
       deliveryMode: data.deliveryMode ?? "pickup",
+      pickupTime: data.pickupTime ?? "",
+      location: data.location ?? "",
       active: data.active ?? true,
     },
   });
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
   const products = await prisma.product.findMany({ where: { active: true } });
   for (const p of products) {
     await prisma.productStock.create({
-      data: { productId: p.id, deliverySlotId: slot.id, totalStock: 0, reservedStock: 0 },
+      data: { productId: p.id, deliverySlotId: slot.id, totalStock: 8, reservedStock: 0 },
     });
   }
 

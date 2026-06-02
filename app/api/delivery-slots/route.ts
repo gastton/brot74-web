@@ -25,8 +25,8 @@ function isExpired(slotDate: Date, now: Date): boolean {
 }
 
 async function findSlotForDate(date: Date) {
-  const start = new Date(date); start.setHours(0, 0, 0, 0);
-  const end   = new Date(date); end.setHours(23, 59, 59, 999);
+  const start = new Date(date); start.setUTCHours(0, 0, 0, 0);
+  const end   = new Date(date); end.setUTCHours(23, 59, 59, 999);
   return prisma.deliverySlot.findFirst({
     where: { date: { gte: start, lte: end }, active: true },
   });
@@ -55,6 +55,8 @@ export async function GET() {
       date: date.toISOString(),
       dayLabel: label,
       deliveryMode: slot?.deliveryMode ?? "pickup",
+      pickupTime: slot?.pickupTime ?? "",
+      location: slot?.location ?? "",
       disabled: isExpired(date, now) || !slot,
     };
   }

@@ -14,6 +14,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     data: {
       dayLabel: data.dayLabel,
       deliveryMode: data.deliveryMode ?? "pickup",
+      pickupTime: data.pickupTime ?? "",
+      location: data.location ?? "",
       active: data.active,
     },
   });

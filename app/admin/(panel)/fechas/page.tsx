@@ -8,6 +8,8 @@ interface Slot {
   date: string;
   dayLabel: string;
   deliveryMode: "pickup" | "delivery" | "both";
+  pickupTime: string;
+  location: string;
   active: boolean;
   stocks: { id: number; productName: string; totalStock: number; reservedStock: number; productId: number; deliverySlotId: number }[];
 }
@@ -29,7 +31,7 @@ export default function FechasPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
-  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", active: true });
+  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", pickupTime: "", location: "", active: true });
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
 
   // Default generate month: next month
@@ -84,12 +86,12 @@ export default function FechasPage() {
     await fetch("/api/admin/slots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, active: form.active }),
+      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, active: form.active }),
     });
     await fetchAll();
     setShowForm(false);
     setSaving(false);
-    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", active: true });
+    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", pickupTime: "", location: "", active: true });
   }
 
   async function handleGenerate() {
@@ -119,7 +121,16 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: mode, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: mode, pickupTime: slot.pickupTime, location: slot.location, active: slot.active }),
+    });
+    fetchAll();
+  }
+
+  async function updateDetails(slot: Slot, pickupTime: string, location: string) {
+    await fetch(`/api/admin/slots/${slot.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, active: slot.active }),
     });
     fetchAll();
   }
@@ -181,6 +192,7 @@ export default function FechasPage() {
             onDelete={handleDelete}
             onSaveStock={saveStock}
             onChangeMode={changeDeliveryMode}
+            onUpdateDetails={updateDetails}
           />
 
           {past.length > 0 && (
@@ -204,6 +216,7 @@ export default function FechasPage() {
                     onDelete={handleDelete}
                     onSaveStock={saveStock}
                     onChangeMode={changeDeliveryMode}
+                    onUpdateDetails={updateDetails}
                     muted
                   />
                 </div>
@@ -248,6 +261,18 @@ export default function FechasPage() {
                   <option value="delivery">🚚 Delivery</option>
                   <option value="both">🏠🚚 Ambos (cliente elige)</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-charcoal mb-1">Horario de retiro</label>
+                <input type="text" value={form.pickupTime} onChange={(e) => setForm({ ...form, pickupTime: e.target.value })}
+                  placeholder="Ej: 10:00 - 13:00"
+                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-charcoal mb-1">Lugar de retiro</label>
+                <input type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  placeholder="Ej: Av. Corrientes 1234, CABA"
+                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowForm(false)} className="flex-1 btn-secondary rounded-xl py-3 text-sm">Cancelar</button>
@@ -354,12 +379,13 @@ export default function FechasPage() {
   );
 }
 
-function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, muted }: {
+function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, onUpdateDetails, muted }: {
   title: string; slots: Slot[]; products: Product[];
   stockEdits: Record<string, string>; setStockEdits: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
   onToggle: (s: Slot) => void; onDelete: (id: number) => void;
   onSaveStock: (productId: number, deliverySlotId: number, key: string) => void;
   onChangeMode: (s: Slot, mode: "pickup"|"delivery"|"both") => void;
+  onUpdateDetails: (s: Slot, pickupTime: string, location: string) => void;
   muted?: boolean;
 }) {
   if (slots.length === 0) return null;
@@ -390,17 +416,23 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
               </div>
             </div>
 
-            <div className="border-t border-border pt-4 mb-4">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Tipo de entrega</p>
-              <select
-                value={slot.deliveryMode}
-                onChange={(e) => onChangeMode(slot, e.target.value as "pickup"|"delivery"|"both")}
-                className="w-full border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
-              >
-                <option value="pickup">🏠 Retiro en casa</option>
-                <option value="delivery">🚚 Delivery</option>
-                <option value="both">🏠🚚 Ambos (cliente elige)</option>
-              </select>
+            <div className="border-t border-border pt-4 mb-4 space-y-3">
+              <div>
+                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Tipo de entrega</p>
+                <select
+                  value={slot.deliveryMode}
+                  onChange={(e) => onChangeMode(slot, e.target.value as "pickup"|"delivery"|"both")}
+                  className="w-full border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
+                >
+                  <option value="pickup">🏠 Retiro en casa</option>
+                  <option value="delivery">🚚 Delivery</option>
+                  <option value="both">🏠🚚 Ambos (cliente elige)</option>
+                </select>
+              </div>
+              <SlotDetailField label="Horario de retiro" placeholder="Ej: 10:00 - 13:00" initial={slot.pickupTime}
+                onSave={(v) => onUpdateDetails(slot, v, slot.location)} />
+              <SlotDetailField label="Lugar de retiro" placeholder="Ej: Av. Corrientes 1234, CABA" initial={slot.location}
+                onSave={(v) => onUpdateDetails(slot, slot.pickupTime, v)} />
             </div>
 
             <div className="border-t border-border pt-4">
@@ -433,6 +465,33 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function SlotDetailField({ label, placeholder, initial, onSave }: {
+  label: string; placeholder: string; initial: string; onSave: (v: string) => void;
+}) {
+  const [value, setValue] = useState(initial);
+  const dirty = value !== initial;
+  return (
+    <div>
+      <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">{label}</p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={placeholder}
+          className="flex-1 border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
+        />
+        {dirty && (
+          <button onClick={() => onSave(value)}
+            className="p-2 bg-brown text-cream rounded-xl hover:bg-charcoal transition-colors">
+            <Check className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );
