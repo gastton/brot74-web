@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { ShoppingBag, ChevronRight } from "lucide-react";
+import { ShoppingBag, ChevronRight, ChevronLeft } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import DateSelector from "@/components/DateSelector";
@@ -39,6 +39,7 @@ type CartMap = Record<number, number>;
 export default function Home() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+  const [view, setView] = useState<"date" | "menu">("date");
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartMap>({});
   const [showModal, setShowModal] = useState(false);
@@ -128,73 +129,79 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8 space-y-10">
-        {/* Hero */}
-        <section className="text-center pt-2">
-          <p className="text-sm uppercase tracking-widest text-amber font-semibold mb-2">Pedidos online</p>
-          <h2 className="font-serif text-4xl sm:text-5xl font-bold text-brown mb-4 leading-tight">
-            Elegí tu BROT
-          </h2>
-          <p className="text-muted max-w-sm mx-auto text-sm leading-relaxed">
-            Selecciona el día y el tipo de pan. Así de simple...como el pan
-          </p>
-        </section>
-
-        {/* Fecha */}
-        <section>
-          <h3 className="font-serif text-xl font-bold text-brown mb-3 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-amber text-white text-xs flex items-center justify-center font-bold">1</span>
-            Elegí la fecha
-          </h3>
-          {loadingSlots ? (
-            <div className="rounded-3xl overflow-hidden border-2 border-border animate-pulse">
-              <div className="h-52 bg-gray-200" />
-              <div className="bg-white p-5 space-y-3">
-                <div className="h-10 bg-gray-100 rounded-2xl" />
-                <div className="h-10 bg-gray-100 rounded-2xl" />
-                <div className="h-12 bg-gray-200 rounded-2xl" />
-              </div>
-            </div>
-          ) : (
-            <DateSelector slots={slots} selectedId={selectedSlotId} onChange={setSelectedSlotId} />
-          )}
-        </section>
-
-        {/* Productos */}
-        <section>
-          <h3 className="font-serif text-xl font-bold text-brown mb-3 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-amber text-white text-xs flex items-center justify-center font-bold">2</span>
-            Elegí tu pan
-          </h3>
-
-          {!selectedSlotId && (
-            <div className="bg-amber/10 border border-amber/30 rounded-xl px-4 py-3 mb-4">
-              <p className="text-sm text-brown/80">
-                ↑ Primero elegí una fecha de entrega para ver el stock disponible.
+      <main className="max-w-2xl mx-auto px-4 py-8">
+        {view === "date" ? (
+          <div className="space-y-5">
+            {/* Hero */}
+            <section className="text-center pt-0">
+              <p className="text-sm uppercase tracking-widest text-amber font-semibold mb-1">Pedidos online</p>
+              <h2 className="font-serif text-4xl sm:text-5xl font-bold text-brown leading-tight">
+                Elegí tu BROT
+              </h2>
+              <p className="text-muted max-w-sm mx-auto text-sm leading-relaxed mt-1">
+                Seleccioná el día de entrega para ver el menú disponible
               </p>
-            </div>
-          )}
+            </section>
 
-          {loadingProducts ? (
-            <div className="grid grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-48 bg-white rounded-2xl border-2 border-border animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  {...product}
-                  quantity={cart[product.id] ?? 0}
-                  slotSelected={!!selectedSlotId}
-                  onClick={() => setSelectedProduct(product)}
+            {/* Fecha */}
+            <section>
+              {loadingSlots ? (
+                <div className="rounded-3xl overflow-hidden border-2 border-border animate-pulse">
+                  <div className="h-64 bg-gray-200" />
+                  <div className="bg-white p-5 space-y-3">
+                    <div className="h-10 bg-gray-100 rounded-2xl" />
+                    <div className="h-10 bg-gray-100 rounded-2xl" />
+                    <div className="h-12 bg-gray-200 rounded-2xl" />
+                  </div>
+                </div>
+              ) : (
+                <DateSelector
+                  slots={slots}
+                  selectedId={selectedSlotId}
+                  onChange={(id) => {
+                    setSelectedSlotId(id);
+                    setView("menu");
+                  }}
                 />
-              ))}
-            </div>
-          )}
-        </section>
+              )}
+            </section>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Back button */}
+            <button
+              onClick={() => { setView("date"); setSelectedSlotId(null); setCart({}); }}
+              className="flex items-center gap-1.5 text-sm font-medium text-brown hover:text-amber transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              {selectedSlot?.dayLabel ?? "Cambiar fecha"}
+            </button>
+
+            {/* Productos */}
+            <section>
+              <h3 className="font-serif text-xl font-bold text-brown mb-4">Elegí tu pan</h3>
+              {loadingProducts ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-48 bg-white rounded-2xl border-2 border-border animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      {...product}
+                      quantity={cart[product.id] ?? 0}
+                      slotSelected={!!selectedSlotId}
+                      onClick={() => setSelectedProduct(product)}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </main>
 
       {/* Cart bar */}
