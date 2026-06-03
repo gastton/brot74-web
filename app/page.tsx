@@ -50,7 +50,6 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [headerVisible, setHeaderVisible] = useState(false);
 
   const orderingSectionRef = useRef<HTMLElement>(null);
 
@@ -61,18 +60,7 @@ export default function Home() {
       .finally(() => setLoadingSlots(false));
   }, []);
 
-  // Show header once user scrolls past hero
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setHeaderVisible(!entry.isIntersecting),
-      { threshold: 0.1 }
-    );
-    const hero = document.getElementById("hero-section");
-    if (hero) observer.observe(hero);
-    return () => observer.disconnect();
-  }, []);
-
-  const fetchProducts = useCallback((slotId: number) => {
+const fetchProducts = useCallback((slotId: number) => {
     setLoadingProducts(true);
     fetch(`/api/products?slotId=${slotId}`)
       .then((r) => r.json())
@@ -126,24 +114,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-
-      {/* Sticky header — aparece al scrollear */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-40 bg-cream/95 backdrop-blur border-b border-border transition-all duration-300 ${
-          headerVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
-        }`}
-      >
-        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="BROT.74" width={40} height={40} className="object-contain" priority />
-            <p className="text-sm font-medium text-muted leading-none">Pan Natural</p>
-          </div>
-          <a href="https://instagram.com/brot.74" target="_blank" rel="noopener noreferrer"
-            className="p-2 text-muted hover:text-brown transition-colors">
-            <InstagramIcon className="w-5 h-5" />
-          </a>
-        </div>
-      </header>
 
       {/* Hero section — pantalla completa */}
       <section
