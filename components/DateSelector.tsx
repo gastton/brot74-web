@@ -52,7 +52,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-sm mx-auto">
       {visibleSlots.map((slot, i) => {
         const date = new Date(slot.date);
         const isSelected = slot.id !== null && selectedId === slot.id;
