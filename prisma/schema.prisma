@@ -36,6 +36,8 @@ model DeliverySlot {
   pickupTime   String   @default("")
   location     String   @default("")
   imageUrl     String   @default("")
+  imageFocalX  Int      @default(50)
+  imageFocalY  Int      @default(50)
   orderCutoff  DateTime?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())

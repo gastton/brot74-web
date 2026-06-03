@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import FocalPicker from "@/components/FocalPicker";
 
 interface Slot {
   id: number;
@@ -12,6 +14,8 @@ interface Slot {
   pickupTime: string;
   location: string;
   imageUrl: string;
+  imageFocalX: number;
+  imageFocalY: number;
   orderCutoff: string | null;
   active: boolean;
   stocks: { id: number; productName: string; totalStock: number; reservedStock: number; productId: number; deliverySlotId: number }[];
@@ -137,16 +141,16 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, imageUrl: slot.imageUrl, orderCutoff: slot.orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, orderCutoff: slot.orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
 
-  async function updateImage(slot: Slot, imageUrl: string) {
+  async function updateImage(slot: Slot, imageUrl: string, focalX?: number, focalY?: number) {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl, orderCutoff: slot.orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl, imageFocalX: focalX ?? slot.imageFocalX, imageFocalY: focalY ?? slot.imageFocalY, orderCutoff: slot.orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
@@ -155,7 +159,7 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl: slot.imageUrl, orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
@@ -417,7 +421,7 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
   onSaveStock: (productId: number, deliverySlotId: number, key: string) => void;
   onChangeMode: (s: Slot, mode: "pickup"|"delivery"|"both") => void;
   onUpdateDetails: (s: Slot, pickupTime: string, location: string) => void;
-  onUpdateImage: (s: Slot, imageUrl: string) => void;
+  onUpdateImage: (s: Slot, imageUrl: string, focalX?: number, focalY?: number) => void;
   onUpdateCutoff: (s: Slot, orderCutoff: string | null) => void;
   muted?: boolean;
 }) {
@@ -478,29 +482,12 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
                 />
               </div>
 
-              {/* Image picker */}
-              <div>
-                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Imagen de la card</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {images.map((url) => (
-                    <button
-                      key={url}
-                      onClick={() => onUpdateImage(slot, url)}
-                      className={cn(
-                        "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
-                        slot.imageUrl === url ? "border-amber shadow-sm" : "border-border hover:border-amber/50"
-                      )}
-                    >
-                      <img src={url} alt="" className="w-full h-full object-cover" />
-                      {slot.imageUrl === url && (
-                        <div className="absolute inset-0 bg-amber/20 flex items-center justify-center">
-                          <Check className="w-5 h-5 text-amber drop-shadow" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Image editor */}
+              <SlotImageEditor
+                slot={slot}
+                images={images}
+                onSave={(imageUrl, focalX, focalY) => onUpdateImage(slot, imageUrl, focalX, focalY)}
+              />
             </div>
 
             <div className="border-t border-border pt-4">
@@ -535,6 +522,103 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
         ))}
       </div>
     </div>
+  );
+}
+
+const HERO_IMAGE_FALLBACK = "/products/product-1779659787800.jpeg";
+
+function SlotImageEditor({ slot, images, onSave }: {
+  slot: Slot;
+  images: string[];
+  onSave: (imageUrl: string, focalX: number, focalY: number) => void;
+}) {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(slot.imageUrl || HERO_IMAGE_FALLBACK);
+  const [focalX, setFocalX] = useState(slot.imageFocalX);
+  const [focalY, setFocalY] = useState(slot.imageFocalY);
+
+  function handleOpen() {
+    setSelectedImage(slot.imageUrl || HERO_IMAGE_FALLBACK);
+    setFocalX(slot.imageFocalX);
+    setFocalY(slot.imageFocalY);
+    setShowModal(true);
+  }
+
+  function handleSave() {
+    onSave(selectedImage, focalX, focalY);
+    setShowModal(false);
+  }
+
+  return (
+    <>
+      <button
+        onClick={handleOpen}
+        className="w-full btn-secondary rounded-xl py-2 text-sm flex items-center justify-center gap-2"
+      >
+        <ImageIcon className="w-4 h-4" /> Imagen de la card
+      </button>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-charcoal/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div className="relative bg-cream rounded-2xl shadow-2xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-lg font-bold text-brown">Imagen de la card</h3>
+              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-muted" /></button>
+            </div>
+
+            {/* Focal picker — mismo ratio que la card, con overlay */}
+            <div className="mb-4">
+              <FocalPicker
+                imageUrl={selectedImage}
+                focalX={focalX}
+                focalY={focalY}
+                containerClass="h-72"
+                onChange={(x, y) => { setFocalX(x); setFocalY(y); }}
+                overlay={
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                      <p className="text-sm font-bold tracking-widest uppercase opacity-90">
+                        {new Date(slot.date).toLocaleDateString("es-AR", { weekday: "long" }).toUpperCase()}
+                      </p>
+                      <p className="text-xs tracking-widest uppercase opacity-70">
+                        {new Date(slot.date).toLocaleDateString("es-AR", { month: "short" }).toUpperCase().replace(".", "")}
+                      </p>
+                      <p className="text-5xl font-bold leading-none mt-1">{new Date(slot.date).getDate()}</p>
+                    </div>
+                  </>
+                }
+              />
+            </div>
+
+            {/* Image grid */}
+            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Elegí una imagen</p>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {images.map((url) => (
+                <button key={url} onClick={() => { setSelectedImage(url); setFocalX(50); setFocalY(50); }}
+                  className={cn(
+                    "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
+                    selectedImage === url ? "border-amber shadow-sm" : "border-border hover:border-amber/50"
+                  )}
+                >
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  {selectedImage === url && (
+                    <div className="absolute inset-0 bg-amber/20 flex items-center justify-center">
+                      <Check className="w-5 h-5 text-amber drop-shadow" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <button onClick={handleSave} className="w-full btn-primary rounded-xl py-3 text-sm flex items-center justify-center gap-2">
+              <Check className="w-4 h-4" /> Guardar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

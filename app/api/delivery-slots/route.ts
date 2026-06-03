@@ -58,6 +58,8 @@ export async function GET() {
       pickupTime: slot?.pickupTime ?? "",
       location: slot?.location ?? "",
       imageUrl: slot?.imageUrl ?? "",
+      imageFocalX: slot?.imageFocalX ?? 50,
+      imageFocalY: slot?.imageFocalY ?? 50,
       orderCutoff: slot?.orderCutoff ?? null,
       disabled: isExpired(date, now) || !slot,
     };
