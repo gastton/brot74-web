@@ -12,6 +12,8 @@ interface Slot {
   pickupTime: string;
   location: string;
   imageUrl: string;
+  imageFocalX: number;
+  imageFocalY: number;
   orderCutoff: string | null;
   disabled: boolean;
 }
@@ -95,6 +97,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
                 alt="Pan artesanal"
                 fill
                 className="object-cover"
+                style={{ objectPosition: `${slot.imageFocalX}% ${slot.imageFocalY}%` }}
                 sizes="(max-width: 672px) 100vw, 672px"
                 priority={i === 0}
               />

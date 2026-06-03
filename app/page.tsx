@@ -18,6 +18,8 @@ interface Slot {
   pickupTime: string;
   location: string;
   imageUrl: string;
+  imageFocalX: number;
+  imageFocalY: number;
   orderCutoff: string | null;
   disabled: boolean;
 }
