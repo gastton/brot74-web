@@ -153,13 +153,13 @@ export default function Home() {
         <div className="flex flex-col items-center gap-6">
           <Image src="/logo.png" alt="BROT.74" width={120} height={120} className="object-contain" priority />
           <div>
-            <p className="text-muted text-base mt-2">Pan artesanal de fermentación natural</p>
+            <p className="text-brown/60 text-base mt-2">Pan artesanal de fermentación natural</p>
           </div>
           <a
             href="https://instagram.com/brot.74"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-muted hover:text-brown transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-brown/60 hover:text-amber transition-colors"
           >
             <InstagramIcon className="w-4 h-4" />
             @brot.74
@@ -169,7 +169,7 @@ export default function Home() {
         {/* Scroll hint */}
         <button
           onClick={scrollToOrdering}
-          className="absolute bottom-8 flex flex-col items-center gap-1 text-muted hover:text-brown transition-colors animate-bounce"
+          className="absolute bottom-8 flex flex-col items-center gap-1 text-amber hover:text-amber-light transition-colors animate-bounce"
         >
           <span className="text-xs font-medium tracking-widest uppercase">Pedidos</span>
           <ChevronDown className="w-5 h-5" />
