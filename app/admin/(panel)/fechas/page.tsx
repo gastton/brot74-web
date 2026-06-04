@@ -444,15 +444,27 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <button onClick={() => onToggle(slot)} className="p-2 text-muted hover:text-brown transition-colors">
-                  {slot.active ? <ToggleRight className="w-5 h-5 text-green-500" /> : <ToggleLeft className="w-5 h-5" />}
-                </button>
-                <button onClick={() => onDelete(slot.id)} className="p-2 text-muted hover:text-red-500 transition-colors">
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <SlotImageTrigger slot={slot} images={images} onSave={(imageUrl, focalX, focalY) => onUpdateImage(slot, imageUrl, focalX, focalY)} />
+                <div className="relative group">
+                  <button onClick={() => onToggle(slot)} className="p-2 text-amber hover:text-amber-light transition-colors">
+                    {slot.active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                  </button>
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs bg-charcoal text-white rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    {slot.active ? "Deshabilitar" : "Habilitar"}
+                  </span>
+                </div>
+                <div className="relative group">
+                  <button onClick={() => onDelete(slot.id)} className="p-2 text-red-400 hover:text-red-600 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs bg-charcoal text-white rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    Eliminar fecha
+                  </span>
+                </div>
               </div>
             </div>
 
+            <div className={!slot.active ? "opacity-40 pointer-events-none" : ""}>
             <div className="border-t border-border pt-4 mb-4 space-y-3">
               <div>
                 <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Tipo de entrega</p>
@@ -482,12 +494,6 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
                 />
               </div>
 
-              {/* Image editor */}
-              <SlotImageEditor
-                slot={slot}
-                images={images}
-                onSave={(imageUrl, focalX, focalY) => onUpdateImage(slot, imageUrl, focalX, focalY)}
-              />
             </div>
 
             <div className="border-t border-border pt-4">
@@ -518,6 +524,7 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
                 })}
               </div>
             </div>
+            </div>
           </div>
         ))}
       </div>
@@ -527,7 +534,7 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
 
 const HERO_IMAGE_FALLBACK = "/products/product-1779659787800.jpeg";
 
-function SlotImageEditor({ slot, images, onSave }: {
+function SlotImageTrigger({ slot, images, onSave }: {
   slot: Slot;
   images: string[];
   onSave: (imageUrl: string, focalX: number, focalY: number) => void;
@@ -551,12 +558,14 @@ function SlotImageEditor({ slot, images, onSave }: {
 
   return (
     <>
-      <button
-        onClick={handleOpen}
-        className="w-full btn-secondary rounded-xl py-2 text-sm flex items-center justify-center gap-2"
-      >
-        <ImageIcon className="w-4 h-4" /> Imagen de la card
-      </button>
+      <div className="relative group">
+        <button onClick={handleOpen} className="p-2 text-green-500 hover:text-green-600 transition-colors">
+          <ImageIcon className="w-4 h-4" />
+        </button>
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs bg-charcoal text-white rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          Imagen de la card
+        </span>
+      </div>
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
