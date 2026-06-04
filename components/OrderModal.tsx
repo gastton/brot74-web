@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, ShoppingBag, Home, Truck } from "lucide-react";
+import { X, Loader2, ShoppingBag, Home, Truck, Copy, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +35,22 @@ export default function OrderModal({
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [step, setStep] = useState<"form" | "payment">("form");
+  const [orderId, setOrderId] = useState<number | null>(null);
+  const [copiedCvu, setCopiedCvu] = useState(false);
+  const [copiedAlias, setCopiedAlias] = useState(false);
+
+  const CVU = process.env.NEXT_PUBLIC_CVU ?? "";
+  const ALIAS = process.env.NEXT_PUBLIC_ALIAS ?? "";
+  const TITULAR = process.env.NEXT_PUBLIC_TITULAR ?? "";
+  const CUIT = process.env.NEXT_PUBLIC_CUIT ?? "";
+  const WA = process.env.NEXT_PUBLIC_WHATSAPP ?? "";
+
+  function copyToClipboard(text: string, type: "cvu" | "alias") {
+    navigator.clipboard.writeText(text);
+    if (type === "cvu") { setCopiedCvu(true); setTimeout(() => setCopiedCvu(false), 2000); }
+    else { setCopiedAlias(true); setTimeout(() => setCopiedAlias(false), 2000); }
+  }
 
   // Cuando el modo es "both", el cliente elige; si no, es fijo
   const [wantsDelivery, setWantsDelivery] = useState(deliveryMode === "delivery");
@@ -82,7 +98,8 @@ export default function OrderModal({
         return;
       }
 
-      onSuccess(data.orderId, data.initPoint);
+      setOrderId(data.orderId);
+      setStep("payment");
     } catch {
       setError("Error de conexión. Intentá de nuevo.");
     } finally {
@@ -109,6 +126,72 @@ export default function OrderModal({
             <X className="w-5 h-5 text-muted" />
           </button>
         </div>
+
+        {step === "payment" && orderId ? (
+          <div className="p-6 space-y-5">
+            {/* Total */}
+            <div className="text-center py-2">
+              <p className="text-sm text-muted mb-1">Total a transferir</p>
+              <p className="font-serif text-4xl font-bold text-brown">{formatCurrency(total)}</p>
+            </div>
+
+            {/* Datos de pago */}
+            <div className="bg-white rounded-2xl border border-border divide-y divide-border">
+              {/* Titular */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-xs text-muted mb-0.5">Titular</p>
+                  <p className="font-semibold text-charcoal">{TITULAR}</p>
+                </div>
+              </div>
+              {/* CUIT */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-xs text-muted mb-0.5">CUIT / CUIL</p>
+                  <p className="font-semibold text-charcoal">{CUIT}</p>
+                </div>
+              </div>
+              {/* Alias */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-xs text-muted mb-0.5">Alias</p>
+                  <p className="font-semibold text-charcoal">{ALIAS}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(ALIAS, "alias")}
+                  className="w-9 h-9 rounded-xl bg-cream border border-border flex items-center justify-center text-muted hover:text-brown hover:border-amber transition-all"
+                >
+                  {copiedAlias ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+              {/* CVU */}
+              <div className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-xs text-muted mb-0.5">CVU</p>
+                  <p className="font-semibold text-charcoal text-sm tracking-wide">{CVU}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(CVU, "cvu")}
+                  className="w-9 h-9 rounded-xl bg-cream border border-border flex items-center justify-center text-muted hover:text-brown hover:border-amber transition-all"
+                >
+                  {copiedCvu ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <a
+              href={`https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Te mando el comprobante del pedido #${orderId} por ${formatCurrency(total)} 🍞`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setTimeout(() => onSuccess(orderId), 500)}
+              className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4 rounded-xl"
+            >
+              Compartir comprobante 📎
+            </a>
+          </div>
+        ) : (
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Resumen */}
@@ -218,21 +301,16 @@ export default function OrderModal({
             </div>
           )}
 
-          <div className="bg-amber/10 border border-amber/30 rounded-xl px-4 py-3">
-            <p className="text-xs text-brown/80 leading-relaxed">
-              <strong>Pago por adelantado.</strong> Al confirmar serás redirigido a Mercado Pago para completar el pago de {formatCurrency(total)}.
-            </p>
-          </div>
-
           <button
             type="submit"
-            disabled={true}
-            className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4 rounded-xl opacity-50 cursor-not-allowed"
+            disabled={loading}
+            className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4 rounded-xl"
           >
-            <ShoppingBag className="w-5 h-5" />
-            Confirmar y pagar (próximamente)
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingBag className="w-5 h-5" />}
+            {loading ? "Procesando..." : "Confirmar pedido"}
           </button>
         </form>
+        )}
       </div>
     </div>
   );
