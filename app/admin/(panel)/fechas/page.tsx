@@ -39,7 +39,7 @@ export default function FechasPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
-  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", pickupTime: "", location: "", active: true });
+  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", pickupTime: "8:00 - 17:00", location: "", orderCutoff: "", active: true });
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
 
   // Default generate month: next month
@@ -88,7 +88,8 @@ export default function FechasPage() {
     if (!dateStr) return;
     const d = new Date(dateStr + "T12:00:00");
     const label = d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, (c) => c.toUpperCase());
-    setForm((f) => ({ ...f, date: dateStr, dayLabel: label }));
+    const cutoff = new Date(d.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    setForm((f) => ({ ...f, date: dateStr, dayLabel: label, orderCutoff: cutoff }));
   }
 
   async function handleCreate() {
@@ -97,12 +98,12 @@ export default function FechasPage() {
     await fetch("/api/admin/slots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, active: form.active }),
+      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff || null, active: form.active }),
     });
     await fetchAll();
     setShowForm(false);
     setSaving(false);
-    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", pickupTime: "", location: "", active: true });
+    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", pickupTime: "8:00 - 17:00", location: "", orderCutoff: "", active: true });
   }
 
   async function handleGenerate() {
@@ -307,6 +308,11 @@ export default function FechasPage() {
                 <label className="block text-sm font-semibold text-charcoal mb-1">Lugar de retiro</label>
                 <input type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}
                   placeholder="Ej: Av. Corrientes 1234, CABA"
+                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-charcoal mb-1">Pedidos hasta</label>
+                <input type="date" value={form.orderCutoff} onChange={(e) => setForm({ ...form, orderCutoff: e.target.value })}
                   className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
               </div>
               <div className="flex gap-3 pt-2">
