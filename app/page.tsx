@@ -248,7 +248,7 @@ export default function Home() {
         {/* ── Hero (banda navy) ── */}
         <section
           className="flex flex-col items-center text-center"
-          style={{ background: "#0E233C", padding: "52px 32px 60px" }}
+          style={{ background: "#0E233C", minHeight: "100svh", padding: "56px 32px 80px", position: "relative", justifyContent: "center" }}
         >
           {/* Sello medallón */}
           <div
@@ -361,6 +361,24 @@ export default function Home() {
             Pedí tu BROT{" "}
             <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>→</span>
           </button>
+
+          {/* Tagline (anclado al pie del hero) */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: "30px",
+              textAlign: "center",
+              fontWeight: 600,
+              fontSize: "10.5px",
+              letterSpacing: ".1em",
+              textTransform: "uppercase",
+              color: "rgba(244,238,226,.42)",
+            }}
+          >
+            Pan hecho con tiempo
+          </div>
         </section>
 
         {/* ── Separador ── */}
