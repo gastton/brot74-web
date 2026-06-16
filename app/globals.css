@@ -94,7 +94,7 @@ body {
 }
 .brot-input:focus {
   border-color: #0E233C;
-  box-shadow: 0 0 0 3px rgba(14,35,60,.12);
+  box-shadow: 0 0 0 3px rgba(14,35,60,.16);
 }
 textarea.brot-input {
   resize: none;
