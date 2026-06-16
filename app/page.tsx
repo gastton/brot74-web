@@ -5,6 +5,7 @@ import Image from "next/image";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import OrderModal from "@/components/OrderModal";
+import DateSelector from "@/components/DateSelector";
 import { formatCurrency } from "@/lib/utils";
 
 interface Slot {
@@ -42,17 +43,6 @@ type CartMap = Record<number, number>;
 const serif = "var(--font-newsreader, 'Newsreader', Georgia, serif)";
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
-function deliveryTitle(mode: Slot["deliveryMode"]) {
-  if (mode === "delivery") return "Delivery a domicilio";
-  if (mode === "both")     return "Retiro o delivery";
-  return "Retiro en el horno";
-}
-
-function deliveryDesc(slot: Slot) {
-  if (slot.deliveryMode === "delivery") return "Te lo llevamos hasta tu puerta.";
-  const parts = [slot.pickupTime, slot.location].filter(Boolean);
-  return parts.join(" · ") || "Pasás a buscar tu pan recién horneado.";
-}
 
 export default function Home() {
   const [slots, setSlots]                     = useState<Slot[]>([]);
@@ -128,116 +118,11 @@ export default function Home() {
     return (
       <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
         <main className="w-full max-w-[430px] mx-auto px-6 py-10">
-          <button
-            onClick={goHome}
-            className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy mb-8"
-            style={{ opacity: 0.8, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 5l-7 7 7 7"/>
-            </svg>
-            Volver
-          </button>
-
-          <h2
-            className="font-bold text-[30px] tracking-[-0.01em] text-navy"
-            style={{ margin: "0 0 22px" }}
-          >
-            Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>día</em>
-          </h2>
-
-          <div className="flex flex-col gap-[14px]">
-            {loadingSlots ? (
-              [1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse flex items-center gap-4 rounded-[16px]"
-                  style={{ background: "#FBF7EF", border: "1px solid rgba(14,35,60,.08)", padding: "20px" }}
-                >
-                  <div className="w-[52px] h-[52px] rounded-[12px] bg-stone/20 flex-none" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 rounded bg-stone/20 w-1/3" />
-                    <div className="h-4 rounded bg-stone/10 w-2/3" />
-                    <div className="h-3 rounded bg-stone/10 w-1/2" />
-                  </div>
-                </div>
-              ))
-            ) : slots.length === 0 ? (
-              <div
-                className="text-center text-[15px]"
-                style={{ color: "#7C766A", fontFamily: serif, fontStyle: "italic", padding: "24px 0" }}
-              >
-                No hay fechas disponibles en este momento.
-              </div>
-            ) : (
-              slots.map((slot) => {
-                const weekday = new Date(slot.date + "T12:00:00")
-                  .toLocaleDateString("es-AR", { weekday: "long" })
-                  .toUpperCase();
-                const isDisabled = slot.disabled || !slot.id;
-
-                return (
-                  <button
-                    key={slot.id}
-                    onClick={() => !isDisabled && slot.id && selectSlot(slot.id)}
-                    disabled={isDisabled}
-                    className="flex items-center gap-4 text-left border-none w-full"
-                    style={{
-                      background: "#FBF7EF",
-                      border: "1px solid rgba(14,35,60,.08)",
-                      borderRadius: "16px",
-                      padding: "20px",
-                      boxShadow: "0 18px 30px -28px rgba(14,35,60,.45)",
-                      transition: ctaTransition,
-                      cursor: isDisabled ? "default" : "pointer",
-                      opacity: isDisabled ? 0.45 : 1,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (isDisabled) return;
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
-                      if (arrow) arrow.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "";
-                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
-                      if (arrow) arrow.style.transform = "";
-                    }}
-                  >
-                    <span
-                      className="flex-none flex items-center justify-center"
-                      style={{
-                        width: "52px",
-                        height: "52px",
-                        borderRadius: "12px",
-                        background: "#F4EEE2",
-                        border: "1px solid rgba(14,35,60,.07)",
-                      }}
-                    >
-                      <Image src="/isotipo-oscuro.png" alt="" width={36} height={36} className="object-contain" />
-                    </span>
-                    <span className="flex-1 min-w-0">
-                      <span className="block font-bold uppercase tracking-[.18em]" style={{ fontSize: "10.5px", color: "#C8851A" }}>
-                        {weekday}
-                      </span>
-                      <span className="block mt-[3px]" style={{ fontFamily: serif, fontSize: "19px", color: "#0E233C" }}>
-                        {deliveryTitle(slot.deliveryMode)}
-                      </span>
-                      <span className="block mt-[3px] font-medium text-[12.5px] leading-[1.4]" style={{ color: "#7C766A" }}>
-                        {deliveryDesc(slot)}
-                      </span>
-                    </span>
-                    <span
-                      className="day-arrow flex-none font-sans text-[20px]"
-                      style={{ color: "#0E233C", opacity: 0.55, transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}
-                    >
-                      →
-                    </span>
-                  </button>
-                );
-              })
-            )}
-          </div>
+          <DateSelector
+            slots={slots}
+            selectedId={selectedSlotId}
+            onChange={(id) => selectSlot(id)}
+          />
         </main>
       </div>
     );
