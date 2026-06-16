@@ -316,22 +316,6 @@ export default function Home() {
             <em style={{ fontStyle: "italic", color: "#EBB155" }}>como debe ser.</em>
           </h1>
 
-          {/* Subtítulo */}
-          <p
-            style={{
-              fontFamily: serif,
-              fontWeight: 400,
-              fontSize: "17px",
-              fontStyle: "italic",
-              lineHeight: 1.5,
-              color: "rgba(244,238,226,.5)",
-              margin: "18px 0 0",
-              maxWidth: "30ch",
-            }}
-          >
-            Harina, agua, sal y tiempo. Horneado por encargo, siempre fresco.
-          </p>
-
           {/* CTA */}
           <button
             onClick={() => pedirRef.current?.scrollIntoView({ behavior: "smooth" })}
