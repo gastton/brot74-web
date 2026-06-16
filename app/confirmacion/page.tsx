@@ -38,7 +38,7 @@ function ConfirmacionContent() {
       >
         {/* Sello / logo */}
         <Image
-          src="/logo.png"
+          src="/sello-brot-navy.png"
           alt="BROT 74"
           width={116}
           height={116}
