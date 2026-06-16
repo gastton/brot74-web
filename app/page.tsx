@@ -123,6 +123,13 @@ export default function Home() {
             selectedId={selectedSlotId}
             onChange={(id) => selectSlot(id)}
           />
+
+          <p
+            className="text-center font-medium text-[14px] leading-[1.6]"
+            style={{ color: "#7C766A", marginTop: "22px", maxWidth: "34ch", marginInline: "auto" }}
+          >
+            Acá vas a ver el próximo día de entrega disponible: horario, lugar y hasta cuándo podés pedir. Cuando estés listo, tocá VER MENÚ para elegir tu pan.
+          </p>
         </main>
       </div>
     );
