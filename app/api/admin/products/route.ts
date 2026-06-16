@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       imageUrl: data.imageUrl ?? "",
       focalX: data.focalX ?? 50,
       focalY: data.focalY ?? 50,
+      imageScale: data.imageScale ?? 1,
       active: data.active ?? true,
       sortOrder: data.sortOrder ?? 0,
     },

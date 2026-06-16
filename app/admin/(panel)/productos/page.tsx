@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Plus, Pencil, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, ImagePlus } from "lucide-react";
 import Image from "next/image";
+import ImageZoomModal from "@/components/ImageZoomModal";
+import FocalPicker from "@/components/FocalPicker";
 import { formatCurrency } from "@/lib/utils";
 
 const DAYS = [
@@ -21,6 +23,7 @@ interface Product {
   imageUrl: string;
   focalX: number;
   focalY: number;
+  imageScale: number;
   availableDays: string;
   active: boolean;
   sortOrder: number;
@@ -35,6 +38,7 @@ const emptyForm = {
   imageUrl: "",
   focalX: 50,
   focalY: 50,
+  imageScale: 1,
   availableDays: [] as string[],
   active: true,
   sortOrder: "0",
@@ -48,6 +52,7 @@ export default function ProductosPage() {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -78,6 +83,7 @@ export default function ProductosPage() {
       imageUrl: p.imageUrl,
       focalX: p.focalX ?? 50,
       focalY: p.focalY ?? 50,
+      imageScale: p.imageScale ?? 1,
       availableDays: p.availableDays ? p.availableDays.split(",").filter(Boolean) : [],
       active: p.active,
       sortOrder: String(p.sortOrder),
@@ -118,7 +124,7 @@ export default function ProductosPage() {
     await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, price: parseInt(form.price), sortOrder: parseInt(form.sortOrder), availableDays: form.availableDays.join(","), focalX: form.focalX, focalY: form.focalY }),
+      body: JSON.stringify({ ...form, price: parseInt(form.price), sortOrder: parseInt(form.sortOrder), availableDays: form.availableDays.join(","), focalX: form.focalX, focalY: form.focalY, imageScale: form.imageScale }),
     });
     await fetchProducts();
     setShowForm(false);
@@ -161,7 +167,8 @@ export default function ProductosPage() {
               <div className="flex items-start gap-4">
                 {/* Thumbnail */}
                 {p.imageUrl ? (
-                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-border">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-border cursor-zoom-in"
+                    onClick={() => setZoomSrc(p.imageUrl)}>
                     <Image src={p.imageUrl} alt={p.name} width={64} height={64} className="w-full h-full object-cover" />
                   </div>
                 ) : (
@@ -234,7 +241,7 @@ export default function ProductosPage() {
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) { handleImageUpload(file); setForm((f) => ({ ...f, focalX: 50, focalY: 50 })); }
+                    if (file) { handleImageUpload(file); setForm((f) => ({ ...f, focalX: 50, focalY: 50, imageScale: 1 })); }
                   }}
                 />
                 {imagePreview ? (
@@ -244,7 +251,9 @@ export default function ProductosPage() {
                       imageUrl={imagePreview}
                       focalX={form.focalX}
                       focalY={form.focalY}
+                      scale={form.imageScale}
                       onChange={(x, y) => setForm((f) => ({ ...f, focalX: x, focalY: y }))}
+                      onScaleChange={(s) => setForm((f) => ({ ...f, imageScale: s }))}
                     />
                     <button
                       type="button"
@@ -333,68 +342,12 @@ export default function ProductosPage() {
           </div>
         </div>
       )}
+
+      {zoomSrc && <ImageZoomModal src={zoomSrc} onClose={() => setZoomSrc(null)} />}
     </div>
   );
 }
 
-function FocalPicker({ imageUrl, focalX, focalY, onChange }: {
-  imageUrl: string;
-  focalX: number;
-  focalY: number;
-  onChange: (x: number, y: number) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const dragging = useRef(false);
-
-  const getPos = useCallback((clientX: number, clientY: number) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const x = Math.round(Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100)));
-    const y = Math.round(Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)));
-    onChange(x, y);
-  }, [onChange]);
-
-  return (
-    <div className="space-y-1">
-      <p className="text-xs text-muted">Arrastrá para enfocar el recuadre</p>
-      <div
-        ref={ref}
-        className="relative aspect-square w-full overflow-hidden rounded-xl cursor-crosshair select-none touch-none"
-        onMouseDown={(e) => { dragging.current = true; getPos(e.clientX, e.clientY); }}
-        onMouseMove={(e) => { if (dragging.current) getPos(e.clientX, e.clientY); }}
-        onMouseUp={() => { dragging.current = false; }}
-        onMouseLeave={() => { dragging.current = false; }}
-        onTouchStart={(e) => { dragging.current = true; getPos(e.touches[0].clientX, e.touches[0].clientY); }}
-        onTouchMove={(e) => { if (dragging.current) getPos(e.touches[0].clientX, e.touches[0].clientY); }}
-        onTouchEnd={() => { dragging.current = false; }}
-      >
-        <Image
-          src={imageUrl}
-          alt="Focal preview"
-          fill
-          className="object-cover pointer-events-none"
-          style={{ objectPosition: `${focalX}% ${focalY}%` }}
-          sizes="400px"
-        />
-        {/* Guías */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute left-0 right-0 h-px bg-white/50" style={{ top: `${focalY}%` }} />
-          <div className="absolute top-0 bottom-0 w-px bg-white/50" style={{ left: `${focalX}%` }} />
-          <div
-            className="absolute w-5 h-5 rounded-full border-2 border-white shadow-lg -translate-x-1/2 -translate-y-1/2"
-            style={{ left: `${focalX}%`, top: `${focalY}%` }}
-          />
-        </div>
-        {/* Label */}
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none">
-          <span className="bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
-            Arrastrá para enfocar
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function Field({ label, value, onChange, placeholder, type = "text", textarea }: {
   label: string; value: string; onChange: (v: string) => void;

@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
           imageUrl: p.imageUrl,
           focalX: p.focalX,
           focalY: p.focalY,
+          imageScale: p.imageScale,
           stock: available,
           hasStock: available === null ? true : available > 0,
         };
@@ -50,6 +51,7 @@ export async function GET(req: NextRequest) {
       imageUrl: p.imageUrl,
       focalX: p.focalX,
       focalY: p.focalY,
+          imageScale: p.imageScale,
       stock: null,
       hasStock: true,
     }))

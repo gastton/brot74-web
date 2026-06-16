@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, ShoppingBag, Home, Truck, Copy, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -18,63 +18,135 @@ interface OrderModalProps {
   deliveryMode: "pickup" | "delivery" | "both";
   slotLabel: string;
   onClose: () => void;
-  onSuccess: (orderId: number, mpUrl?: string) => void;
+  onSuccess: (orderId: number) => void;
 }
 
-export default function OrderModal({
-  items,
-  slotId,
-  deliveryMode,
-  slotLabel,
-  onClose,
-  onSuccess,
-}: OrderModalProps) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [step, setStep] = useState<"form" | "payment">("form");
-  const [orderId, setOrderId] = useState<number | null>(null);
-  const [copiedCvu, setCopiedCvu] = useState(false);
-  const [copiedAlias, setCopiedAlias] = useState(false);
+const MODAL_STYLE = {
+  background: "#FBF7EF",
+  borderRadius: "22px",
+  boxShadow: "0 40px 80px -24px rgba(14,35,60,.6)",
+} as const;
 
-  const CVU = process.env.NEXT_PUBLIC_CVU ?? "";
-  const ALIAS = process.env.NEXT_PUBLIC_ALIAS ?? "";
-  const TITULAR = process.env.NEXT_PUBLIC_TITULAR ?? "";
-  const CUIT = process.env.NEXT_PUBLIC_CUIT ?? "";
-  const WA = process.env.NEXT_PUBLIC_WHATSAPP ?? "";
+const HAIR = { height: "1px", background: "rgba(14,35,60,.10)" } as const;
 
-  function copyToClipboard(text: string, type: "cvu" | "alias") {
-    navigator.clipboard.writeText(text);
-    if (type === "cvu") { setCopiedCvu(true); setTimeout(() => setCopiedCvu(false), 2000); }
-    else { setCopiedAlias(true); setTimeout(() => setCopiedAlias(false), 2000); }
+const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
+
+function CloseIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2" strokeLinecap="round">
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </svg>
+  );
+}
+
+function BagIcon({ stroke = "#F4EEE2" }: { stroke?: string }) {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3F8F5B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12.5l4.5 4.5L19 7"/>
+    </svg>
+  );
+}
+
+function ClipIcon() {
+  return (
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l9-9a3.3 3.3 0 0 1 4.7 4.7l-9 9a1.7 1.7 0 0 1-2.4-2.4l8-8"/>
+    </svg>
+  );
+}
+
+function TruckIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+    </svg>
+  );
+}
+
+function HomeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/>
+    </svg>
+  );
+}
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    navigator.clipboard?.writeText(value).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
   }
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      aria-label="Copiar"
+      className="flex-none flex items-center justify-center rounded-[12px]"
+      style={{
+        width: "42px",
+        height: "42px",
+        background: "#F4EEE2",
+        border: "1px solid rgba(14,35,60,.10)",
+        cursor: "pointer",
+        color: "#0E233C",
+        transition: "transform .14s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.06)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+      onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.92)"; }}
+      onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1.06)"; }}
+    >
+      {copied ? <CheckIcon /> : <CopyIcon />}
+    </button>
+  );
+}
 
-  // Cuando el modo es "both", el cliente elige; si no, es fijo
+export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onClose, onSuccess }: OrderModalProps) {
+  const [name, setName]       = useState("");
+  const [phone, setPhone]     = useState("");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes]     = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [step, setStep]       = useState<"form" | "payment">("form");
+  const [orderId, setOrderId] = useState<number | null>(null);
   const [wantsDelivery, setWantsDelivery] = useState(deliveryMode === "delivery");
-  const isDelivery = deliveryMode === "delivery" ? true : deliveryMode === "pickup" ? false : wantsDelivery;
 
-  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const CVU     = process.env.NEXT_PUBLIC_CVU     ?? "";
+  const ALIAS   = process.env.NEXT_PUBLIC_ALIAS   ?? "";
+  const TITULAR = process.env.NEXT_PUBLIC_TITULAR ?? "";
+  const CUIT    = process.env.NEXT_PUBLIC_CUIT    ?? "";
+  const WA      = process.env.NEXT_PUBLIC_WHATSAPP ?? "";
+
+  const isDelivery = deliveryMode === "delivery" ? true : deliveryMode === "pickup" ? false : wantsDelivery;
+  const modeLabel  = deliveryMode === "both" ? (isDelivery ? "Delivery" : "Retiro en casa") : deliveryMode === "delivery" ? "Delivery" : "Retiro en casa";
+  const total      = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    if (!name.trim() || !phone.trim()) {
-      setError("Nombre y teléfono son requeridos");
-      return;
-    }
+    if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
-    if (phone.trim() && (digits.length < 8 || digits.length > 15)) {
-      setError("El teléfono debe tener entre 8 y 15 dígitos");
-      return;
-    }
-    if (isDelivery && !address.trim()) {
-      setError("La dirección es requerida para delivery");
-      return;
-    }
+    if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
+    if (isDelivery && !address.trim()) { setError("La dirección es requerida para delivery"); return; }
 
     setLoading(true);
     try {
@@ -83,7 +155,7 @@ export default function OrderModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerName: name.trim(),
-          customerPhone: phone.replace(/\D/g, ""),
+          customerPhone: digits,
           customerAddress: isDelivery ? address.trim() : "",
           deliverySlotId: slotId,
           notes: notes.trim(),
@@ -91,13 +163,8 @@ export default function OrderModal({
           items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Error al procesar el pedido");
-        return;
-      }
-
+      if (!res.ok) { setError(data.error ?? "Error al procesar el pedido"); return; }
       setOrderId(data.orderId);
       setStep("payment");
     } catch {
@@ -107,192 +174,217 @@ export default function OrderModal({
     }
   }
 
-  const modeLabel = deliveryMode === "both"
-    ? (isDelivery ? "Delivery" : "Retiro en casa")
-    : deliveryMode === "delivery" ? "Delivery" : "Retiro en casa";
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-charcoal/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ padding: "19px" }}>
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0"
+        style={{ background: "rgba(14,35,60,.58)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }}
+        onClick={onClose}
+      />
 
-      <div className="relative bg-cream w-full max-w-lg rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+      {/* Modal */}
+      <div
+        className="relative w-full overflow-y-auto"
+        style={{ ...MODAL_STYLE, maxWidth: "392px", maxHeight: "90vh" }}
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-cream border-b border-border px-6 py-4 flex items-center justify-between rounded-t-3xl">
+        <div className="flex items-start justify-between gap-[14px] px-[26px] pt-[24px] pb-[18px]">
           <div>
-            <h2 className="font-serif text-xl font-bold text-brown">Tu pedido</h2>
-            <p className="text-xs text-muted mt-0.5">{slotLabel} · {modeLabel}</p>
+            <h3 className="font-bold text-[27px] tracking-[-0.01em] text-navy m-0">Tu pedido</h3>
+            <div
+              className="text-[14.5px] text-stone mt-[5px]"
+              style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}
+            >
+              {slotLabel} · {modeLabel}
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-border transition-colors">
-            <X className="w-5 h-5 text-muted" />
+          <button
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="flex-none mt-0.5 flex items-center justify-center border-none bg-transparent p-0"
+            style={{ cursor: "pointer", transition: "transform .15s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+          >
+            <CloseIcon />
           </button>
         </div>
+        <div style={HAIR} />
 
+        {/* ── Pantalla de pago (step = payment) ── */}
         {step === "payment" && orderId ? (
-          <div className="p-6 space-y-5">
+          <div className="px-[26px] py-[24px] space-y-[22px]">
             {/* Total */}
-            <div className="text-center py-2">
-              <p className="text-sm text-muted mb-1">Total a transferir</p>
-              <p className="font-serif text-4xl font-bold text-brown">{formatCurrency(total)}</p>
-            </div>
-
-            {/* Datos de pago */}
-            <div className="bg-white rounded-2xl border border-border divide-y divide-border">
-              {/* Titular */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-xs text-muted mb-0.5">Titular</p>
-                  <p className="font-semibold text-charcoal">{TITULAR}</p>
-                </div>
-              </div>
-              {/* CUIT */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-xs text-muted mb-0.5">CUIT / CUIL</p>
-                  <p className="font-semibold text-charcoal">{CUIT}</p>
-                </div>
-              </div>
-              {/* Alias */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-xs text-muted mb-0.5">Alias</p>
-                  <p className="font-semibold text-charcoal">{ALIAS}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(ALIAS, "alias")}
-                  className="w-9 h-9 rounded-xl bg-cream border border-border flex items-center justify-center text-muted hover:text-brown hover:border-amber transition-all"
-                >
-                  {copiedAlias ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                </button>
-              </div>
-              {/* CVU */}
-              <div className="flex items-center justify-between px-4 py-3">
-                <div>
-                  <p className="text-xs text-muted mb-0.5">CVU</p>
-                  <p className="font-semibold text-charcoal text-sm tracking-wide">{CVU}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(CVU, "cvu")}
-                  className="w-9 h-9 rounded-xl bg-cream border border-border flex items-center justify-center text-muted hover:text-brown hover:border-amber transition-all"
-                >
-                  {copiedCvu ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                </button>
+            <div className="text-center">
+              <div className="font-semibold text-[14.5px] text-stone">Total a transferir</div>
+              <div className="font-bold leading-none mt-[6px]" style={{ fontSize: "46px", letterSpacing: "-.02em", color: "#C8851A" }}>
+                {formatCurrency(total)}
               </div>
             </div>
 
+            {/* Datos bancarios */}
+            <div
+              className="overflow-hidden"
+              style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)" }}
+            >
+              {TITULAR && (
+                <div className="flex items-center gap-3 px-5 py-[15px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[13px] text-stone">Titular</div>
+                    <div className="font-bold text-[18px] text-navy mt-[3px] break-all">{TITULAR}</div>
+                  </div>
+                </div>
+              )}
+              {CUIT && (
+                <div className="flex items-center gap-3 px-5 py-[15px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[13px] text-stone">CUIT / CUIL</div>
+                    <div className="font-bold text-[18px] text-navy mt-[3px] break-all">{CUIT}</div>
+                  </div>
+                </div>
+              )}
+              {ALIAS && (
+                <div className="flex items-center gap-3 px-5 py-[15px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[13px] text-stone">Alias</div>
+                    <div className="font-bold text-[18px] text-navy mt-[3px] break-all">{ALIAS}</div>
+                  </div>
+                  <CopyButton value={ALIAS} />
+                </div>
+              )}
+              {CVU && (
+                <div className="flex items-center gap-3 px-5 py-[15px]">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-[13px] text-stone">CVU</div>
+                    <div className="font-bold text-[18px] text-navy mt-[3px] break-all tracking-wide">{CVU}</div>
+                  </div>
+                  <CopyButton value={CVU} />
+                </div>
+              )}
+            </div>
+
+            {/* Compartir comprobante */}
             <a
-              href={`https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Te mando el comprobante del pedido #${orderId} por ${formatCurrency(total)} 🍞`)}`}
+              href={`https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Te mando el comprobante del pedido #${orderId} por ${formatCurrency(total)}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setTimeout(() => onSuccess(orderId), 500)}
-              className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4 rounded-xl"
+              className="w-full font-bold text-[16.5px] tracking-[.01em] py-[17px] rounded-[14px] flex items-center justify-center gap-[11px] no-underline"
+              style={{
+                background: "#0E233C",
+                color: "#F4EEE2",
+                transition: ctaTransition,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
             >
-              Compartir comprobante 📎
+              Compartir comprobante
+              <ClipIcon />
             </a>
           </div>
         ) : (
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        /* ── Formulario (step = form) ── */
+        <form onSubmit={handleSubmit} className="px-[26px] py-[22px] space-y-[18px]">
           {/* Resumen */}
-          <div className="bg-white rounded-xl border border-border p-4 space-y-2">
+          <div
+            className="overflow-hidden"
+            style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)", padding: "18px 20px" }}
+          >
             {items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span className="text-charcoal">
-                  {item.name} <span className="text-muted">×{item.quantity}</span>
+              <div key={item.id} className="flex items-baseline justify-between gap-3 pb-[14px]">
+                <span className="font-semibold text-[16px] text-navy whitespace-nowrap">
+                  {item.name}{" "}
+                  <i className="not-italic font-medium text-[14px] text-stone">×{item.quantity}</i>
                 </span>
-                <span className="font-semibold text-brown">{formatCurrency(item.price * item.quantity)}</span>
+                <span className="font-bold text-[16px] text-navy whitespace-nowrap">
+                  {formatCurrency(item.price * item.quantity)}
+                </span>
               </div>
             ))}
-            <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
-              <span className="text-charcoal">Total</span>
-              <span className="text-brown text-lg">{formatCurrency(total)}</span>
+            <div style={HAIR} />
+            <div className="flex items-baseline justify-between gap-3 pt-[14px]">
+              <span className="font-bold text-[19px] text-navy">Total</span>
+              <span className="font-bold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
+                {formatCurrency(total)}
+              </span>
             </div>
           </div>
 
-          {/* Selector retiro / delivery (solo cuando el slot acepta ambos) */}
+          {/* Selector retiro / delivery */}
           {deliveryMode === "both" && (
             <div>
-              <label className="block text-sm font-semibold text-charcoal mb-2">¿Cómo querés recibirlo?</label>
+              <label className="block font-bold text-[14.5px] text-navy mb-2">¿Cómo querés recibirlo?</label>
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setWantsDelivery(false)}
-                  className={cn(
-                    "flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all",
-                    !wantsDelivery
-                      ? "border-amber bg-amber/10 text-brown"
-                      : "border-border bg-white text-muted"
-                  )}
-                >
-                  <Home className="w-4 h-4" /> Retiro en casa
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setWantsDelivery(true)}
-                  className={cn(
-                    "flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all",
-                    wantsDelivery
-                      ? "border-amber bg-amber/10 text-brown"
-                      : "border-border bg-white text-muted"
-                  )}
-                >
-                  <Truck className="w-4 h-4" /> Delivery
-                </button>
+                {[{ label: "Retiro en casa", value: false, icon: <HomeIcon /> }, { label: "Delivery", value: true, icon: <TruckIcon /> }].map(({ label, value, icon }) => (
+                  <button
+                    key={String(value)}
+                    type="button"
+                    onClick={() => setWantsDelivery(value)}
+                    className={cn(
+                      "flex items-center justify-center gap-2 p-3 rounded-xl text-[14px] font-semibold transition-all",
+                      wantsDelivery === value
+                        ? "text-navy"
+                        : "text-stone"
+                    )}
+                    style={{
+                      border: `1.5px solid ${wantsDelivery === value ? "#C8851A" : "rgba(14,35,60,.16)"}`,
+                      background: wantsDelivery === value ? "rgba(200,133,26,.08)" : "#fff",
+                    }}
+                  >
+                    {icon} {label}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Datos del cliente */}
-          <div className="space-y-3">
+          {/* Campos del formulario */}
+          {[
+            { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v), placeholder: "Juan Pérez", required: true },
+            { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
+          ].map((field) => (
+            <div key={field.id}>
+              <label className="block font-bold text-[14.5px] text-navy mb-2">
+                {field.label} <span style={{ color: "#C8851A" }}>*</span>
+              </label>
+              <input
+                type={field.type}
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+                placeholder={field.placeholder}
+                required={field.required}
+                className="brot-input"
+              />
+            </div>
+          ))}
+
+          {isDelivery && (
             <div>
-              <label className="block text-sm font-semibold text-charcoal mb-1">Nombre y apellido *</label>
+              <label className="block font-bold text-[14.5px] text-navy mb-2">
+                Dirección de delivery <span style={{ color: "#C8851A" }}>*</span>
+              </label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Juan Pérez"
-                className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Av. Corrientes 1234, CABA"
                 required
+                className="brot-input"
               />
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-semibold text-charcoal mb-1">Teléfono (WhatsApp) *</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="11 1234-5678"
-                className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white"
-                required
-              />
-            </div>
-
-            {isDelivery && (
-              <div>
-                <label className="block text-sm font-semibold text-charcoal mb-1">Dirección de delivery *</label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Av. Corrientes 1234, CABA"
-                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white"
-                  required
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-semibold text-charcoal mb-1">Notas (opcional)</label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Alguna aclaración sobre tu pedido..."
-                rows={2}
-                className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white resize-none"
-              />
-            </div>
+          <div>
+            <label className="block font-bold text-[14.5px] text-navy mb-2">Notas (opcional)</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Alguna aclaración sobre tu pedido…"
+              rows={3}
+              className="brot-input"
+            />
           </div>
 
           {error && (
@@ -304,9 +396,10 @@ export default function OrderModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary flex items-center justify-center gap-2 text-base py-4 rounded-xl"
+            className="btn-primary"
+            style={{ marginTop: "4px" }}
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShoppingBag className="w-5 h-5" />}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BagIcon />}
             {loading ? "Procesando..." : "Confirmar pedido"}
           </button>
         </form>

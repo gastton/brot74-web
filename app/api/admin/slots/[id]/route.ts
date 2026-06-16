@@ -19,6 +19,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       imageUrl: data.imageUrl ?? "",
       imageFocalX: data.imageFocalX ?? 50,
       imageFocalY: data.imageFocalY ?? 50,
+      imageScale: data.imageScale ?? 1,
       orderCutoff: data.orderCutoff ? new Date(data.orderCutoff) : null,
       active: data.active,
     },

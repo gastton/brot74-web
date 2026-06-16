@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       imageUrl: data.imageUrl ?? "",
       imageFocalX: data.imageFocalX ?? 50,
       imageFocalY: data.imageFocalY ?? 50,
+      imageScale: data.imageScale ?? 1,
       orderCutoff: data.orderCutoff ? new Date(data.orderCutoff) : null,
       active: data.active ?? true,
     },

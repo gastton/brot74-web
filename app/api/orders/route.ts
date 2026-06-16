@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { isMPConfigured, getMPClient } from "@/lib/mercadopago";
 import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 
 export async function POST(req: NextRequest) {
@@ -91,48 +90,6 @@ export async function POST(req: NextRequest) {
       return newOrder;
     });
 
-    // Create Mercado Pago preference if configured
-    let mpData: { preferenceId?: string; initPoint?: string } = {};
-    if (isMPConfigured()) {
-      try {
-        const { Preference } = await import("mercadopago");
-        const client = getMPClient();
-        const preference = new Preference(client);
-        const mpItems = enrichedItems.map((i) => ({
-          id: String(i.productId),
-          title: i.name,
-          quantity: i.quantity,
-          unit_price: i.unitPrice,
-          currency_id: "ARS",
-        }));
-
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-        const result = await preference.create({
-          body: {
-            items: mpItems,
-            payer: { name: customerName, phone: { number: customerPhone } },
-            back_urls: {
-              success: `${baseUrl}/confirmacion?order=${order.id}&status=success`,
-              failure: `${baseUrl}/confirmacion?order=${order.id}&status=failure`,
-              pending: `${baseUrl}/confirmacion?order=${order.id}&status=pending`,
-            },
-            auto_return: "approved",
-            notification_url: `${baseUrl}/api/webhook/mercadopago`,
-            external_reference: String(order.id),
-          },
-        });
-
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { mpPreferenceId: result.id ?? "" },
-        });
-
-        mpData = { preferenceId: result.id ?? undefined, initPoint: result.init_point ?? undefined };
-      } catch (e) {
-        console.error("MP preference creation failed:", e);
-      }
-    }
-
     // Send WhatsApp notification
     try {
       const msg = buildOrderMessage({
@@ -151,12 +108,7 @@ export async function POST(req: NextRequest) {
       console.error("WhatsApp notification failed:", e);
     }
 
-    return NextResponse.json({
-      orderId: order.id,
-      total,
-      mpConfigured: isMPConfigured(),
-      ...mpData,
-    });
+    return NextResponse.json({ orderId: order.id, total });
   } catch (e) {
     console.error("Order creation error:", e);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });

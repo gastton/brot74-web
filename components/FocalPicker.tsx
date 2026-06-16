@@ -8,12 +8,14 @@ interface FocalPickerProps {
   imageUrl: string;
   focalX: number;
   focalY: number;
+  scale?: number;
   onChange: (x: number, y: number) => void;
+  onScaleChange?: (scale: number) => void;
   containerClass?: string;
   overlay?: React.ReactNode;
 }
 
-export default function FocalPicker({ imageUrl, focalX, focalY, onChange, containerClass = "aspect-square", overlay }: FocalPickerProps) {
+export default function FocalPicker({ imageUrl, focalX, focalY, scale = 1, onChange, onScaleChange, containerClass = "aspect-square", overlay }: FocalPickerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
 
@@ -26,7 +28,7 @@ export default function FocalPicker({ imageUrl, focalX, focalY, onChange, contai
   }, [onChange]);
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <p className="text-xs text-muted">Arrastrá para enfocar el recuadre</p>
       <div
         ref={ref}
@@ -44,7 +46,7 @@ export default function FocalPicker({ imageUrl, focalX, focalY, onChange, contai
           alt="Focal preview"
           fill
           className="object-cover pointer-events-none"
-          style={{ objectPosition: `${focalX}% ${focalY}%` }}
+          style={{ objectPosition: `${focalX}% ${focalY}%`, transform: `scale(${scale})`, transformOrigin: `${focalX}% ${focalY}%` }}
           sizes="400px"
         />
         {overlay && <div className="absolute inset-0 pointer-events-none">{overlay}</div>}
@@ -62,6 +64,21 @@ export default function FocalPicker({ imageUrl, focalX, focalY, onChange, contai
           </span>
         </div>
       </div>
+      {onScaleChange && (
+        <div className="flex items-center gap-3 pt-1">
+          <span className="text-xs text-muted shrink-0">Zoom</span>
+          <input
+            type="range"
+            min={1}
+            max={2.5}
+            step={0.05}
+            value={scale}
+            onChange={(e) => onScaleChange(parseFloat(e.target.value))}
+            className="flex-1 accent-amber"
+          />
+          <span className="text-xs text-muted w-8 text-right shrink-0">{Math.round(scale * 100)}%</span>
+        </div>
+      )}
     </div>
   );
 }

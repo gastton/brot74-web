@@ -28,6 +28,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       imageUrl: data.imageUrl,
       focalX: data.focalX ?? 50,
       focalY: data.focalY ?? 50,
+      imageScale: data.imageScale ?? 1,
       availableDays: data.availableDays ?? "",
       active: data.active,
       sortOrder: data.sortOrder,
