@@ -57,6 +57,13 @@ export default function ProductModal({
   const isOutOfStock = !product.hasStock || (remaining !== null && remaining <= 0 && quantity === 0);
   const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0);
 
+  const stockColor =
+    isOutOfStock          ? "#7C766A"
+    : remaining === null  ? "#3F8F5B"
+    : remaining >= 3      ? "#3F8F5B"
+    : remaining > 0       ? "#C8851A"
+    :                       "#D94F4F";
+
   const stockText = !slotSelected
     ? null
     : isOutOfStock
@@ -166,11 +173,11 @@ export default function ProductModal({
           {stockText && (
             <div className="flex items-center gap-2 mt-[18px]">
               {!isOutOfStock && (
-                <span className="w-[7px] h-[7px] rounded-full flex-none" style={{ background: "#16C65A" }} />
+                <span className="w-[7px] h-[7px] rounded-full flex-none" style={{ background: stockColor }} />
               )}
               <span
                 className="font-semibold text-[13.5px] whitespace-nowrap"
-                style={{ color: isOutOfStock ? "#7C766A" : "#3F8F5B" }}
+                style={{ color: stockColor }}
               >
                 {stockText}
               </span>
