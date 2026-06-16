@@ -1,74 +1,102 @@
 @import "tailwindcss";
 
 @theme {
-  /* Paleta extraída del logo BROT.74 */
-  --color-cream: #F0F3F8;        /* fondo: blanco con tinte azul muy suave */
-  --color-brown: #1C2D50;        /* navy oscuro — fondo del logo */
-  --color-brown-light: #2E4270;  /* navy medio */
-  --color-amber: #E8A020;        /* dorado — "BROT" */
-  --color-amber-light: #F0B94A;  /* dorado claro */
-  --color-charcoal: #0F1B30;     /* navy muy oscuro — textos fuertes */
-  --color-muted: #9CA0AD;        /* gris plateado — "74" */
-  --color-border: #D5DAE8;       /* borde suave con tinte azul */
+  /* BROT 74 — Paleta de marca */
+  --color-navy:     #0E233C;
+  --color-amber:    #C8851A;
+  --color-cream:    #F4EEE2;
+  --color-paper:    #FBF7EF;
+  --color-stone:    #7C766A;
+  --color-open:     #16C65A;
+  --color-open-ink: #3F8F5B;
+  --color-faint:    #A8A296;
+
+  /* Aliases para clases existentes en los componentes */
+  --color-brown:       #0E233C;
+  --color-brown-light: #2A3B52;
+  --color-charcoal:    #0A1B2E;
+  --color-muted:       #7C766A;
+  --color-border:      #C8B99A;
+  --color-amber-light: #D9983D;
+
+  /* Tipografías */
+  --font-sans:  var(--font-quicksand,  'Quicksand',  system-ui, sans-serif);
+  --font-serif: var(--font-newsreader, 'Newsreader', Georgia,   serif);
 }
 
 :root {
-  --background: #F0F3F8;
-  --foreground: #0F1B30;
-}
-
-html {
-  --font-serif: var(--font-poppins);
-  --font-sans: var(--font-poppins);
+  --background: #F4EEE2;
+  --foreground: #0E233C;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-family: var(--font-quicksand, 'Quicksand'), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 {
-  font-family: var(--font-poppins), system-ui, sans-serif;
+/* ── Badge pulsante "Pedidos abiertos" ── */
+@keyframes brot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 #16C65A, 0 0 7px 1px #16C65A; }
+  50%       { box-shadow: 0 0 0 4px rgba(22,198,90,0), 0 0 11px 2px #16C65A; }
+}
+.brot-pulse {
+  animation: brot-pulse 2.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brot-pulse { animation: none; }
 }
 
-input, textarea, select {
-  font-family: var(--font-poppins), system-ui, sans-serif;
-}
-
+/* ── Botón principal ── */
 .btn-primary {
-  background-color: #1C2D50;
-  color: #F0F3F8;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: background-color 0.2s;
-  cursor: pointer;
+  background-color: #0E233C;
+  color: #F4EEE2;
+  padding: 17px 24px;
+  border-radius: 14px;
+  font-family: var(--font-quicksand, 'Quicksand'), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16.5px;
+  letter-spacing: 0.01em;
   border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: 100%;
+  transition: transform 0.18s cubic-bezier(.2,.7,.3,1), box-shadow 0.18s;
 }
-
 .btn-primary:hover:not(:disabled) {
-  background-color: #0F1B30;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -16px rgba(14,35,60,.55);
 }
-
 .btn-primary:disabled {
-  background-color: #9CA0AD;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.btn-secondary {
-  background-color: transparent;
-  color: #1C2D50;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: all 0.2s;
-  cursor: pointer;
-  border: 2px solid #1C2D50;
+/* ── Input base ── */
+.brot-input {
+  width: 100%;
+  font-family: var(--font-quicksand, 'Quicksand'), system-ui, sans-serif;
+  font-size: 15px;
+  color: #0E233C;
+  background: #fff;
+  border: 1.5px solid rgba(14,35,60,.16);
+  border-radius: 12px;
+  padding: 14px 16px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-
-.btn-secondary:hover {
-  background-color: #1C2D50;
-  color: #F0F3F8;
+.brot-input::placeholder {
+  color: #A8A296;
+}
+.brot-input:focus {
+  border-color: #0E233C;
+  box-shadow: 0 0 0 3px rgba(14,35,60,.12);
+}
+textarea.brot-input {
+  resize: none;
+  line-height: 1.5;
 }

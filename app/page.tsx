@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { ShoppingBag, ChevronRight, ChevronLeft, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import DateSelector from "@/components/DateSelector";
@@ -20,6 +20,7 @@ interface Slot {
   imageUrl: string;
   imageFocalX: number;
   imageFocalY: number;
+  imageScale: number;
   orderCutoff: string | null;
   disabled: boolean;
 }
@@ -34,6 +35,7 @@ interface Product {
   imageUrl: string;
   focalX: number;
   focalY: number;
+  imageScale: number;
   stock: number | null;
   hasStock: boolean;
 }
@@ -41,14 +43,14 @@ interface Product {
 type CartMap = Record<number, number>;
 
 export default function Home() {
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots]                   = useState<Slot[]>([]);
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
-  const [view, setView] = useState<"date" | "menu">("date");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartMap>({});
-  const [showModal, setShowModal] = useState(false);
+  const [view, setView]                     = useState<"date" | "menu">("date");
+  const [products, setProducts]             = useState<Product[]>([]);
+  const [cart, setCart]                     = useState<CartMap>({});
+  const [showModal, setShowModal]           = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [loadingSlots, setLoadingSlots] = useState(true);
+  const [loadingSlots, setLoadingSlots]     = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
   const orderingSectionRef = useRef<HTMLElement>(null);
@@ -60,7 +62,7 @@ export default function Home() {
       .finally(() => setLoadingSlots(false));
   }, []);
 
-const fetchProducts = useCallback((slotId: number) => {
+  const fetchProducts = useCallback((slotId: number) => {
     setLoadingProducts(true);
     fetch(`/api/products?slotId=${slotId}`)
       .then((r) => r.json())
@@ -73,9 +75,7 @@ const fetchProducts = useCallback((slotId: number) => {
       fetchProducts(selectedSlotId);
       setCart({});
     } else {
-      fetch("/api/products")
-        .then((r) => r.json())
-        .then(setProducts);
+      fetch("/api/products").then((r) => r.json()).then(setProducts);
     }
   }, [selectedSlotId, fetchProducts]);
 
@@ -96,16 +96,12 @@ const fetchProducts = useCallback((slotId: number) => {
     .filter((p) => (cart[p.id] ?? 0) > 0)
     .map((p) => ({ id: p.id, name: p.name, price: p.price, quantity: cart[p.id] }));
 
-  const cartTotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const cartTotal   = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);
 
-  function handleOrderSuccess(orderId: number, mpUrl?: string) {
+  function handleOrderSuccess(orderId: number) {
     setShowModal(false);
-    if (mpUrl) {
-      window.location.href = mpUrl;
-    } else {
-      window.location.href = `/confirmacion?order=${orderId}&status=pending`;
-    }
+    window.location.href = `/confirmacion?order=${orderId}&status=pending`;
   }
 
   function scrollToOrdering() {
@@ -113,139 +109,182 @@ const fetchProducts = useCallback((slotId: number) => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-cream">
 
-      {/* Hero section — pantalla completa */}
-      <section
-        id="hero-section"
-        className="min-h-dvh flex flex-col items-center justify-center px-6 text-center bg-cream"
-      >
-        <div className="flex flex-col items-center gap-6">
-          <Image src="/logo.png" alt="BROT.74" width={120} height={120} className="object-contain" priority />
+      {/* ── Hero section ── */}
+      <section className="min-h-dvh flex flex-col items-center justify-center px-6 text-center bg-cream">
+        <div className="flex flex-col items-center gap-5">
+          <Image src="/logo.png" alt="BROT.74" width={110} height={110} className="object-contain" priority />
           <div>
-            <p className="text-brown/60 text-base mt-2">Pan artesanal de fermentación natural</p>
+            <p className="text-stone text-[15px] mt-2" style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}>
+              Pan artesanal de fermentación natural
+            </p>
           </div>
           <a
             href="https://instagram.com/brot.74"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-brown/60 hover:text-amber transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-stone hover:text-amber transition-colors"
           >
             <InstagramIcon className="w-4 h-4" />
             @brot.74
           </a>
         </div>
 
-        {/* Scroll hint */}
         <button
           onClick={scrollToOrdering}
-          className="absolute bottom-8 flex flex-col items-center gap-1 text-amber hover:text-amber-light transition-colors animate-bounce"
+          className="absolute bottom-8 flex flex-col items-center gap-1 text-amber hover:text-navy transition-colors"
+          style={{ animation: "bounce 1s infinite" }}
         >
-          <span className="text-xs font-medium tracking-widest uppercase">Pedidos</span>
+          <span className="text-xs font-bold tracking-widest uppercase">Pedidos</span>
           <ChevronDown className="w-5 h-5" />
         </button>
       </section>
 
-      {/* Ordering section */}
+      {/* ── Ordering section ── */}
       <section ref={orderingSectionRef} className="min-h-dvh bg-cream">
-        <main className="max-w-2xl mx-auto px-4 py-8">
+        <main className="w-full max-w-[430px] mx-auto px-4 py-8">
+
           {view === "date" ? (
-            <div className="space-y-5">
-              <section className="text-center pt-1">
-                <h2 className="font-serif text-4xl sm:text-5xl font-bold text-brown leading-tight">
-                  Elegí tu BROT
+            /* ── Vista: selección de fecha ── */
+            <div className="space-y-6">
+              <header className="text-center pt-1">
+                <h2
+                  className="font-bold text-[37px] leading-[1.05] tracking-[-0.01em] text-navy m-0"
+                >
+                  Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
                 </h2>
-                <p className="text-muted max-w-sm mx-auto text-sm leading-relaxed mt-1">
+                <p
+                  className="text-[15.5px] leading-[1.45] text-stone mt-3 mx-auto"
+                  style={{
+                    fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)",
+                    fontStyle: "italic",
+                    maxWidth: "26ch",
+                  }}
+                >
                   Seleccioná el día de entrega para ver el menú disponible
                 </p>
-              </section>
+              </header>
 
-              <section>
-                {loadingSlots ? (
-                  <div className="rounded-3xl overflow-hidden border-2 border-border animate-pulse max-w-sm mx-auto">
-                    <div className="h-64 bg-gray-200" />
-                    <div className="bg-white p-5 space-y-3">
-                      <div className="h-10 bg-gray-100 rounded-2xl" />
-                      <div className="h-10 bg-gray-100 rounded-2xl" />
-                      <div className="h-12 bg-gray-200 rounded-2xl" />
-                    </div>
+              {loadingSlots ? (
+                <div
+                  className="rounded-[22px] overflow-hidden animate-pulse"
+                  style={{ background: "#FBF7EF", border: "1px solid rgba(14,35,60,.10)" }}
+                >
+                  <div className="h-[290px] bg-stone/20" />
+                  <div className="p-6 space-y-4">
+                    <div className="h-10 rounded-[12px] bg-stone/10" />
+                    <div className="h-10 rounded-[12px] bg-stone/10" />
+                    <div className="h-14 rounded-[14px] bg-stone/20" />
                   </div>
-                ) : (
-                  <DateSelector
-                    slots={slots}
-                    selectedId={selectedSlotId}
-                    onChange={(id) => {
-                      setSelectedSlotId(id);
-                      setView("menu");
-                    }}
-                  />
-                )}
-              </section>
+                </div>
+              ) : (
+                <DateSelector
+                  slots={slots}
+                  selectedId={selectedSlotId}
+                  onChange={(id) => {
+                    setSelectedSlotId(id);
+                    setView("menu");
+                  }}
+                />
+              )}
             </div>
           ) : (
-            <div className="space-y-6">
+            /* ── Vista: menú del día ── */
+            <div className="space-y-[22px]">
+              {/* Volver */}
               <button
                 onClick={() => { setView("date"); setSelectedSlotId(null); setCart({}); }}
-                className="flex items-center gap-1.5 text-sm font-medium text-brown hover:text-amber transition-colors"
+                className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy hover:text-amber transition-colors"
+                style={{ opacity: 0.85 }}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 5l-7 7 7 7"/>
+                </svg>
                 {selectedSlot?.dayLabel ?? "Cambiar fecha"}
               </button>
 
-              <section>
-                <h3 className="font-serif text-xl font-bold text-brown mb-4">Elegí tu pan</h3>
-                {loadingProducts ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    {[1, 2].map((i) => (
-                      <div key={i} className="h-48 bg-white rounded-2xl border-2 border-border animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    {products.map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        {...product}
-                        quantity={cart[product.id] ?? 0}
-                        slotSelected={!!selectedSlotId}
-                        onClick={() => setSelectedProduct(product)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
+              {/* Título */}
+              <h2
+                className="font-bold text-[30px] tracking-[-0.01em] text-navy m-0"
+              >
+                Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>pan</em>
+              </h2>
+
+              {/* Grilla de productos */}
+              {loadingProducts ? (
+                <div className="grid grid-cols-2 gap-[18px]">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="aspect-square rounded-[16px] bg-stone/20" />
+                      <div className="pt-3 space-y-2">
+                        <div className="h-4 rounded bg-stone/10" />
+                        <div className="h-3 rounded bg-stone/10 w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-[18px]">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      {...product}
+                      quantity={cart[product.id] ?? 0}
+                      slotSelected={!!selectedSlotId}
+                      onClick={() => setSelectedProduct(product)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </main>
 
-        <footer className="border-t border-border py-6 mt-8">
-          <div className="max-w-2xl mx-auto px-4 text-center">
-            <p className="text-xs text-muted">Pan artesanal de fermentación natural</p>
+        <footer className="py-6 mt-8">
+          <div className="max-w-[430px] mx-auto px-4 text-center">
+            <p className="text-[13px] text-stone" style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}>
+              Pan artesanal de fermentación natural
+            </p>
           </div>
         </footer>
       </section>
 
-      {/* Cart bar */}
+      {/* ── Barra de carrito fija ── */}
       {cartItems.length > 0 && selectedSlotId && !selectedProduct && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 bg-gradient-to-t from-cream via-cream/95 to-transparent">
-          <div className="max-w-2xl mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-4" style={{ background: "linear-gradient(to top, #F4EEE2 60%, transparent)" }}>
+          <div className="max-w-[430px] mx-auto">
             <button
               onClick={() => setShowModal(true)}
-              className="w-full bg-brown text-cream rounded-2xl p-4 flex items-center justify-between shadow-lg hover:bg-charcoal transition-colors"
+              className="w-full flex items-center gap-3 rounded-[16px] border-none"
+              style={{
+                background: "#0E233C",
+                color: "#F4EEE2",
+                padding: "14px 18px",
+                cursor: "pointer",
+                boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
+                transition: "transform .18s cubic-bezier(.2,.7,.3,1)",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
             >
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 rounded-xl p-2">
-                  <ShoppingBag className="w-5 h-5" />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-sm">{cartItems.reduce((s, i) => s + i.quantity, 0)} producto{cartItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}</p>
-                  <p className="text-xs text-white/70">{selectedSlot?.dayLabel}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-lg">{formatCurrency(cartTotal)}</span>
-                <ChevronRight className="w-5 h-5 text-white/70" />
-              </div>
+              <span
+                className="w-9 h-9 flex-none rounded-full flex items-center justify-center"
+                style={{ border: "1px solid rgba(244,238,226,.38)" }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+                </svg>
+              </span>
+              <span className="font-semibold text-[16px] whitespace-nowrap">
+                {cartItems.reduce((s, i) => s + i.quantity, 0)} producto{cartItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
+              </span>
+              <span className="font-bold text-[18px] ml-auto whitespace-nowrap">
+                {formatCurrency(cartTotal)}
+              </span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 6l6 6-6 6"/>
+              </svg>
             </button>
           </div>
         </div>

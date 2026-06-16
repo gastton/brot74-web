@@ -18,6 +18,7 @@ model Product {
   imageUrl    String   @default("")
   focalX      Int      @default(50)
   focalY      Int      @default(50)
+  imageScale  Float    @default(1)
   availableDays String @default("")
   active      Boolean  @default(true)
   sortOrder   Int      @default(0)
@@ -38,6 +39,7 @@ model DeliverySlot {
   imageUrl     String   @default("")
   imageFocalX  Int      @default(50)
   imageFocalY  Int      @default(50)
+  imageScale   Float    @default(1)
   orderCutoff  DateTime?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -66,8 +68,6 @@ model Order {
   customerAddress String   @default("")
   deliverySlotId  Int
   status          String   @default("pending")
-  mpPreferenceId  String   @default("")
-  mpPaymentId     String   @default("")
   total           Int
   notes           String   @default("")
   createdAt       DateTime @default(now())

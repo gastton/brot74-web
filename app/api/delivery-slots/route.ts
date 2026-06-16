@@ -35,6 +35,7 @@ export async function GET() {
       imageUrl: slot.imageUrl,
       imageFocalX: slot.imageFocalX,
       imageFocalY: slot.imageFocalY,
+      imageScale: slot.imageScale,
       orderCutoff: slot.orderCutoff,
       disabled: false,
     }));

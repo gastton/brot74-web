@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
-import { ShoppingBag } from "lucide-react";
 
 interface ProductCardProps {
   id: number;
@@ -14,6 +13,7 @@ interface ProductCardProps {
   imageUrl: string;
   focalX: number;
   focalY: number;
+  imageScale: number;
   stock: number | null;
   hasStock: boolean;
   quantity: number;
@@ -28,6 +28,7 @@ export default function ProductCard({
   imageUrl,
   focalX,
   focalY,
+  imageScale,
   stock,
   hasStock,
   quantity,
@@ -35,60 +36,112 @@ export default function ProductCard({
   onClick,
 }: ProductCardProps) {
   const remaining = stock !== null ? stock - quantity : null;
-  const outOfStock = slotSelected && remaining !== null && remaining <= 0 && quantity === 0;
+  const outOfStock = slotSelected && !hasStock && stock !== null && stock <= 0;
   const isDisabled = !slotSelected || outOfStock;
 
   return (
-    <button
-      onClick={onClick}
-      disabled={isDisabled}
-      className={`relative bg-white rounded-2xl overflow-hidden text-left w-full transition-all duration-200 ${
-        outOfStock
-          ? "opacity-50 grayscale-[30%] cursor-not-allowed"
-          : !slotSelected
-          ? "opacity-60 cursor-not-allowed"
-          : "shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer"
-      }`}
+    <div
+      onClick={() => { if (!isDisabled) onClick(); }}
+      className="flex flex-col"
+      style={{
+        cursor: isDisabled ? "default" : "pointer",
+        transition: "transform .18s cubic-bezier(.2,.7,.3,1)",
+      }}
+      onMouseEnter={(e) => {
+        if (!isDisabled) e.currentTarget.style.transform = "translateY(-3px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "";
+      }}
     >
-      {/* Imagen */}
-      <div className="aspect-square relative w-full bg-cream">
+      {/* Foto */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          aspectRatio: "1/1",
+          borderRadius: "16px",
+          background: "#ddd6c8",
+          border: "1px solid rgba(14,35,60,.08)",
+          boxShadow: isDisabled ? "none" : "0 16px 28px -22px rgba(14,35,60,.45)",
+        }}
+      >
         {imageUrl ? (
-          <Image src={imageUrl} alt={name} fill className="object-cover" style={{ objectPosition: `${focalX}% ${focalY}%` }} sizes="(max-width: 640px) 50vw, 300px" />
+          <div
+            className="absolute inset-0 bg-cover"
+            style={{
+              backgroundImage: `url(${imageUrl})`,
+              backgroundPosition: `${focalX}% ${focalY}%`,
+              transform: `scale(${imageScale})`,
+              transformOrigin: `${focalX}% ${focalY}%`,
+              transition: "transform .3s cubic-bezier(.2,.7,.3,1)",
+              filter: outOfStock ? "grayscale(.85) brightness(1.04)" : "none",
+            }}
+            onMouseEnter={(e) => {
+              if (!isDisabled) e.currentTarget.style.transform = `scale(${Math.max(imageScale, 1) * 1.04})`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = `scale(${imageScale})`;
+            }}
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ShoppingBag className="w-10 h-10 text-amber opacity-30" />
-          </div>
+          <div className="absolute inset-0 bg-[#ddd6c8]" />
         )}
 
-        {/* Badge cantidad */}
-        {quantity > 0 && (
-          <div className="absolute top-2 right-2 bg-brown text-cream rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md">
+        {/* Velo sin stock */}
+        {outOfStock && (
+          <div className="absolute inset-0" style={{ background: "rgba(244,238,226,.5)" }} />
+        )}
+
+        {/* Badge sin stock */}
+        {outOfStock && (
+          <span
+            className="absolute top-3 left-3 font-bold text-[11.5px] tracking-[.04em] px-3 py-1.5 rounded-full whitespace-nowrap"
+            style={{
+              background: "rgba(248,243,234,.78)",
+              backdropFilter: "blur(5px)",
+              WebkitBackdropFilter: "blur(5px)",
+              color: "#7C766A",
+              boxShadow: "0 3px 10px -5px rgba(0,0,0,.35)",
+            }}
+          >
+            Sin stock
+          </span>
+        )}
+
+        {/* Badge cantidad en carrito */}
+        {quantity > 0 && !outOfStock && (
+          <div
+            className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+            style={{ background: "#0E233C", color: "#F4EEE2", boxShadow: "0 2px 8px rgba(14,35,60,.4)" }}
+          >
             {quantity}
           </div>
         )}
 
         {/* Badge últimas unidades */}
         {slotSelected && remaining !== null && remaining <= 2 && remaining > 0 && (
-          <div className="absolute top-2 left-2 bg-amber text-white rounded-full px-2 py-0.5 text-xs font-semibold shadow">
+          <div
+            className="absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full"
+            style={{ background: "#C8851A", color: "#F4EEE2" }}
+          >
             Últimos {remaining}
           </div>
         )}
+      </div>
 
-        {/* Overlay sin stock */}
-        {outOfStock && (
-          <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
-            <span className="text-xs font-semibold text-muted bg-white/90 px-3 py-1 rounded-full">Sin stock</span>
-          </div>
+      {/* Texto */}
+      <div
+        className="pt-3 px-0.5"
+        style={{ opacity: outOfStock ? 0.5 : 1 }}
+      >
+        <div className="font-semibold text-[16.5px] text-navy leading-snug">{name}</div>
+        {weight && (
+          <div className="font-medium text-[12.5px] text-stone mt-0.5">{weight}</div>
         )}
-
+        <div className="font-bold text-[15.5px] mt-2" style={{ color: "#C8851A" }}>
+          {formatCurrency(price)}
+        </div>
       </div>
-
-      {/* Info debajo */}
-      <div className="p-3 pb-4">
-        <p className="font-serif font-bold text-brown text-sm leading-snug">{name}</p>
-        {weight && <p className="text-xs text-muted mt-0.5">{weight}</p>}
-        <p className="font-bold text-amber text-sm mt-1.5">{formatCurrency(price)}</p>
-      </div>
-    </button>
+    </div>
   );
 }

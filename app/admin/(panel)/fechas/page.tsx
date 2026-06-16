@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp, ImageIcon, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import FocalPicker from "@/components/FocalPicker";
+import ImageZoomModal from "@/components/ImageZoomModal";
 
 interface Slot {
   id: number;
@@ -16,6 +17,7 @@ interface Slot {
   imageUrl: string;
   imageFocalX: number;
   imageFocalY: number;
+  imageScale: number;
   orderCutoff: string | null;
   active: boolean;
   stocks: { id: number; productName: string; totalStock: number; reservedStock: number; productId: number; deliverySlotId: number }[];
@@ -142,16 +144,16 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, orderCutoff: slot.orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, imageScale: slot.imageScale, orderCutoff: slot.orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
 
-  async function updateImage(slot: Slot, imageUrl: string, focalX?: number, focalY?: number) {
+  async function updateImage(slot: Slot, imageUrl: string, focalX?: number, focalY?: number, imageScale?: number) {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl, imageFocalX: focalX ?? slot.imageFocalX, imageFocalY: focalY ?? slot.imageFocalY, orderCutoff: slot.orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl, imageFocalX: focalX ?? slot.imageFocalX, imageFocalY: focalY ?? slot.imageFocalY, imageScale: imageScale ?? slot.imageScale, orderCutoff: slot.orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
@@ -427,7 +429,7 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
   onSaveStock: (productId: number, deliverySlotId: number, key: string) => void;
   onChangeMode: (s: Slot, mode: "pickup"|"delivery"|"both") => void;
   onUpdateDetails: (s: Slot, pickupTime: string, location: string) => void;
-  onUpdateImage: (s: Slot, imageUrl: string, focalX?: number, focalY?: number) => void;
+  onUpdateImage: (s: Slot, imageUrl: string, focalX?: number, focalY?: number, imageScale?: number) => void;
   onUpdateCutoff: (s: Slot, orderCutoff: string | null) => void;
   muted?: boolean;
 }) {
@@ -450,7 +452,7 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <SlotImageTrigger slot={slot} images={images} onSave={(imageUrl, focalX, focalY) => onUpdateImage(slot, imageUrl, focalX, focalY)} />
+                <SlotImageTrigger slot={slot} images={images} onSave={(imageUrl, focalX, focalY, imageScale) => onUpdateImage(slot, imageUrl, focalX, focalY, imageScale)} />
                 <div className="relative group">
                   <button onClick={() => onToggle(slot)} className="p-2 text-amber hover:text-amber-light transition-colors">
                     {slot.active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
@@ -543,22 +545,38 @@ const HERO_IMAGE_FALLBACK = "/products/product-1779659787800.jpeg";
 function SlotImageTrigger({ slot, images, onSave }: {
   slot: Slot;
   images: string[];
-  onSave: (imageUrl: string, focalX: number, focalY: number) => void;
+  onSave: (imageUrl: string, focalX: number, focalY: number, imageScale: number) => void;
 }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(slot.imageUrl || HERO_IMAGE_FALLBACK);
   const [focalX, setFocalX] = useState(slot.imageFocalX);
   const [focalY, setFocalY] = useState(slot.imageFocalY);
+  const [scale, setScale] = useState(slot.imageScale ?? 1);
+  const [zoomSrc, setZoomSrc] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleImageUpload(file: File) {
+    setUploading(true);
+    setSelectedImage(URL.createObjectURL(file));
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (res.ok) { setSelectedImage(data.url); setFocalX(50); setFocalY(50); setScale(1); }
+    setUploading(false);
+  }
 
   function handleOpen() {
     setSelectedImage(slot.imageUrl || HERO_IMAGE_FALLBACK);
     setFocalX(slot.imageFocalX);
     setFocalY(slot.imageFocalY);
+    setScale(slot.imageScale ?? 1);
     setShowModal(true);
   }
 
   function handleSave() {
-    onSave(selectedImage, focalX, focalY);
+    onSave(selectedImage, focalX, focalY, scale);
     setShowModal(false);
   }
 
@@ -588,8 +606,10 @@ function SlotImageTrigger({ slot, images, onSave }: {
                 imageUrl={selectedImage}
                 focalX={focalX}
                 focalY={focalY}
+                scale={scale}
                 containerClass="h-72"
                 onChange={(x, y) => { setFocalX(x); setFocalY(y); }}
+                onScaleChange={setScale}
                 overlay={
                   <>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
@@ -607,25 +627,14 @@ function SlotImageTrigger({ slot, images, onSave }: {
               />
             </div>
 
-            {/* Image grid */}
-            <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Elegí una imagen</p>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {images.map((url) => (
-                <button key={url} onClick={() => { setSelectedImage(url); setFocalX(50); setFocalY(50); }}
-                  className={cn(
-                    "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
-                    selectedImage === url ? "border-amber shadow-sm" : "border-border hover:border-amber/50"
-                  )}
-                >
-                  <img src={url} alt="" className="w-full h-full object-cover" />
-                  {selectedImage === url && (
-                    <div className="absolute inset-0 bg-amber/20 flex items-center justify-center">
-                      <Check className="w-5 h-5 text-amber drop-shadow" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
+            {/* Upload */}
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+
+            <button type="button" onClick={() => fileInputRef.current?.click()}
+              className="w-full text-xs text-muted hover:text-brown transition-colors py-1 mb-3">
+              {uploading ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Subiendo...</span> : "Cambiar imagen"}
+            </button>
 
             <button onClick={handleSave} className="w-full btn-primary rounded-xl py-3 text-sm flex items-center justify-center gap-2">
               <Check className="w-4 h-4" /> Guardar
@@ -633,6 +642,8 @@ function SlotImageTrigger({ slot, images, onSave }: {
           </div>
         </div>
       )}
+
+      {zoomSrc && <ImageZoomModal src={zoomSrc} onClose={() => setZoomSrc(null)} />}
     </>
   );
 }
