@@ -143,7 +143,7 @@ export default function Home() {
               {selectedSlot?.dayLabel ?? "Cambiar fecha"}
             </button>
 
-            <h2 className="font-bold text-[30px] tracking-[-0.01em] text-navy m-0">
+            <h2 className="font-bold text-[30px] tracking-[-0.01em] text-navy" style={{ margin: "18px 0 22px" }}>
               Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>pan</em>
             </h2>
 
