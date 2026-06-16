@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
@@ -57,15 +57,13 @@ function deliveryDesc(slot: Slot) {
 export default function Home() {
   const [slots, setSlots]                     = useState<Slot[]>([]);
   const [selectedSlotId, setSelectedSlotId]   = useState<number | null>(null);
-  const [view, setView]                       = useState<"date" | "menu">("date");
+  const [view, setView]                       = useState<"home" | "slots" | "menu">("home");
   const [products, setProducts]               = useState<Product[]>([]);
   const [cart, setCart]                       = useState<CartMap>({});
   const [showModal, setShowModal]             = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loadingSlots, setLoadingSlots]       = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
-
-  const pedirRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     fetch("/api/delivery-slots")
@@ -95,7 +93,7 @@ export default function Home() {
   }
 
   function goHome() {
-    setView("date");
+    setView("home");
     setSelectedSlotId(null);
     setCart({});
   }
@@ -125,6 +123,126 @@ export default function Home() {
     window.location.href = `/confirmacion?order=${orderId}&status=pending`;
   }
 
+  /* ─── SLOTS VIEW ────────────────────────────────────────── */
+  if (view === "slots") {
+    return (
+      <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
+        <main className="w-full max-w-[430px] mx-auto px-6 py-10">
+          <button
+            onClick={goHome}
+            className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy mb-8"
+            style={{ opacity: 0.8, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 5l-7 7 7 7"/>
+            </svg>
+            Volver
+          </button>
+
+          <h2
+            className="font-bold text-[30px] tracking-[-0.01em] text-navy"
+            style={{ margin: "0 0 22px" }}
+          >
+            Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>día</em>
+          </h2>
+
+          <div className="flex flex-col gap-[14px]">
+            {loadingSlots ? (
+              [1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse flex items-center gap-4 rounded-[16px]"
+                  style={{ background: "#FBF7EF", border: "1px solid rgba(14,35,60,.08)", padding: "20px" }}
+                >
+                  <div className="w-[52px] h-[52px] rounded-[12px] bg-stone/20 flex-none" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 rounded bg-stone/20 w-1/3" />
+                    <div className="h-4 rounded bg-stone/10 w-2/3" />
+                    <div className="h-3 rounded bg-stone/10 w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : slots.length === 0 ? (
+              <div
+                className="text-center text-[15px]"
+                style={{ color: "#7C766A", fontFamily: serif, fontStyle: "italic", padding: "24px 0" }}
+              >
+                No hay fechas disponibles en este momento.
+              </div>
+            ) : (
+              slots.map((slot) => {
+                const weekday = new Date(slot.date + "T12:00:00")
+                  .toLocaleDateString("es-AR", { weekday: "long" })
+                  .toUpperCase();
+                const isDisabled = slot.disabled || !slot.id;
+
+                return (
+                  <button
+                    key={slot.id}
+                    onClick={() => !isDisabled && slot.id && selectSlot(slot.id)}
+                    disabled={isDisabled}
+                    className="flex items-center gap-4 text-left border-none w-full"
+                    style={{
+                      background: "#FBF7EF",
+                      border: "1px solid rgba(14,35,60,.08)",
+                      borderRadius: "16px",
+                      padding: "20px",
+                      boxShadow: "0 18px 30px -28px rgba(14,35,60,.45)",
+                      transition: ctaTransition,
+                      cursor: isDisabled ? "default" : "pointer",
+                      opacity: isDisabled ? 0.45 : 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (isDisabled) return;
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
+                      if (arrow) arrow.style.transform = "translateX(4px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "";
+                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
+                      if (arrow) arrow.style.transform = "";
+                    }}
+                  >
+                    <span
+                      className="flex-none flex items-center justify-center"
+                      style={{
+                        width: "52px",
+                        height: "52px",
+                        borderRadius: "12px",
+                        background: "#F4EEE2",
+                        border: "1px solid rgba(14,35,60,.07)",
+                      }}
+                    >
+                      <Image src="/isotipo-oscuro.png" alt="" width={36} height={36} className="object-contain" />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-bold uppercase tracking-[.18em]" style={{ fontSize: "10.5px", color: "#C8851A" }}>
+                        {weekday}
+                      </span>
+                      <span className="block mt-[3px]" style={{ fontFamily: serif, fontSize: "19px", color: "#0E233C" }}>
+                        {deliveryTitle(slot.deliveryMode)}
+                      </span>
+                      <span className="block mt-[3px] font-medium text-[12.5px] leading-[1.4]" style={{ color: "#7C766A" }}>
+                        {deliveryDesc(slot)}
+                      </span>
+                    </span>
+                    <span
+                      className="day-arrow flex-none font-sans text-[20px]"
+                      style={{ color: "#0E233C", opacity: 0.55, transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}
+                    >
+                      →
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   /* ─── MENU VIEW ─────────────────────────────────────────── */
   if (view === "menu") {
     return (
@@ -133,7 +251,7 @@ export default function Home() {
           <div className="space-y-[22px]">
             {/* Volver */}
             <button
-              onClick={goHome}
+              onClick={() => setView("slots")}
               className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy hover:text-amber transition-colors"
               style={{ opacity: 0.85 }}
             >
@@ -318,7 +436,7 @@ export default function Home() {
 
           {/* CTA */}
           <button
-            onClick={() => pedirRef.current?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => setView("slots")}
             className="inline-flex items-center gap-[11px] font-bold border-none cursor-pointer"
             style={{
               marginTop: "30px",
@@ -364,239 +482,6 @@ export default function Home() {
             Pan hecho con tiempo
           </div>
         </section>
-
-        {/* ── Separador ── */}
-        <div style={{ height: "36px" }} />
-
-        {/* ── El pan ── */}
-        <section style={{ padding: "8px 24px 56px" }}>
-          <div
-            style={{
-              borderRadius: "20px",
-              overflow: "hidden",
-              border: "1px solid rgba(14,35,60,.12)",
-              background: "#EFE7D7",
-              boxShadow: "0 30px 50px -38px rgba(14,35,60,.4)",
-            }}
-          >
-            {/* Foto del pan */}
-            <div
-              style={{
-                height: "300px",
-                backgroundImage: "url('/products/product-1779659787800.jpeg')",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-            <div style={{ padding: "30px 26px 32px", textAlign: "left" }}>
-              <p
-                className="font-semibold uppercase tracking-[.18em]"
-                style={{ fontSize: "10.5px", color: "#C8851A" }}
-              >
-                El pan
-              </p>
-              <h2
-                style={{
-                  fontFamily: serif,
-                  fontWeight: 400,
-                  fontSize: "28px",
-                  lineHeight: 1.12,
-                  letterSpacing: "-.01em",
-                  color: "#0E233C",
-                  margin: "12px 0 0",
-                }}
-              >
-                Tiempo, no atajos.
-              </h2>
-              <p
-                style={{
-                  fontFamily: serif,
-                  fontSize: "16px",
-                  lineHeight: 1.62,
-                  color: "rgba(14,35,60,.55)",
-                  margin: "14px 0 0",
-                }}
-              >
-                Masa madre viva, harinas seleccionadas y fermentación lenta. Sin aditivos ni apuro — solo el tiempo que el pan necesita para tener corteza, miga y sabor de verdad.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Elegí tu día ── */}
-        <section ref={pedirRef} id="pedir" style={{ padding: "4px 24px 56px" }}>
-          <div style={{ textAlign: "center", marginBottom: "26px" }}>
-            <p
-              className="font-semibold uppercase tracking-[.18em]"
-              style={{ fontSize: "10.5px", color: "#7C766A" }}
-            >
-              Cómo pedir
-            </p>
-            <h2
-              style={{
-                fontFamily: serif,
-                fontWeight: 400,
-                fontSize: "31px",
-                letterSpacing: "-.01em",
-                color: "#0E233C",
-                margin: "10px 0 0",
-              }}
-            >
-              Elegí tu día.
-            </h2>
-            <p
-              style={{
-                fontFamily: serif,
-                fontStyle: "italic",
-                fontSize: "15.5px",
-                color: "rgba(14,35,60,.55)",
-                margin: "8px 0 0",
-              }}
-            >
-              Hacé tu pedido online y elegí cómo lo recibís.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-[14px]">
-            {loadingSlots ? (
-              /* Skeletons */
-              [1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="animate-pulse flex items-center gap-4 rounded-[16px]"
-                  style={{ background: "#FBF7EF", border: "1px solid rgba(14,35,60,.08)", padding: "20px" }}
-                >
-                  <div className="w-[52px] h-[52px] rounded-[12px] bg-stone/20 flex-none" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 rounded bg-stone/20 w-1/3" />
-                    <div className="h-4 rounded bg-stone/10 w-2/3" />
-                    <div className="h-3 rounded bg-stone/10 w-1/2" />
-                  </div>
-                </div>
-              ))
-            ) : slots.length === 0 ? (
-              <div
-                className="text-center text-[15px]"
-                style={{ color: "#7C766A", fontFamily: serif, fontStyle: "italic", padding: "24px 0" }}
-              >
-                No hay fechas disponibles en este momento.
-              </div>
-            ) : (
-              slots.map((slot) => {
-                const weekday = new Date(slot.date + "T12:00:00")
-                  .toLocaleDateString("es-AR", { weekday: "long" })
-                  .toUpperCase();
-                const isDisabled = slot.disabled || !slot.id;
-
-                return (
-                  <button
-                    key={slot.id}
-                    onClick={() => !isDisabled && slot.id && selectSlot(slot.id)}
-                    disabled={isDisabled}
-                    className="flex items-center gap-4 text-left border-none w-full"
-                    style={{
-                      background: "#FBF7EF",
-                      border: "1px solid rgba(14,35,60,.08)",
-                      borderRadius: "16px",
-                      padding: "20px",
-                      boxShadow: "0 18px 30px -28px rgba(14,35,60,.45)",
-                      transition: ctaTransition,
-                      cursor: isDisabled ? "default" : "pointer",
-                      opacity: isDisabled ? 0.45 : 1,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (isDisabled) return;
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
-                      if (arrow) arrow.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "";
-                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
-                      if (arrow) arrow.style.transform = "";
-                    }}
-                  >
-                    {/* Ícono */}
-                    <span
-                      className="flex-none flex items-center justify-center"
-                      style={{
-                        width: "52px",
-                        height: "52px",
-                        borderRadius: "12px",
-                        background: "#F4EEE2",
-                        border: "1px solid rgba(14,35,60,.07)",
-                      }}
-                    >
-                      <Image src="/isotipo-oscuro.png" alt="" width={36} height={36} className="object-contain" />
-                    </span>
-
-                    {/* Texto */}
-                    <span className="flex-1 min-w-0">
-                      <span
-                        className="block font-bold uppercase tracking-[.18em]"
-                        style={{ fontSize: "10.5px", color: "#C8851A" }}
-                      >
-                        {weekday}
-                      </span>
-                      <span
-                        className="block mt-[3px]"
-                        style={{ fontFamily: serif, fontSize: "19px", color: "#0E233C" }}
-                      >
-                        {deliveryTitle(slot.deliveryMode)}
-                      </span>
-                      <span
-                        className="block mt-[3px] font-medium text-[12.5px] leading-[1.4]"
-                        style={{ color: "#7C766A" }}
-                      >
-                        {deliveryDesc(slot)}
-                      </span>
-                    </span>
-
-                    {/* Flecha */}
-                    <span
-                      className="day-arrow flex-none font-sans text-[20px]"
-                      style={{ color: "#0E233C", opacity: 0.55, transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}
-                    >
-                      →
-                    </span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </section>
-
-        {/* ── Footer ── */}
-        <footer
-          className="flex flex-col items-center text-center gap-[14px]"
-          style={{ padding: "40px 24px 38px", borderTop: "1px solid rgba(14,35,60,.12)" }}
-        >
-          <Image src="/isotipo-oscuro.png" alt="BROT 74" width={50} height={50} className="object-contain" />
-          <div>
-            <div className="font-semibold text-[15px] tracking-[.04em] text-navy">BROT 74</div>
-            <div
-              className="text-stone mt-[3px]"
-              style={{ fontFamily: serif, fontStyle: "italic", fontSize: "13.5px" }}
-            >
-              Micro-panadería artesanal · Masa madre
-            </div>
-          </div>
-          <a
-            href="https://instagram.com/brot.74"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-[13px] tracking-[.04em] no-underline transition-opacity"
-            style={{ color: "#C8851A", opacity: 0.9 }}
-          >
-            @brot.74
-          </a>
-          <div
-            className="font-sans text-[10.5px] uppercase tracking-[.1em]"
-            style={{ color: "rgba(14,35,60,.55)", opacity: 0.7 }}
-          >
-            Hecho con tiempo
-          </div>
-        </footer>
 
       </div>
     </div>
