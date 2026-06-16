@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { ChevronDown } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
-import DateSelector from "@/components/DateSelector";
 import OrderModal from "@/components/OrderModal";
-import InstagramIcon from "@/components/InstagramIcon";
 import { formatCurrency } from "@/lib/utils";
 
 interface Slot {
@@ -42,18 +39,33 @@ interface Product {
 
 type CartMap = Record<number, number>;
 
+const serif = "var(--font-newsreader, 'Newsreader', Georgia, serif)";
+const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
+
+function deliveryTitle(mode: Slot["deliveryMode"]) {
+  if (mode === "delivery") return "Delivery a domicilio";
+  if (mode === "both")     return "Retiro o delivery";
+  return "Retiro en el horno";
+}
+
+function deliveryDesc(slot: Slot) {
+  if (slot.deliveryMode === "delivery") return "Te lo llevamos hasta tu puerta.";
+  const parts = [slot.pickupTime, slot.location].filter(Boolean);
+  return parts.join(" · ") || "Pasás a buscar tu pan recién horneado.";
+}
+
 export default function Home() {
-  const [slots, setSlots]                   = useState<Slot[]>([]);
-  const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
-  const [view, setView]                     = useState<"date" | "menu">("date");
-  const [products, setProducts]             = useState<Product[]>([]);
-  const [cart, setCart]                     = useState<CartMap>({});
-  const [showModal, setShowModal]           = useState(false);
+  const [slots, setSlots]                     = useState<Slot[]>([]);
+  const [selectedSlotId, setSelectedSlotId]   = useState<number | null>(null);
+  const [view, setView]                       = useState<"date" | "menu">("date");
+  const [products, setProducts]               = useState<Product[]>([]);
+  const [cart, setCart]                       = useState<CartMap>({});
+  const [showModal, setShowModal]             = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [loadingSlots, setLoadingSlots]     = useState(true);
+  const [loadingSlots, setLoadingSlots]       = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
-  const orderingSectionRef = useRef<HTMLElement>(null);
+  const pedirRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     fetch("/api/delivery-slots")
@@ -74,10 +86,19 @@ export default function Home() {
     if (selectedSlotId) {
       fetchProducts(selectedSlotId);
       setCart({});
-    } else {
-      fetch("/api/products").then((r) => r.json()).then(setProducts);
     }
   }, [selectedSlotId, fetchProducts]);
+
+  function selectSlot(id: number) {
+    setSelectedSlotId(id);
+    setView("menu");
+  }
+
+  function goHome() {
+    setView("date");
+    setSelectedSlotId(null);
+    setCart({});
+  }
 
   function addToCart(productId: number) {
     setCart((prev) => ({ ...prev, [productId]: (prev[productId] ?? 0) + 1 }));
@@ -96,7 +117,7 @@ export default function Home() {
     .filter((p) => (cart[p.id] ?? 0) > 0)
     .map((p) => ({ id: p.id, name: p.name, price: p.price, quantity: cart[p.id] }));
 
-  const cartTotal   = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const cartTotal    = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);
 
   function handleOrderSuccess(orderId: number) {
@@ -104,218 +125,478 @@ export default function Home() {
     window.location.href = `/confirmacion?order=${orderId}&status=pending`;
   }
 
-  function scrollToOrdering() {
-    orderingSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  /* ─── MENU VIEW ─────────────────────────────────────────── */
+  if (view === "menu") {
+    return (
+      <div className="min-h-screen bg-cream">
+        <main className="w-full max-w-[430px] mx-auto px-4 py-8">
+          <div className="space-y-[22px]">
+            {/* Volver */}
+            <button
+              onClick={goHome}
+              className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy hover:text-amber transition-colors"
+              style={{ opacity: 0.85 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 5l-7 7 7 7"/>
+              </svg>
+              {selectedSlot?.dayLabel ?? "Cambiar fecha"}
+            </button>
+
+            <h2 className="font-bold text-[30px] tracking-[-0.01em] text-navy m-0">
+              Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>pan</em>
+            </h2>
+
+            {loadingProducts ? (
+              <div className="grid grid-cols-2 gap-[18px]">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-square rounded-[16px] bg-stone/20" />
+                    <div className="pt-3 space-y-2">
+                      <div className="h-4 rounded bg-stone/10" />
+                      <div className="h-3 rounded bg-stone/10 w-2/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-[18px]">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    {...product}
+                    quantity={cart[product.id] ?? 0}
+                    slotSelected={!!selectedSlotId}
+                    onClick={() => setSelectedProduct(product)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Cart bar */}
+        {cartItems.length > 0 && selectedSlotId && !selectedProduct && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 p-4" style={{ background: "linear-gradient(to top, #F4EEE2 60%, transparent)" }}>
+            <div className="max-w-[430px] mx-auto">
+              <button
+                onClick={() => setShowModal(true)}
+                className="w-full flex items-center gap-3 rounded-[16px] border-none"
+                style={{
+                  background: "#0E233C",
+                  color: "#F4EEE2",
+                  padding: "14px 18px",
+                  cursor: "pointer",
+                  boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
+                  transition: ctaTransition,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+              >
+                <span className="w-9 h-9 flex-none rounded-full flex items-center justify-center" style={{ border: "1px solid rgba(244,238,226,.38)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+                  </svg>
+                </span>
+                <span className="font-semibold text-[16px] whitespace-nowrap">
+                  {cartItems.reduce((s, i) => s + i.quantity, 0)} producto{cartItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
+                </span>
+                <span className="font-bold text-[18px] ml-auto whitespace-nowrap">{formatCurrency(cartTotal)}</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 6l6 6-6 6"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {selectedProduct && (
+          <ProductModal
+            product={selectedProduct}
+            quantity={cart[selectedProduct.id] ?? 0}
+            slotSelected={!!selectedSlotId}
+            cartCount={cartItems.reduce((s, i) => s + i.quantity, 0)}
+            cartTotal={cartTotal}
+            onAdd={() => addToCart(selectedProduct.id)}
+            onRemove={() => removeFromCart(selectedProduct.id)}
+            onClose={() => setSelectedProduct(null)}
+            onCheckout={() => { setSelectedProduct(null); setShowModal(true); }}
+          />
+        )}
+
+        {showModal && selectedSlotId && selectedSlot && (
+          <OrderModal
+            items={cartItems}
+            slotId={selectedSlotId}
+            deliveryMode={selectedSlot.deliveryMode}
+            slotLabel={selectedSlot.dayLabel}
+            onClose={() => setShowModal(false)}
+            onSuccess={handleOrderSuccess}
+          />
+        )}
+
+        {cartItems.length > 0 && <div className="h-24" />}
+      </div>
+    );
   }
 
+  /* ─── HOME VIEW ──────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
+      <div className="w-full max-w-[430px] mx-auto">
 
-      {/* ── Hero section ── */}
-      <section className="min-h-dvh flex flex-col items-center justify-center px-6 text-center bg-cream">
-        <div className="flex flex-col items-center gap-5">
-          <Image src="/logo.png" alt="BROT.74" width={110} height={110} className="object-contain" priority />
-          <div>
-            <p className="text-stone text-[15px] mt-2" style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}>
-              Pan artesanal de fermentación natural
+        {/* ── Hero (banda navy) ── */}
+        <section
+          className="flex flex-col items-center text-center"
+          style={{ background: "#0E233C", padding: "52px 32px 60px" }}
+        >
+          {/* Sello medallón */}
+          <div
+            style={{
+              position: "relative",
+              width: "212px",
+              height: "212px",
+              borderRadius: "50%",
+              background: "#F4EEE2",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingBottom: "18px",
+              filter: "drop-shadow(0 20px 36px rgba(0,0,0,.35))",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: "10px",
+                borderRadius: "50%",
+                border: "1px solid rgba(14,35,60,.16)",
+                pointerEvents: "none",
+              }}
+            />
+            <Image
+              src="/ramillete-ink-b.png"
+              alt="Ramillete BROT 74"
+              width={129}
+              height={129}
+              className="object-contain"
+              style={{ height: "129px", width: "auto" }}
+              priority
+            />
+            <div style={{ display: "inline-flex", alignItems: "baseline", marginTop: "3px", lineHeight: 1, fontSize: "21px" }}>
+              <span style={{ fontWeight: 500, letterSpacing: "0.04em", color: "#0E233C" }}>BROT</span>
+              <span style={{ fontWeight: 700, letterSpacing: "0.04em", marginLeft: "3px", color: "#E49C24" }}>74</span>
+            </div>
+          </div>
+
+          {/* Kicker */}
+          <p
+            className="font-semibold uppercase tracking-[.3em]"
+            style={{ fontSize: "11px", color: "rgba(244,238,226,.62)", marginTop: "30px" }}
+          >
+            Micro-panadería de masa madre
+          </p>
+
+          {/* Título */}
+          <h1
+            style={{
+              fontFamily: serif,
+              fontWeight: 400,
+              fontSize: "41px",
+              lineHeight: 1.08,
+              letterSpacing: "-.015em",
+              color: "#F4EEE2",
+              margin: "16px 0 0",
+              maxWidth: "13ch",
+            }}
+          >
+            Pan de fermentación natural,{" "}
+            <em style={{ fontStyle: "italic", color: "#EBB155" }}>como debe ser.</em>
+          </h1>
+
+          {/* Subtítulo */}
+          <p
+            style={{
+              fontFamily: serif,
+              fontWeight: 400,
+              fontSize: "17px",
+              fontStyle: "italic",
+              lineHeight: 1.5,
+              color: "rgba(244,238,226,.5)",
+              margin: "18px 0 0",
+              maxWidth: "30ch",
+            }}
+          >
+            Harina, agua, sal y tiempo. Horneado por encargo, siempre fresco.
+          </p>
+
+          {/* CTA */}
+          <button
+            onClick={() => pedirRef.current?.scrollIntoView({ behavior: "smooth" })}
+            className="inline-flex items-center gap-[11px] font-bold border-none cursor-pointer"
+            style={{
+              marginTop: "30px",
+              fontSize: "15.5px",
+              letterSpacing: ".02em",
+              color: "#0E233C",
+              background: "#E49C24",
+              padding: "16px 28px",
+              borderRadius: "12px",
+              boxShadow: "0 16px 32px -14px rgba(228,156,36,.6)",
+              transition: ctaTransition,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              const arrow = e.currentTarget.querySelector<HTMLElement>(".arrow");
+              if (arrow) arrow.style.transform = "translateX(4px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "";
+              const arrow = e.currentTarget.querySelector<HTMLElement>(".arrow");
+              if (arrow) arrow.style.transform = "";
+            }}
+          >
+            Pedí tu BROT{" "}
+            <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>→</span>
+          </button>
+        </section>
+
+        {/* ── Separador ── */}
+        <div style={{ height: "36px" }} />
+
+        {/* ── El pan ── */}
+        <section style={{ padding: "8px 24px 56px" }}>
+          <div
+            style={{
+              borderRadius: "20px",
+              overflow: "hidden",
+              border: "1px solid rgba(14,35,60,.12)",
+              background: "#EFE7D7",
+              boxShadow: "0 30px 50px -38px rgba(14,35,60,.4)",
+            }}
+          >
+            {/* Foto del pan */}
+            <div
+              style={{
+                height: "300px",
+                backgroundImage: "url('/products/product-1779659787800.jpeg')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+            <div style={{ padding: "30px 26px 32px", textAlign: "left" }}>
+              <p
+                className="font-semibold uppercase tracking-[.18em]"
+                style={{ fontSize: "10.5px", color: "#C8851A" }}
+              >
+                El pan
+              </p>
+              <h2
+                style={{
+                  fontFamily: serif,
+                  fontWeight: 400,
+                  fontSize: "28px",
+                  lineHeight: 1.12,
+                  letterSpacing: "-.01em",
+                  color: "#0E233C",
+                  margin: "12px 0 0",
+                }}
+              >
+                Tiempo, no atajos.
+              </h2>
+              <p
+                style={{
+                  fontFamily: serif,
+                  fontSize: "16px",
+                  lineHeight: 1.62,
+                  color: "rgba(14,35,60,.55)",
+                  margin: "14px 0 0",
+                }}
+              >
+                Masa madre viva, harinas seleccionadas y fermentación lenta. Sin aditivos ni apuro — solo el tiempo que el pan necesita para tener corteza, miga y sabor de verdad.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Elegí tu día ── */}
+        <section ref={pedirRef} id="pedir" style={{ padding: "4px 24px 56px" }}>
+          <div style={{ textAlign: "center", marginBottom: "26px" }}>
+            <p
+              className="font-semibold uppercase tracking-[.18em]"
+              style={{ fontSize: "10.5px", color: "#7C766A" }}
+            >
+              Cómo pedir
             </p>
+            <h2
+              style={{
+                fontFamily: serif,
+                fontWeight: 400,
+                fontSize: "31px",
+                letterSpacing: "-.01em",
+                color: "#0E233C",
+                margin: "10px 0 0",
+              }}
+            >
+              Elegí tu día.
+            </h2>
+            <p
+              style={{
+                fontFamily: serif,
+                fontStyle: "italic",
+                fontSize: "15.5px",
+                color: "rgba(14,35,60,.55)",
+                margin: "8px 0 0",
+              }}
+            >
+              Hacé tu pedido online y elegí cómo lo recibís.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-[14px]">
+            {loadingSlots ? (
+              /* Skeletons */
+              [1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse flex items-center gap-4 rounded-[16px]"
+                  style={{ background: "#FBF7EF", border: "1px solid rgba(14,35,60,.08)", padding: "20px" }}
+                >
+                  <div className="w-[52px] h-[52px] rounded-[12px] bg-stone/20 flex-none" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 rounded bg-stone/20 w-1/3" />
+                    <div className="h-4 rounded bg-stone/10 w-2/3" />
+                    <div className="h-3 rounded bg-stone/10 w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : slots.length === 0 ? (
+              <div
+                className="text-center text-[15px]"
+                style={{ color: "#7C766A", fontFamily: serif, fontStyle: "italic", padding: "24px 0" }}
+              >
+                No hay fechas disponibles en este momento.
+              </div>
+            ) : (
+              slots.map((slot) => {
+                const weekday = new Date(slot.date + "T12:00:00")
+                  .toLocaleDateString("es-AR", { weekday: "long" })
+                  .toUpperCase();
+                const isDisabled = slot.disabled || !slot.id;
+
+                return (
+                  <button
+                    key={slot.id}
+                    onClick={() => !isDisabled && slot.id && selectSlot(slot.id)}
+                    disabled={isDisabled}
+                    className="flex items-center gap-4 text-left border-none w-full"
+                    style={{
+                      background: "#FBF7EF",
+                      border: "1px solid rgba(14,35,60,.08)",
+                      borderRadius: "16px",
+                      padding: "20px",
+                      boxShadow: "0 18px 30px -28px rgba(14,35,60,.45)",
+                      transition: ctaTransition,
+                      cursor: isDisabled ? "default" : "pointer",
+                      opacity: isDisabled ? 0.45 : 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (isDisabled) return;
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
+                      if (arrow) arrow.style.transform = "translateX(4px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "";
+                      const arrow = e.currentTarget.querySelector<HTMLElement>(".day-arrow");
+                      if (arrow) arrow.style.transform = "";
+                    }}
+                  >
+                    {/* Ícono */}
+                    <span
+                      className="flex-none flex items-center justify-center"
+                      style={{
+                        width: "52px",
+                        height: "52px",
+                        borderRadius: "12px",
+                        background: "#F4EEE2",
+                        border: "1px solid rgba(14,35,60,.07)",
+                      }}
+                    >
+                      <Image src="/isotipo-oscuro.png" alt="" width={36} height={36} className="object-contain" />
+                    </span>
+
+                    {/* Texto */}
+                    <span className="flex-1 min-w-0">
+                      <span
+                        className="block font-bold uppercase tracking-[.18em]"
+                        style={{ fontSize: "10.5px", color: "#C8851A" }}
+                      >
+                        {weekday}
+                      </span>
+                      <span
+                        className="block mt-[3px]"
+                        style={{ fontFamily: serif, fontSize: "19px", color: "#0E233C" }}
+                      >
+                        {deliveryTitle(slot.deliveryMode)}
+                      </span>
+                      <span
+                        className="block mt-[3px] font-medium text-[12.5px] leading-[1.4]"
+                        style={{ color: "#7C766A" }}
+                      >
+                        {deliveryDesc(slot)}
+                      </span>
+                    </span>
+
+                    {/* Flecha */}
+                    <span
+                      className="day-arrow flex-none font-sans text-[20px]"
+                      style={{ color: "#0E233C", opacity: 0.55, transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}
+                    >
+                      →
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </section>
+
+        {/* ── Footer ── */}
+        <footer
+          className="flex flex-col items-center text-center gap-[14px]"
+          style={{ padding: "40px 24px 38px", borderTop: "1px solid rgba(14,35,60,.12)" }}
+        >
+          <Image src="/isotipo-oscuro.png" alt="BROT 74" width={50} height={50} className="object-contain" />
+          <div>
+            <div className="font-semibold text-[15px] tracking-[.04em] text-navy">BROT 74</div>
+            <div
+              className="text-stone mt-[3px]"
+              style={{ fontFamily: serif, fontStyle: "italic", fontSize: "13.5px" }}
+            >
+              Micro-panadería artesanal · Masa madre
+            </div>
           </div>
           <a
             href="https://instagram.com/brot.74"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-stone hover:text-amber transition-colors"
+            className="font-semibold text-[13px] tracking-[.04em] no-underline transition-opacity"
+            style={{ color: "#C8851A", opacity: 0.9 }}
           >
-            <InstagramIcon className="w-4 h-4" />
             @brot.74
           </a>
-        </div>
-
-        <button
-          onClick={scrollToOrdering}
-          className="absolute bottom-8 flex flex-col items-center gap-1 text-amber hover:text-navy transition-colors"
-          style={{ animation: "bounce 1s infinite" }}
-        >
-          <span className="text-xs font-bold tracking-widest uppercase">Pedidos</span>
-          <ChevronDown className="w-5 h-5" />
-        </button>
-      </section>
-
-      {/* ── Ordering section ── */}
-      <section ref={orderingSectionRef} className="min-h-dvh bg-cream">
-        <main className="w-full max-w-[430px] mx-auto px-4 py-8">
-
-          {view === "date" ? (
-            /* ── Vista: selección de fecha ── */
-            <div className="space-y-6">
-              <header className="text-center pt-1">
-                <h2
-                  className="font-bold text-[37px] leading-[1.05] tracking-[-0.01em] text-navy m-0"
-                >
-                  Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
-                </h2>
-                <p
-                  className="text-[15.5px] leading-[1.45] text-stone mt-3 mx-auto"
-                  style={{
-                    fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)",
-                    fontStyle: "italic",
-                    maxWidth: "26ch",
-                  }}
-                >
-                  Seleccioná el día de entrega para ver el menú disponible
-                </p>
-              </header>
-
-              {loadingSlots ? (
-                <div
-                  className="rounded-[22px] overflow-hidden animate-pulse"
-                  style={{ background: "#FBF7EF", border: "1px solid rgba(14,35,60,.10)" }}
-                >
-                  <div className="h-[290px] bg-stone/20" />
-                  <div className="p-6 space-y-4">
-                    <div className="h-10 rounded-[12px] bg-stone/10" />
-                    <div className="h-10 rounded-[12px] bg-stone/10" />
-                    <div className="h-14 rounded-[14px] bg-stone/20" />
-                  </div>
-                </div>
-              ) : (
-                <DateSelector
-                  slots={slots}
-                  selectedId={selectedSlotId}
-                  onChange={(id) => {
-                    setSelectedSlotId(id);
-                    setView("menu");
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            /* ── Vista: menú del día ── */
-            <div className="space-y-[22px]">
-              {/* Volver */}
-              <button
-                onClick={() => { setView("date"); setSelectedSlotId(null); setCart({}); }}
-                className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy hover:text-amber transition-colors"
-                style={{ opacity: 0.85 }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 5l-7 7 7 7"/>
-                </svg>
-                {selectedSlot?.dayLabel ?? "Cambiar fecha"}
-              </button>
-
-              {/* Título */}
-              <h2
-                className="font-bold text-[30px] tracking-[-0.01em] text-navy m-0"
-              >
-                Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>pan</em>
-              </h2>
-
-              {/* Grilla de productos */}
-              {loadingProducts ? (
-                <div className="grid grid-cols-2 gap-[18px]">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="aspect-square rounded-[16px] bg-stone/20" />
-                      <div className="pt-3 space-y-2">
-                        <div className="h-4 rounded bg-stone/10" />
-                        <div className="h-3 rounded bg-stone/10 w-2/3" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-[18px]">
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      {...product}
-                      quantity={cart[product.id] ?? 0}
-                      slotSelected={!!selectedSlotId}
-                      onClick={() => setSelectedProduct(product)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </main>
-
-        <footer className="py-6 mt-8">
-          <div className="max-w-[430px] mx-auto px-4 text-center">
-            <p className="text-[13px] text-stone" style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}>
-              Pan artesanal de fermentación natural
-            </p>
+          <div
+            className="font-sans text-[10.5px] uppercase tracking-[.1em]"
+            style={{ color: "rgba(14,35,60,.55)", opacity: 0.7 }}
+          >
+            Hecho con tiempo
           </div>
         </footer>
-      </section>
 
-      {/* ── Barra de carrito fija ── */}
-      {cartItems.length > 0 && selectedSlotId && !selectedProduct && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4" style={{ background: "linear-gradient(to top, #F4EEE2 60%, transparent)" }}>
-          <div className="max-w-[430px] mx-auto">
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full flex items-center gap-3 rounded-[16px] border-none"
-              style={{
-                background: "#0E233C",
-                color: "#F4EEE2",
-                padding: "14px 18px",
-                cursor: "pointer",
-                boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
-                transition: "transform .18s cubic-bezier(.2,.7,.3,1)",
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-            >
-              <span
-                className="w-9 h-9 flex-none rounded-full flex items-center justify-center"
-                style={{ border: "1px solid rgba(244,238,226,.38)" }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
-                </svg>
-              </span>
-              <span className="font-semibold text-[16px] whitespace-nowrap">
-                {cartItems.reduce((s, i) => s + i.quantity, 0)} producto{cartItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
-              </span>
-              <span className="font-bold text-[18px] ml-auto whitespace-nowrap">
-                {formatCurrency(cartTotal)}
-              </span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 6l6 6-6 6"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          quantity={cart[selectedProduct.id] ?? 0}
-          slotSelected={!!selectedSlotId}
-          cartCount={cartItems.reduce((s, i) => s + i.quantity, 0)}
-          cartTotal={cartTotal}
-          onAdd={() => addToCart(selectedProduct.id)}
-          onRemove={() => removeFromCart(selectedProduct.id)}
-          onClose={() => setSelectedProduct(null)}
-          onCheckout={() => { setSelectedProduct(null); setShowModal(true); }}
-        />
-      )}
-
-      {showModal && selectedSlotId && selectedSlot && (
-        <OrderModal
-          items={cartItems}
-          slotId={selectedSlotId}
-          deliveryMode={selectedSlot.deliveryMode}
-          slotLabel={selectedSlot.dayLabel}
-          onClose={() => setShowModal(false)}
-          onSuccess={handleOrderSuccess}
-        />
-      )}
-
-      {cartItems.length > 0 && <div className="h-24" />}
+      </div>
     </div>
   );
 }
