@@ -161,7 +161,7 @@ export default function Home() {
   if (view === "slots") {
     return (
       <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
-        <main className="w-full max-w-[430px] mx-auto px-6 py-10">
+        <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 py-10">
           {/* Título */}
           <header className="mb-5 text-center">
             <h2 className="font-bold text-[37px] leading-[1.05] tracking-[-0.01em] text-navy m-0">
@@ -186,9 +186,9 @@ export default function Home() {
   if (view === "menu") {
     return (
       <div className="min-h-screen bg-cream">
-        <main className="w-full max-w-[430px] mx-auto px-4 py-8">
-          <div className="space-y-[22px]">
-            {/* Volver */}
+        <main className="w-full max-w-[430px] md:max-w-none lg:max-w-[1120px] mx-auto px-4 py-8 md:px-10 md:pt-9 md:pb-14 lg:px-12 lg:pt-12 lg:pb-[72px]">
+          {/* Cabecera: columna en mobile, fila en tablet+ */}
+          <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-3 md:gap-6 mb-[22px] md:mb-[28px]">
             <button
               onClick={() => setView("slots")}
               className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy hover:text-amber transition-colors"
@@ -200,42 +200,42 @@ export default function Home() {
               {selectedSlot?.dayLabel ?? "Cambiar fecha"}
             </button>
 
-            <h2 className="font-bold text-[30px] tracking-[-0.01em] text-navy" style={{ margin: "18px 0 22px" }}>
+            <h2 className="font-bold text-[30px] tracking-[-0.01em] text-navy m-0">
               Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
             </h2>
-
-            {loadingProducts ? (
-              <div className="grid grid-cols-2 gap-[18px]">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="aspect-square rounded-[16px] bg-stone/20" />
-                    <div className="pt-3 space-y-2">
-                      <div className="h-4 rounded bg-stone/10" />
-                      <div className="h-3 rounded bg-stone/10 w-2/3" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-[18px]">
-                {products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    {...product}
-                    quantity={cart[product.id] ?? 0}
-                    slotSelected={!!selectedSlotId}
-                    onClick={() => setSelectedProduct(product)}
-                  />
-                ))}
-              </div>
-            )}
           </div>
+
+          {loadingProducts ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[18px] md:gap-[22px] lg:gap-[26px]">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-square rounded-[16px] bg-stone/20" />
+                  <div className="pt-3 space-y-2">
+                    <div className="h-4 rounded bg-stone/10" />
+                    <div className="h-3 rounded bg-stone/10 w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[18px] md:gap-[22px] lg:gap-[26px]">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  {...product}
+                  quantity={cart[product.id] ?? 0}
+                  slotSelected={!!selectedSlotId}
+                  onClick={() => setSelectedProduct(product)}
+                />
+              ))}
+            </div>
+          )}
         </main>
 
         {/* Cart bar */}
         {cartItems.length > 0 && selectedSlotId && !selectedProduct && (
           <div className="fixed bottom-0 left-0 right-0 z-40 p-4" style={{ background: "linear-gradient(to top, #F4EEE2 60%, transparent)" }}>
-            <div className="max-w-[430px] mx-auto">
+            <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto">
               <button
                 onClick={() => setShowModal(true)}
                 className="w-full flex items-center gap-3 rounded-[16px] border-none"
@@ -299,8 +299,7 @@ export default function Home() {
 
   /* ─── HOME VIEW ──────────────────────────────────────────── */
   return (
-    <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
-      <div className="w-full max-w-[430px] mx-auto">
+    <div className="min-h-screen" style={{ background: "#0E233C" }}>
 
         {/* ── Hero (banda navy) ── */}
         <section
@@ -309,6 +308,7 @@ export default function Home() {
         >
           {/* Sello medallón */}
           <div
+            className="brot-hero-seal"
             style={{
               position: "relative",
               width: "212px",
@@ -350,7 +350,7 @@ export default function Home() {
 
           {/* Kicker */}
           <p
-            className="font-semibold uppercase tracking-[.3em]"
+            className="brot-hero-kicker font-semibold uppercase tracking-[.3em]"
             style={{ fontSize: "11px", color: "rgba(244,238,226,.62)", marginTop: "30px" }}
           >
             Micro-panadería de masa madre
@@ -358,6 +358,7 @@ export default function Home() {
 
           {/* Título */}
           <h1
+            className="brot-hero-title"
             style={{
               fontFamily: serif,
               fontWeight: 400,
@@ -376,7 +377,7 @@ export default function Home() {
           {/* CTA */}
           <button
             onClick={() => setView("slots")}
-            className="inline-flex items-center gap-[11px] font-bold border-none cursor-pointer"
+            className="brot-hero-cta inline-flex items-center gap-[11px] font-bold border-none cursor-pointer"
             style={{
               marginTop: "30px",
               fontSize: "15.5px",
@@ -390,17 +391,17 @@ export default function Home() {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-2px)";
-              const arrow = e.currentTarget.querySelector<HTMLElement>(".arrow");
+              const arrow = e.currentTarget.querySelector(".arrow") as HTMLElement | null;
               if (arrow) arrow.style.transform = "translateX(4px)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "";
-              const arrow = e.currentTarget.querySelector<HTMLElement>(".arrow");
+              const arrow = e.currentTarget.querySelector(".arrow") as HTMLElement | null;
               if (arrow) arrow.style.transform = "";
             }}
           >
             Pedí tu BROT{" "}
-            <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>→</span>
+            <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>{"→"}</span>
           </button>
 
           {/* Tagline (anclado al pie del hero) */}
@@ -422,7 +423,6 @@ export default function Home() {
           </div>
         </section>
 
-      </div>
     </div>
   );
 }

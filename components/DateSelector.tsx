@@ -102,7 +102,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
   }
 
   return (
-    <div className="space-y-6 w-full max-w-[430px] mx-auto">
+    <div className="space-y-6 w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto">
       {visibleSlots.map((slot, i) => {
         const date = new Date(slot.date);
         const weekday = date.toLocaleDateString("es-AR", { weekday: "long" }).toUpperCase();
@@ -117,7 +117,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
         return (
           <article
             key={slot.id ?? `slot-${i}`}
-            className="rounded-[22px] overflow-hidden"
+            className="brot-card-article rounded-[22px] overflow-hidden"
             style={{
               background: "#FBF7EF",
               border: "1px solid rgba(14,35,60,.10)",
@@ -125,7 +125,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             }}
           >
             {/* ── Media: foto + fecha + badge ── */}
-            <div className="relative h-[290px]">
+            <div className="brot-card-media relative h-[290px]">
               <Image
                 src={slot.imageUrl || FALLBACK_IMAGE}
                 alt="Pan artesanal"
@@ -133,7 +133,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
                 style={slot.imageScale < 1
                   ? { objectFit: "contain" }
                   : { objectFit: "cover", objectPosition: `${slot.imageFocalX}% ${slot.imageFocalY}%`, transform: `scale(${slot.imageScale})`, transformOrigin: `${slot.imageFocalX}% ${slot.imageFocalY}%` }}
-                sizes="430px"
+                sizes="(min-width: 900px) 344px, 430px"
                 priority={i === 0}
               />
 
@@ -182,7 +182,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
             </div>
 
             {/* ── Cuerpo ── */}
-            <div className="px-6 pb-6 pt-2">
+            <div className="brot-card-body px-6 pb-6 pt-2">
               {slot.pickupTime && (
                 <InfoRow icon={<ClockIcon />} label="Horario de retiro" value={slot.pickupTime} />
               )}

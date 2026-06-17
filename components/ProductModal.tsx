@@ -83,7 +83,7 @@ export default function ProductModal({
 
       {/* Modal */}
       <div
-        className="relative w-full overflow-hidden"
+        className="brot-modal-inner relative w-full overflow-hidden"
         style={{
           maxWidth: "374px",
           background: "#FBF7EF",
@@ -117,20 +117,20 @@ export default function ProductModal({
 
         {/* Foto */}
         {product.imageUrl && (
-          <div className="relative w-full overflow-hidden" style={{ height: "234px" }}>
+          <div className="brot-modal-photo relative w-full overflow-hidden" style={{ height: "234px" }}>
             <Image
               src={product.imageUrl}
               alt={product.name}
               fill
               className="object-cover"
               style={{ objectPosition: `${product.focalX}% ${product.focalY}%` }}
-              sizes="374px"
+              sizes="(min-width: 900px) 350px, 374px"
             />
           </div>
         )}
 
         {/* Cuerpo */}
-        <div className="px-6 pb-6 pt-[22px]">
+        <div className="brot-modal-body px-6 pb-6 pt-[22px]">
           {/* Nombre + precio */}
           <div className="flex items-baseline justify-between gap-[14px]">
             <h3 className="font-bold text-[26px] tracking-[-0.01em] text-navy m-0" style={{ lineHeight: 1.1 }}>
