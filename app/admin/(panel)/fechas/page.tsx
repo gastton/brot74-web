@@ -41,7 +41,7 @@ export default function FechasPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
-  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", pickupTime: "8:00 - 17:00", location: "", orderCutoff: "", active: true });
+  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
 
   // Default generate month: next month
@@ -105,7 +105,7 @@ export default function FechasPage() {
     await fetchAll();
     setShowForm(false);
     setSaving(false);
-    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", pickupTime: "8:00 - 17:00", location: "", orderCutoff: "", active: true });
+    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
   }
 
   async function handleGenerate() {
