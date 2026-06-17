@@ -68,7 +68,7 @@ function NotaPrePedido() {
           Cómo funciona
         </p>
         <p className="font-medium text-[13.5px] leading-[1.5] mt-[3px] m-0" style={{ color: "#0E233C" }}>
-          Trabajamos por <strong>pre-pedido</strong>: elegís el día, encargás tu BROT y lo retirás fresco esa misma fecha.
+          Trabajamos por <strong>pre-pedido</strong>: elegís el día, encargás tu BROT y lo retirás.
         </p>
       </div>
       <button
