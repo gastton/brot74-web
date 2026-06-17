@@ -130,12 +130,9 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
                 src={slot.imageUrl || FALLBACK_IMAGE}
                 alt="Pan artesanal"
                 fill
-                className="object-cover"
-                style={{
-                  objectPosition: `${slot.imageFocalX}% ${slot.imageFocalY}%`,
-                  transform: `scale(${slot.imageScale})`,
-                  transformOrigin: `${slot.imageFocalX}% ${slot.imageFocalY}%`,
-                }}
+                style={slot.imageScale < 1
+                  ? { objectFit: "contain" }
+                  : { objectFit: "cover", objectPosition: `${slot.imageFocalX}% ${slot.imageFocalY}%`, transform: `scale(${slot.imageScale})`, transformOrigin: `${slot.imageFocalX}% ${slot.imageFocalY}%` }}
                 sizes="430px"
                 priority={i === 0}
               />
