@@ -26,7 +26,7 @@ function ConfirmacionContent() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-10 bg-cream">
       <div
-        className="w-full text-center"
+        className="brot-ok-card w-full text-center"
         style={{
           maxWidth: "420px",
           background: "#fff",

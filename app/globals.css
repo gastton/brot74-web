@@ -100,3 +100,139 @@ textarea.brot-input {
   resize: none;
   line-height: 1.5;
 }
+
+/* ═══════════════════════════════════════════
+   v2 · Responsive (mobile-first)
+   Breakpoints: 768px tablet · 900px modales · 1024px desktop
+   ═══════════════════════════════════════════ */
+
+/* ── Hero desktop scaling ── */
+@media (min-width: 1024px) {
+  .brot-hero-seal {
+    width:  clamp(200px, 16vw, 240px) !important;
+    height: clamp(200px, 16vw, 240px) !important;
+  }
+  .brot-hero-title {
+    font-size: clamp(46px, 4.6vw, 66px) !important;
+  }
+  .brot-hero-kicker {
+    margin-top: 40px !important;
+  }
+  .brot-hero-cta {
+    font-size: 16.5px !important;
+    padding: 18px 32px !important;
+    margin-top: 38px !important;
+  }
+}
+
+/* ── DateSelector: horizontal card at 900px+ ── */
+@media (min-width: 900px) {
+  .brot-card-article {
+    display: flex;
+  }
+  .brot-card-media {
+    flex: 0 0 44%;
+    height: auto !important;
+    min-height: 440px;
+  }
+  .brot-card-body {
+    flex: 1;
+    padding: 30px 36px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .brot-card-body .brot-card-rows {
+    padding-top: 0;
+  }
+  .brot-card-body .brot-card-cta {
+    margin-top: 24px !important;
+  }
+}
+
+/* ── ProductModal: horizontal at 900px+ ── */
+@media (min-width: 900px) {
+  .brot-modal-inner {
+    display: flex !important;
+    flex-direction: row !important;
+    max-width: 760px !important;
+    max-height: 88vh !important;
+    overflow: hidden !important;
+  }
+  .brot-modal-photo {
+    flex: 0 0 46%;
+    height: auto !important;
+    min-height: 420px;
+    align-self: stretch;
+  }
+  .brot-modal-body {
+    flex: 1;
+    padding: 40px !important;
+    overflow-y: auto;
+  }
+}
+
+/* ── OrderModal checkout (form step): two columns at 900px+ ── */
+@media (min-width: 900px) {
+  .brot-co-modal {
+    max-width: 720px !important;
+  }
+  .brot-co-body {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+  }
+  .brot-co-body > * {
+    margin-top: 0 !important;
+  }
+  .brot-co-summary {
+    position: sticky;
+    top: 0;
+  }
+  .brot-co-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .brot-co-form > * {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* ── OrderModal payment step: two columns at 900px+ ── */
+@media (min-width: 900px) {
+  .brot-cf-body {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    grid-template-areas: "tot data" "cta data";
+    align-content: start;
+  }
+  .brot-cf-body > * {
+    margin-top: 0 !important;
+  }
+  .brot-cf-tot {
+    grid-area: tot;
+    text-align: left !important;
+  }
+  .brot-cf-tot-amount {
+    font-size: 56px !important;
+  }
+  .brot-cf-data {
+    grid-area: data;
+  }
+  .brot-cf-cta {
+    grid-area: cta;
+    align-self: start;
+  }
+}
+
+/* ── Confirmacion page: desktop card ── */
+@media (min-width: 1024px) {
+  .brot-ok-card {
+    max-width: 480px !important;
+    padding: 54px 48px 44px !important;
+  }
+}

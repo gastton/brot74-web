@@ -185,7 +185,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
 
       {/* Modal */}
       <div
-        className="relative w-full overflow-y-auto"
+        className="brot-co-modal relative w-full overflow-y-auto"
         style={{ ...MODAL_STYLE, maxWidth: "392px", maxHeight: "90vh" }}
       >
         {/* Header */}
@@ -216,18 +216,18 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
 
         {/* ── Pantalla de pago (step = payment) ── */}
         {step === "payment" && orderId ? (
-          <div className="px-[26px] py-[24px] space-y-[22px]">
+          <div className="brot-cf-body px-[26px] py-[24px] space-y-[22px]">
             {/* Total */}
-            <div className="text-center">
+            <div className="brot-cf-tot text-center">
               <div className="font-semibold text-[14.5px] text-stone">Total a transferir</div>
-              <div className="font-bold leading-none mt-[6px]" style={{ fontSize: "46px", letterSpacing: "-.02em", color: "#C8851A" }}>
+              <div className="brot-cf-tot-amount font-bold leading-none mt-[6px]" style={{ fontSize: "46px", letterSpacing: "-.02em", color: "#C8851A" }}>
                 {formatCurrency(total)}
               </div>
             </div>
 
             {/* Datos bancarios */}
             <div
-              className="overflow-hidden"
+              className="brot-cf-data overflow-hidden"
               style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)" }}
             >
               {TITULAR && (
@@ -272,7 +272,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setTimeout(() => onSuccess(orderId), 500)}
-              className="w-full font-bold text-[16.5px] tracking-[.01em] py-[17px] rounded-[14px] flex items-center justify-center gap-[11px] no-underline"
+              className="brot-cf-cta w-full font-bold text-[16.5px] tracking-[.01em] py-[17px] rounded-[14px] flex items-center justify-center gap-[11px] no-underline"
               style={{
                 background: "#0E233C",
                 color: "#F4EEE2",
@@ -288,122 +288,126 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
         ) : (
 
         /* ── Formulario (step = form) ── */
-        <form onSubmit={handleSubmit} className="px-[26px] py-[22px] space-y-[18px]">
-          {/* Resumen */}
-          <div
-            className="overflow-hidden"
-            style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)", padding: "18px 20px" }}
-          >
-            {items.map((item) => (
-              <div key={item.id} className="flex items-baseline justify-between gap-3 pb-[14px]">
-                <span className="font-semibold text-[16px] text-navy whitespace-nowrap">
-                  {item.name}{" "}
-                  <i className="not-italic font-medium text-[14px] text-stone">×{item.quantity}</i>
-                </span>
-                <span className="font-bold text-[16px] text-navy whitespace-nowrap">
-                  {formatCurrency(item.price * item.quantity)}
+        <form onSubmit={handleSubmit} className="px-[26px] py-[22px]">
+          <div className="brot-co-body space-y-[18px]">
+            {/* Resumen — columna izquierda en desktop */}
+            <div
+              className="brot-co-summary overflow-hidden"
+              style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)", padding: "18px 20px" }}
+            >
+              {items.map((item) => (
+                <div key={item.id} className="flex items-baseline justify-between gap-3 pb-[14px]">
+                  <span className="font-semibold text-[16px] text-navy whitespace-nowrap">
+                    {item.name}{" "}
+                    <i className="not-italic font-medium text-[14px] text-stone">×{item.quantity}</i>
+                  </span>
+                  <span className="font-bold text-[16px] text-navy whitespace-nowrap">
+                    {formatCurrency(item.price * item.quantity)}
+                  </span>
+                </div>
+              ))}
+              <div style={HAIR} />
+              <div className="flex items-baseline justify-between gap-3 pt-[14px]">
+                <span className="font-bold text-[19px] text-navy">Total</span>
+                <span className="font-bold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
+                  {formatCurrency(total)}
                 </span>
               </div>
-            ))}
-            <div style={HAIR} />
-            <div className="flex items-baseline justify-between gap-3 pt-[14px]">
-              <span className="font-bold text-[19px] text-navy">Total</span>
-              <span className="font-bold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
-                {formatCurrency(total)}
-              </span>
             </div>
-          </div>
 
-          {/* Selector retiro / delivery */}
-          {deliveryMode === "both" && (
-            <div>
-              <label className="block font-bold text-[14.5px] text-navy mb-2">¿Cómo querés recibirlo?</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[{ label: "Retiro en casa", value: false, icon: <HomeIcon /> }, { label: "Delivery", value: true, icon: <TruckIcon /> }].map(({ label, value, icon }) => (
-                  <button
-                    key={String(value)}
-                    type="button"
-                    onClick={() => setWantsDelivery(value)}
-                    className={cn(
-                      "flex items-center justify-center gap-2 p-3 rounded-xl text-[14px] font-semibold transition-all",
-                      wantsDelivery === value
-                        ? "text-navy"
-                        : "text-stone"
-                    )}
-                    style={{
-                      border: `1.5px solid ${wantsDelivery === value ? "#C8851A" : "rgba(14,35,60,.16)"}`,
-                      background: wantsDelivery === value ? "rgba(200,133,26,.08)" : "#fff",
-                    }}
-                  >
-                    {icon} {label}
-                  </button>
-                ))}
+            {/* Campos — columna derecha en desktop */}
+            <div className="brot-co-form space-y-[18px]">
+              {/* Selector retiro / delivery */}
+              {deliveryMode === "both" && (
+                <div>
+                  <label className="block font-bold text-[14.5px] text-navy mb-2">¿Cómo querés recibirlo?</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[{ label: "Retiro en casa", value: false, icon: <HomeIcon /> }, { label: "Delivery", value: true, icon: <TruckIcon /> }].map(({ label, value, icon }) => (
+                      <button
+                        key={String(value)}
+                        type="button"
+                        onClick={() => setWantsDelivery(value)}
+                        className={cn(
+                          "flex items-center justify-center gap-2 p-3 rounded-xl text-[14px] font-semibold transition-all",
+                          wantsDelivery === value
+                            ? "text-navy"
+                            : "text-stone"
+                        )}
+                        style={{
+                          border: `1.5px solid ${wantsDelivery === value ? "#C8851A" : "rgba(14,35,60,.16)"}`,
+                          background: wantsDelivery === value ? "rgba(200,133,26,.08)" : "#fff",
+                        }}
+                      >
+                        {icon} {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Campos del formulario */}
+              {[
+                { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v), placeholder: "Juan Pérez", required: true },
+                { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
+              ].map((field) => (
+                <div key={field.id}>
+                  <label className="block font-bold text-[14.5px] text-navy mb-2">
+                    {field.label} <span style={{ color: "#C8851A" }}>*</span>
+                  </label>
+                  <input
+                    type={field.type}
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder={field.placeholder}
+                    required={field.required}
+                    className="brot-input"
+                  />
+                </div>
+              ))}
+
+              {isDelivery && (
+                <div>
+                  <label className="block font-bold text-[14.5px] text-navy mb-2">
+                    Dirección de delivery <span style={{ color: "#C8851A" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Av. Corrientes 1234, CABA"
+                    required
+                    className="brot-input"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block font-bold text-[14.5px] text-navy mb-2">Notas (opcional)</label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Alguna aclaración sobre tu pedido…"
+                  rows={3}
+                  className="brot-input"
+                />
               </div>
-            </div>
-          )}
 
-          {/* Campos del formulario */}
-          {[
-            { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v), placeholder: "Juan Pérez", required: true },
-            { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
-          ].map((field) => (
-            <div key={field.id}>
-              <label className="block font-bold text-[14.5px] text-navy mb-2">
-                {field.label} <span style={{ color: "#C8851A" }}>*</span>
-              </label>
-              <input
-                type={field.type}
-                value={field.value}
-                onChange={(e) => field.onChange(e.target.value)}
-                placeholder={field.placeholder}
-                required={field.required}
-                className="brot-input"
-              />
-            </div>
-          ))}
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+                  {error}
+                </div>
+              )}
 
-          {isDelivery && (
-            <div>
-              <label className="block font-bold text-[14.5px] text-navy mb-2">
-                Dirección de delivery <span style={{ color: "#C8851A" }}>*</span>
-              </label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Av. Corrientes 1234, CABA"
-                required
-                className="brot-input"
-              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BagIcon />}
+                {loading ? "Procesando..." : "Confirmar y pagar"}
+              </button>
             </div>
-          )}
-
-          <div>
-            <label className="block font-bold text-[14.5px] text-navy mb-2">Notas (opcional)</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Alguna aclaración sobre tu pedido…"
-              rows={3}
-              className="brot-input"
-            />
           </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary"
-            style={{ marginTop: "4px" }}
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BagIcon />}
-            {loading ? "Procesando..." : "Confirmar y pagar"}
-          </button>
         </form>
         )}
       </div>
