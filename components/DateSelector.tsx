@@ -207,7 +207,7 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
                 onMouseEnter={(e) => { if (isOpen) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
               >
-                VER MENÚ{" "}
+                VER EL MENÚ DEL DÍA{" "}
                 <span
                   className="inline-block"
                   style={{ transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}

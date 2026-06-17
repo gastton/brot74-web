@@ -41,6 +41,50 @@ interface Product {
 type CartMap = Record<number, number>;
 
 const serif = "var(--font-newsreader, 'Newsreader', Georgia, serif)";
+
+function NotaPrePedido() {
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
+  return (
+    <div
+      role="note"
+      className="flex items-start gap-[11px] mb-5 rounded-[16px] overflow-hidden"
+      style={{
+        background: "#FBF1DF",
+        border: "1px solid rgba(200,133,26,.22)",
+        padding: "13px 14px",
+      }}
+    >
+      <span
+        className="flex-none flex items-center justify-center rounded-full mt-[1px]"
+        style={{ width: "30px", height: "30px", background: "rgba(200,133,26,.12)" }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8851A" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/>
+        </svg>
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-[11px] uppercase tracking-[.14em] m-0" style={{ color: "#C8851A" }}>
+          Cómo funciona
+        </p>
+        <p className="font-medium text-[13.5px] leading-[1.5] mt-[3px] m-0" style={{ color: "#0E233C" }}>
+          Trabajamos por <strong>pre-pedido</strong>: elegís el día, encargás tu BROT y lo retirás fresco esa misma fecha.
+        </p>
+      </div>
+      <button
+        type="button"
+        aria-label="Cerrar aviso"
+        onClick={() => setHidden(true)}
+        className="flex-none flex items-center justify-center rounded-full border-none bg-transparent cursor-pointer"
+        style={{ width: "26px", height: "26px", color: "#7C766A", marginTop: "-2px", marginRight: "-3px" }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+          <path d="M6 6l12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+  );
+}
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
 
@@ -118,12 +162,21 @@ export default function Home() {
     return (
       <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
         <main className="w-full max-w-[430px] mx-auto px-6 py-10">
+          {/* Título */}
+          <header className="mb-5 text-center">
+            <h2 className="font-bold text-[37px] leading-[1.05] tracking-[-0.01em] text-navy m-0">
+              Tu próxima <em className="not-italic" style={{ color: "#C8851A" }}>entrega</em>
+            </h2>
+          </header>
+
+          {/* Nota "Cómo funciona" */}
+          <NotaPrePedido />
+
           <DateSelector
             slots={slots}
             selectedId={selectedSlotId}
             onChange={(id) => selectSlot(id)}
           />
-
         </main>
       </div>
     );
