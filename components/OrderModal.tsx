@@ -191,7 +191,9 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
         {/* Header */}
         <div className="flex items-start justify-between gap-[14px] px-[26px] pt-[24px] pb-[18px]">
           <div>
-            <h3 className="font-bold text-[27px] tracking-[-0.01em] text-navy m-0">Tu pedido</h3>
+            <h3 className="font-bold text-[27px] tracking-[-0.01em] text-navy m-0">
+              {step === "payment" ? "Pagá por transferencia" : "Tu pedido"}
+            </h3>
             <div
               className="text-[14.5px] text-stone mt-[5px]"
               style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}
@@ -400,7 +402,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
             style={{ marginTop: "4px" }}
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BagIcon />}
-            {loading ? "Procesando..." : "Confirmar pedido"}
+            {loading ? "Procesando..." : "Confirmar y pagar"}
           </button>
         </form>
         )}
