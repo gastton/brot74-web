@@ -48,7 +48,7 @@ function ConfirmacionContent() {
 
         {/* Título */}
         <h1 className="font-bold text-[33px] tracking-[-0.01em] text-navy mt-[26px] mb-0">
-          {isSuccess ? "¡Pedido confirmado!" : "Pedido recibido"}
+          Tu BROT está reservado
         </h1>
 
         {/* Descripción */}

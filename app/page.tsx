@@ -165,7 +165,7 @@ export default function Home() {
           {/* Título */}
           <header className="mb-5 text-center">
             <h2 className="font-bold text-[37px] leading-[1.05] tracking-[-0.01em] text-navy m-0">
-              Tu próxima <em className="not-italic" style={{ color: "#C8851A" }}>entrega</em>
+              Tu próximo <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
             </h2>
           </header>
 
@@ -201,7 +201,7 @@ export default function Home() {
             </button>
 
             <h2 className="font-bold text-[30px] tracking-[-0.01em] text-navy" style={{ margin: "18px 0 22px" }}>
-              Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>pan</em>
+              Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
             </h2>
 
             {loadingProducts ? (

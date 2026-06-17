@@ -208,7 +208,7 @@ export default function ProductModal({
                   onMouseEnter={(e) => { if (canAdd) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
                 >
-                  {canAdd ? "Agregar al pedido" : "No disponible"}
+                  {canAdd ? "Sumar este BROT" : "No disponible"}
                 </button>
               ) : (
                 /* Stepper + subtotal */
