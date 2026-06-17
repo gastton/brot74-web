@@ -45,8 +45,10 @@ export default function FocalPicker({ imageUrl, focalX, focalY, scale = 1, onCha
           src={imageUrl}
           alt="Focal preview"
           fill
-          className="object-cover pointer-events-none"
-          style={{ objectPosition: `${focalX}% ${focalY}%`, transform: `scale(${scale})`, transformOrigin: `${focalX}% ${focalY}%` }}
+          className="pointer-events-none"
+          style={scale < 1
+            ? { objectFit: "contain" }
+            : { objectFit: "cover", objectPosition: `${focalX}% ${focalY}%`, transform: `scale(${scale})`, transformOrigin: `${focalX}% ${focalY}%` }}
           sizes="400px"
         />
         {overlay && <div className="absolute inset-0 pointer-events-none">{overlay}</div>}
