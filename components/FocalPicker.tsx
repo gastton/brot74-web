@@ -69,7 +69,7 @@ export default function FocalPicker({ imageUrl, focalX, focalY, scale = 1, onCha
           <span className="text-xs text-muted shrink-0">Zoom</span>
           <input
             type="range"
-            min={1}
+            min={0.5}
             max={2.5}
             step={0.05}
             value={scale}
