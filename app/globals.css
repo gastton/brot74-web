@@ -20,8 +20,8 @@
   --color-amber-light: #D9983D;
 
   /* Tipografías */
-  --font-sans:  var(--font-quicksand,  'Quicksand',  system-ui, sans-serif);
-  --font-serif: var(--font-newsreader, 'Newsreader', Georgia,   serif);
+  --font-sans:  var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
+  --font-serif: var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
 }
 
 :root {
@@ -32,7 +32,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-quicksand, 'Quicksand'), system-ui, sans-serif;
+  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -54,7 +54,7 @@ body {
   color: #F4EEE2;
   padding: 17px 24px;
   border-radius: 14px;
-  font-family: var(--font-quicksand, 'Quicksand'), system-ui, sans-serif;
+  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
   font-weight: 700;
   font-size: 16.5px;
   letter-spacing: 0.01em;
@@ -79,7 +79,7 @@ body {
 /* ── Input base ── */
 .brot-input {
   width: 100%;
-  font-family: var(--font-quicksand, 'Quicksand'), system-ui, sans-serif;
+  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
   font-size: 15px;
   color: #0E233C;
   background: #fff;

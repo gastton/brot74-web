@@ -40,7 +40,7 @@ interface Product {
 
 type CartMap = Record<number, number>;
 
-const serif = "var(--font-newsreader, 'Newsreader', Georgia, serif)";
+const serif = "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)";
 
 function NotaPrePedido() {
   const [hidden, setHidden] = useState(false);
@@ -361,17 +361,17 @@ export default function Home() {
             className="brot-hero-title"
             style={{
               fontFamily: serif,
-              fontWeight: 400,
+              fontWeight: 800,
               fontSize: "41px",
-              lineHeight: 1.08,
-              letterSpacing: "-.015em",
+              lineHeight: 1.05,
+              letterSpacing: "-.025em",
               color: "#F4EEE2",
               margin: "16px 0 0",
               maxWidth: "13ch",
             }}
           >
             Pan de fermentación natural,{" "}
-            <em style={{ fontStyle: "italic", color: "#EBB155" }}>como debe ser.</em>
+            <em style={{ fontStyle: "normal", color: "#EBB155" }}>como debe ser.</em>
           </h1>
 
           {/* CTA */}

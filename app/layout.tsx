@@ -1,19 +1,12 @@
 import type { Metadata } from "next";
-import { Quicksand, Newsreader } from "next/font/google";
+import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 
-const quicksand = Quicksand({
+const hanken = Hanken_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-quicksand",
-  display: "swap",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600", "700", "800"],
   style: ["normal", "italic"],
-  variable: "--font-newsreader",
+  variable: "--font-hanken",
   display: "swap",
 });
 
@@ -24,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${quicksand.variable} ${newsreader.variable}`}>
+    <html lang="es" className={hanken.variable}>
       <body className="min-h-screen bg-cream antialiased">
         {children}
       </body>
