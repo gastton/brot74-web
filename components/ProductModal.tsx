@@ -150,7 +150,7 @@ export default function ProductModal({
           {product.description && (
             <p
               className="text-[16px] leading-[1.55] mt-4"
-              style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", color: "#3a4a5e" }}
+              style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", color: "#3a4a5e" }}
             >
               {product.description}
             </p>
@@ -162,7 +162,7 @@ export default function ProductModal({
               <WheatIcon />
               <span
                 className="text-[13.5px] text-stone"
-                style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}
+                style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
               >
                 {product.ingredients}
               </span>

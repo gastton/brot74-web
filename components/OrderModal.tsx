@@ -196,7 +196,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
             </h3>
             <div
               className="text-[14.5px] text-stone mt-[5px]"
-              style={{ fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)", fontStyle: "italic" }}
+              style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
             >
               {slotLabel} · {modeLabel}
             </div>

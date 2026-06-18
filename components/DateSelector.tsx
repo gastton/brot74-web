@@ -171,9 +171,10 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
                 <div
                   className="leading-[.96] tracking-[-0.02em] mt-0.5"
                   style={{
-                    fontFamily: "var(--font-newsreader, 'Newsreader', Georgia, serif)",
-                    fontWeight: 500,
+                    fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)",
+                    fontWeight: 600,
                     fontSize: "88px",
+                    letterSpacing: "-.03em",
                   }}
                 >
                   {day}
