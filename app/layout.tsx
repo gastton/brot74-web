@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk } from "next/font/google";
+import { Hanken_Grotesk, Jost } from "next/font/google";
 import "./globals.css";
 
 const hanken = Hanken_Grotesk({
@@ -10,6 +10,13 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-jost",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "BROT.74 — Pan Artesanal",
   description: "Pedidos de pan artesanal de fermentación natural.",
@@ -17,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={hanken.variable}>
+    <html lang="es" className={`${hanken.variable} ${jost.variable}`}>
       <body className="min-h-screen bg-cream antialiased">
         {children}
       </body>
