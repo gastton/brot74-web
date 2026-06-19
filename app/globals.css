@@ -113,7 +113,7 @@ textarea.brot-input {
 .mseal img{height:.62em;width:auto;display:block;}
 .mseal .wm{display:inline-flex;align-items:baseline;margin-top:.0133em;line-height:1;}
 .mseal .wm .b{font-weight:500;font-size:.10em;letter-spacing:.06em;}
-.mseal .wm .n{font-weight:700;font-size:.10em;letter-spacing:.06em;margin-left:.05em;color:#C8851A;}
+.mseal .wm .n{font-weight:700;font-size:.10em;letter-spacing:-.11em;margin-left:.16em;color:#C8851A;}
 .mseal.navy .wm .b{color:#F4EEE2;}
 .mseal.cream .wm .b{color:#0E233C;}
 
