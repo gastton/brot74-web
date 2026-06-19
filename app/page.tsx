@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import OrderModal from "@/components/OrderModal";
@@ -308,43 +307,20 @@ export default function Home() {
         >
           {/* Sello medallón */}
           <div
-            className="brot-hero-seal"
+            className="brot-hero-seal mseal cream"
             style={{
-              position: "relative",
               width: "212px",
               height: "212px",
-              borderRadius: "50%",
-              background: "#F4EEE2",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingBottom: "18px",
+              fontSize: "212px",
               filter: "drop-shadow(0 20px 36px rgba(0,0,0,.35))",
               flexShrink: 0,
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                inset: "10px",
-                borderRadius: "50%",
-                border: "1px solid rgba(14,35,60,.16)",
-                pointerEvents: "none",
-              }}
-            />
-            <Image
-              src="/ramillete-ink-b.png"
-              alt="Ramillete BROT 74"
-              width={129}
-              height={129}
-              className="object-contain"
-              style={{ height: "129px", width: "auto" }}
-              priority
-            />
-            <div style={{ display: "inline-flex", alignItems: "baseline", marginTop: "3px", lineHeight: 1, fontSize: "21px" }}>
-              <span style={{ fontWeight: 500, letterSpacing: "0.04em", color: "#0E233C" }}>BROT</span>
-              <span style={{ fontWeight: 700, letterSpacing: "0.04em", marginLeft: "3px", color: "#E49C24" }}>74</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/ramillete-mono-amber.png" alt="BROT 74" />
+            <div className="wm">
+              <span className="b">BROT</span>
+              <span className="n">74</span>
             </div>
           </div>
 

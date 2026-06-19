@@ -101,6 +101,22 @@ textarea.brot-input {
   line-height: 1.5;
 }
 
+/* ── Sello monolínea (v4) ── */
+.mseal{position:relative;border-radius:50%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding-bottom:.0867em;
+  font-family:var(--font-jost,'Jost',sans-serif);}
+.mseal.navy{background:radial-gradient(120% 120% at 50% 18%,#16314f 0%,#0E233C 60%,#0A1B30 100%);}
+.mseal.cream{background:#F4EEE2;}
+.mseal::after{content:"";position:absolute;inset:.0467em;border-radius:50%;}
+.mseal.navy::after{border:.0046em solid rgba(244,238,226,.22);}
+.mseal.cream::after{border:.0046em solid rgba(14,35,60,.16);}
+.mseal img{height:.62em;width:auto;display:block;}
+.mseal .wm{display:inline-flex;align-items:baseline;margin-top:.0133em;line-height:1;}
+.mseal .wm .b{font-weight:500;font-size:.10em;letter-spacing:.06em;}
+.mseal .wm .n{font-weight:700;font-size:.10em;letter-spacing:.06em;margin-left:.05em;color:#C8851A;}
+.mseal.navy .wm .b{color:#F4EEE2;}
+.mseal.cream .wm .b{color:#0E233C;}
+
 /* ═══════════════════════════════════════════
    v2 · Responsive (mobile-first)
    Breakpoints: 768px tablet · 900px modales · 1024px desktop
@@ -109,8 +125,9 @@ textarea.brot-input {
 /* ── Hero desktop scaling ── */
 @media (min-width: 1024px) {
   .brot-hero-seal {
-    width:  clamp(200px, 16vw, 240px) !important;
-    height: clamp(200px, 16vw, 240px) !important;
+    width:     clamp(200px, 16vw, 240px) !important;
+    height:    clamp(200px, 16vw, 240px) !important;
+    font-size: clamp(200px, 16vw, 240px) !important;
   }
   .brot-hero-title {
     font-size: clamp(46px, 4.6vw, 66px) !important;
