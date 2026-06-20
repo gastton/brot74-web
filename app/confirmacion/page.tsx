@@ -72,7 +72,7 @@ function ConfirmacionContent() {
           className="mt-[26px] flex items-center justify-center gap-[6px] flex-wrap font-semibold text-[16px] leading-[1.45] text-navy"
           style={{ background: "#FBF1DF", borderRadius: "16px", padding: "18px 22px" }}
         >
-          Nos vamos a comunicar por WhatsApp para coordinar.
+          Nos vamos a comunicar por WhatsApp para confirmarte el pedido.
           <WheatIcon />
         </div>
 
