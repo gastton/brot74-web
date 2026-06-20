@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
-import { writeFile } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 
 export async function POST(req: NextRequest) {
   const session = await requireAdmin(req);
@@ -18,11 +17,9 @@ export async function POST(req: NextRequest) {
   }
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const filename = `product-${Date.now()}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
+  const filename = `products/product-${Date.now()}.${ext}`;
 
-  const uploadDir = path.join(process.cwd(), "public", "products");
-  await writeFile(path.join(uploadDir, filename), buffer);
+  const blob = await put(filename, file, { access: "public" });
 
-  return NextResponse.json({ url: `/products/${filename}` });
+  return NextResponse.json({ url: blob.url });
 }
