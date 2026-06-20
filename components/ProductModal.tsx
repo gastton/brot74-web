@@ -93,11 +93,11 @@ export default function ProductModal({
           overflowY: "auto",
         }}
       >
-        {/* Cerrar */}
+        {/* Volver */}
         <button
           onClick={onClose}
-          aria-label="Cerrar"
-          className="absolute top-[14px] right-[14px] z-10 w-[34px] h-[34px] rounded-full flex items-center justify-center"
+          aria-label="Volver"
+          className="absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full flex items-center justify-center"
           style={{
             background: "rgba(248,243,234,.85)",
             backdropFilter: "blur(6px)",
@@ -110,8 +110,8 @@ export default function ProductModal({
           onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.2" strokeLinecap="round">
-            <path d="M6 6l12 12M18 6L6 18"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
           </svg>
         </button>
 
