@@ -147,9 +147,9 @@ export default function DateSelector({ slots, selectedId, onChange }: DateSelect
               <span
                 className="absolute top-4 right-4 flex items-center gap-[7px] text-navy font-bold text-[12px] tracking-[.02em] px-[14px] py-[7px] rounded-full whitespace-nowrap"
                 style={{
-                  background: "rgba(248,243,234,.62)",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
+                  background: "rgba(248,243,234,.88)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
                   boxShadow: "0 4px 14px -6px rgba(0,0,0,.4)",
                 }}
               >
