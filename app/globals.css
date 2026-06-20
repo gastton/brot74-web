@@ -203,14 +203,16 @@ textarea.brot-input {
   .brot-co-body > * {
     margin-top: 0 !important;
   }
-  .brot-co-summary {
-    position: sticky;
-    top: 0;
-  }
   .brot-co-form {
     display: flex;
     flex-direction: column;
     gap: 18px;
+    order: 1;
+  }
+  .brot-co-summary {
+    position: sticky;
+    top: 0;
+    order: 2;
   }
   .brot-co-form > * {
     margin-top: 0 !important;
@@ -224,7 +226,7 @@ textarea.brot-input {
     display: grid !important;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
-    grid-template-areas: "tot data" "cta data";
+    grid-template-areas: "data tot" "data cta";
     align-content: start;
   }
   .brot-cf-body > * {
