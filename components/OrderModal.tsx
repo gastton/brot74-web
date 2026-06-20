@@ -17,6 +17,7 @@ interface OrderModalProps {
   slotId: number;
   deliveryMode: "pickup" | "delivery" | "both";
   slotLabel: string;
+  slotLocation: string;
   onClose: () => void;
   onSuccess: (orderId: number) => void;
 }
@@ -119,7 +120,7 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
   const [address, setAddress] = useState("");
@@ -198,7 +199,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, onC
               className="text-[14.5px] text-stone mt-[5px]"
               style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
             >
-              {slotLabel} · {modeLabel}
+              {slotLabel}{slotLocation ? ` · ${slotLocation}` : ` · ${modeLabel}`}
             </div>
           </div>
           <button
