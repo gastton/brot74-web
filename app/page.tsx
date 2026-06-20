@@ -286,6 +286,7 @@ export default function Home() {
             slotId={selectedSlotId}
             deliveryMode={selectedSlot.deliveryMode}
             slotLabel={selectedSlot.dayLabel}
+            slotLocation={selectedSlot.location}
             onClose={() => setShowModal(false)}
             onSuccess={handleOrderSuccess}
           />
