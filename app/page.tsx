@@ -330,7 +330,7 @@ export default function Home() {
             className="brot-hero-kicker font-semibold uppercase tracking-[.3em]"
             style={{ fontSize: "11px", color: "rgba(244,238,226,.62)", marginTop: "30px" }}
           >
-            Micro-panadería de masa madre
+            Micropanadería de masa madre
           </p>
 
           {/* Título */}
