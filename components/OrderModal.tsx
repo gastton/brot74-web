@@ -195,12 +195,14 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
             <h3 className="font-bold text-[27px] tracking-[-0.01em] text-navy m-0">
               {step === "payment" ? "Pagá por transferencia" : "Tu pedido"}
             </h3>
-            <div
-              className="text-[14.5px] text-stone mt-[5px]"
-              style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
-            >
-              {slotLabel}{slotLocation ? ` · ${slotLocation}` : ` · ${modeLabel}`}
-            </div>
+            {(step === "payment" || items.length > 0) && (
+              <div
+                className="text-[14.5px] text-stone mt-[5px]"
+                style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
+              >
+                {slotLabel}{slotLocation ? ` · ${slotLocation}` : ` · ${modeLabel}`}
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -290,6 +292,42 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
 
         /* ── Formulario (step = form) ── */
         <form onSubmit={handleSubmit} className="px-[26px] py-[22px]">
+          {/* ── Estado vacío ── */}
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center text-center py-4 gap-0">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mb-[18px]"
+                style={{ background: "rgba(14,35,60,.05)", color: "#7C766A" }}
+              >
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+                </svg>
+              </div>
+              <h4 className="font-bold text-[21px] leading-[1.25] tracking-[-0.01em] text-navy m-0 mb-2" style={{ maxWidth: "18ch" }}>
+                Todavía no elegiste tu BROT
+              </h4>
+              <p className="text-[15px] text-stone m-0 mb-[22px]" style={{ fontStyle: "italic" }}>
+                Tu pedido está vacío.
+              </p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn-primary mb-3"
+                style={{ maxWidth: "300px" }}
+              >
+                <BagIcon />
+                Elegí tu BROT
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full font-semibold text-[15px] text-stone border-none bg-transparent cursor-pointer py-2"
+                style={{ maxWidth: "300px" }}
+              >
+                Cerrar
+              </button>
+            </div>
+          ) : (
           <div className="brot-co-body space-y-[18px]">
             {/* Resumen — columna izquierda en desktop */}
             <div
@@ -409,6 +447,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
               </button>
             </div>
           </div>
+          )}
         </form>
         )}
       </div>
