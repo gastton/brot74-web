@@ -15,6 +15,11 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + TTL_MS);
 
+    // Lazy cleanup: remove expired reservations for this slot
+    await prisma.cartReservation.deleteMany({
+      where: { deliverySlotId: slotId, expiresAt: { lt: now } },
+    });
+
     for (const item of items as { productId: number; quantity: number }[]) {
       const stock = await prisma.productStock.findUnique({
         where: { productId_deliverySlotId: { productId: item.productId, deliverySlotId: slotId } },
