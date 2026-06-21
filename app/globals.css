@@ -209,10 +209,13 @@ textarea.brot-input {
     gap: 18px;
     order: 1;
   }
-  .brot-co-summary {
+  .brot-co-order-col {
+    order: 2;
     position: sticky;
     top: 0;
-    order: 2;
+  }
+  .brot-co-summary {
+    margin-top: 0;
   }
   .brot-co-form > * {
     margin-top: 0 !important;

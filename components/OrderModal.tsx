@@ -18,6 +18,7 @@ interface OrderModalProps {
   deliveryMode: "pickup" | "delivery" | "both";
   slotLabel: string;
   slotLocation: string;
+  onRemoveItem: (productId: number) => void;
   onClose: () => void;
   onSuccess: (orderId: number) => void;
 }
@@ -120,7 +121,16 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, onClose, onSuccess }: OrderModalProps) {
+function TrashIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+      <path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10 11v5M14 11v5"/>
+    </svg>
+  );
+}
+
+export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
   const [address, setAddress] = useState("");
@@ -329,28 +339,48 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
             </div>
           ) : (
           <div className="brot-co-body space-y-[18px]">
-            {/* Resumen — columna izquierda en desktop */}
-            <div
-              className="brot-co-summary overflow-hidden"
-              style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)", padding: "18px 20px" }}
-            >
-              {items.map((item) => (
-                <div key={item.id} className="flex items-baseline justify-between gap-3 pb-[14px]">
-                  <span className="font-semibold text-[16px] text-navy whitespace-nowrap">
-                    {item.name}{" "}
-                    <i className="not-italic font-medium text-[14px] text-stone">×{item.quantity}</i>
-                  </span>
-                  <span className="font-bold text-[16px] text-navy whitespace-nowrap">
-                    {formatCurrency(item.price * item.quantity)}
+            {/* Resumen — columna derecha en desktop */}
+            <div className="brot-co-order-col">
+              <div className="font-bold text-[14.5px] text-navy mb-2">Productos</div>
+              <div
+                className="brot-co-summary overflow-hidden"
+                style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)", padding: "18px 20px" }}
+              >
+                {items.map((item, i) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 pb-[14px]"
+                    style={{ borderTop: i > 0 ? "1px solid rgba(14,35,60,.08)" : "none", paddingTop: i > 0 ? "14px" : "0" }}
+                  >
+                    <span className="font-semibold text-[16px] text-navy">
+                      {item.name}{" "}
+                      <i className="not-italic font-medium text-[14px] text-stone">×{item.quantity}</i>
+                    </span>
+                    <span className="flex items-center gap-3 flex-none">
+                      <span className="font-bold text-[16px] text-navy whitespace-nowrap">
+                        {formatCurrency(item.price * item.quantity)}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Quitar ${item.name}`}
+                        onClick={() => onRemoveItem(item.id)}
+                        className="w-7 h-7 inline-flex items-center justify-center rounded-lg border-none bg-transparent cursor-pointer text-stone transition-colors"
+                        style={{ transition: "background .15s, color .15s" }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(166,68,46,.10)"; e.currentTarget.style.color = "#A6442E"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = ""; e.currentTarget.style.color = ""; }}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </span>
+                  </div>
+                ))}
+                <div style={HAIR} />
+                <div className="flex items-baseline justify-between gap-3 pt-[14px]">
+                  <span className="font-bold text-[19px] text-navy">Total</span>
+                  <span className="font-bold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
+                    {formatCurrency(total)}
                   </span>
                 </div>
-              ))}
-              <div style={HAIR} />
-              <div className="flex items-baseline justify-between gap-3 pt-[14px]">
-                <span className="font-bold text-[19px] text-navy">Total</span>
-                <span className="font-bold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
-                  {formatCurrency(total)}
-                </span>
               </div>
             </div>
 
@@ -444,6 +474,20 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BagIcon />}
                 {loading ? "Procesando..." : "Confirmar y pagar"}
+              </button>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full font-semibold text-[15px] text-navy border-none bg-transparent cursor-pointer flex items-center justify-center gap-2 py-2 mt-0"
+                style={{ transition: "color .15s" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#C8851A"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = ""; }}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 6l-6 6 6 6"/>
+                </svg>
+                Seguir comprando
               </button>
             </div>
           </div>

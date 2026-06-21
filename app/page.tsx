@@ -144,6 +144,14 @@ export default function Home() {
     });
   }
 
+  function removeItemFromCart(productId: number) {
+    setCart((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      return next;
+    });
+  }
+
   const cartItems = products
     .filter((p) => (cart[p.id] ?? 0) > 0)
     .map((p) => ({ id: p.id, name: p.name, price: p.price, quantity: cart[p.id] }));
@@ -287,6 +295,7 @@ export default function Home() {
             deliveryMode={selectedSlot.deliveryMode}
             slotLabel={selectedSlot.dayLabel}
             slotLocation={selectedSlot.location}
+            onRemoveItem={removeItemFromCart}
             onClose={() => setShowModal(false)}
             onSuccess={handleOrderSuccess}
           />
