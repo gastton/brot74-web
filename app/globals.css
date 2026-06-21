@@ -48,6 +48,18 @@ body {
   .brot-pulse { animation: none; }
 }
 
+/* ── Contador de reserva (v12) ── */
+@keyframes brotRsvPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .5; }
+}
+.brot-rsv-pulse {
+  animation: brotRsvPulse 1.1s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brot-rsv-pulse { animation: none; }
+}
+
 /* ── Botón principal ── */
 .btn-primary {
   background-color: #0E233C;
