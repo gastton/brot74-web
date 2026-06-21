@@ -97,6 +97,10 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loadingSlots, setLoadingSlots]       = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [reserving, setReserving]             = useState(false);
+  const [reserveError, setReserveError]       = useState("");
+  const [sessionToken, setSessionToken]       = useState("");
+  const [reservationExpiresAt, setReservationExpiresAt] = useState("");
 
   useEffect(() => {
     fetch("/api/delivery-slots")
@@ -158,6 +162,44 @@ export default function Home() {
 
   const cartTotal    = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);
+
+  async function openCheckout() {
+    if (!selectedSlotId || cartItems.length === 0) return;
+    setReserveError("");
+    setReserving(true);
+    try {
+      const res = await fetch("/api/cart/reserve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slotId: selectedSlotId,
+          items: cartItems.map((i) => ({ productId: i.id, quantity: i.quantity })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setReserveError(data.error ?? "No se pudo reservar. Intentá de nuevo.");
+        // Refresh products to show updated stock
+        fetchProducts(selectedSlotId);
+        return;
+      }
+      setSessionToken(data.sessionToken);
+      setReservationExpiresAt(data.expiresAt);
+      setShowModal(true);
+    } catch {
+      setReserveError("Error de conexión. Intentá de nuevo.");
+    } finally {
+      setReserving(false);
+    }
+  }
+
+  function handleModalClose() {
+    setShowModal(false);
+    setSessionToken("");
+    setReservationExpiresAt("");
+    // Refresh products so stock counts reflect released reservation
+    if (selectedSlotId) fetchProducts(selectedSlotId);
+  }
 
   function handleOrderSuccess(orderId: number) {
     setShowModal(false);
@@ -242,9 +284,17 @@ export default function Home() {
         {/* Cart bar */}
         {cartItems.length > 0 && selectedSlotId && !selectedProduct && (
           <div className="fixed bottom-0 left-0 right-0 z-40 p-4" style={{ background: "linear-gradient(to top, #F4EEE2 60%, transparent)" }}>
+            {reserveError && (
+              <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto mb-2">
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm text-center">
+                  {reserveError}
+                </div>
+              </div>
+            )}
             <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto">
               <button
-                onClick={() => setShowModal(true)}
+                onClick={openCheckout}
+                disabled={reserving}
                 className="w-full flex items-center gap-3 rounded-[16px] border-none"
                 style={{
                   background: "#0E233C",
@@ -263,7 +313,7 @@ export default function Home() {
                   </svg>
                 </span>
                 <span className="font-semibold text-[16px] whitespace-nowrap">
-                  {cartItems.reduce((s, i) => s + i.quantity, 0)} producto{cartItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
+                  {reserving ? "Reservando…" : `${cartItems.reduce((s, i) => s + i.quantity, 0)} producto${cartItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}`}
                 </span>
                 <span className="font-bold text-[18px] ml-auto whitespace-nowrap">{formatCurrency(cartTotal)}</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -284,19 +334,21 @@ export default function Home() {
             onAdd={() => addToCart(selectedProduct.id)}
             onRemove={() => removeFromCart(selectedProduct.id)}
             onClose={() => setSelectedProduct(null)}
-            onCheckout={() => { setSelectedProduct(null); setShowModal(true); }}
+            onCheckout={() => { setSelectedProduct(null); openCheckout(); }}
           />
         )}
 
-        {showModal && selectedSlotId && selectedSlot && (
+        {showModal && selectedSlotId && selectedSlot && sessionToken && reservationExpiresAt && (
           <OrderModal
             items={cartItems}
             slotId={selectedSlotId}
             deliveryMode={selectedSlot.deliveryMode}
             slotLabel={selectedSlot.dayLabel}
             slotLocation={selectedSlot.location}
+            sessionToken={sessionToken}
+            expiresAt={reservationExpiresAt}
             onRemoveItem={removeItemFromCart}
-            onClose={() => setShowModal(false)}
+            onClose={handleModalClose}
             onSuccess={handleOrderSuccess}
           />
         )}

@@ -5,18 +5,29 @@ export async function GET(req: NextRequest) {
   const slotId = req.nextUrl.searchParams.get("slotId");
 
   if (slotId) {
-    const products = await prisma.product.findMany({
-      where: { active: true },
-      orderBy: { sortOrder: "asc" },
-      include: {
-        stocks: { where: { deliverySlotId: parseInt(slotId) } },
-      },
-    });
+    const slotIdInt = parseInt(slotId);
+    const now = new Date();
+
+    const [products, cartReservations] = await Promise.all([
+      prisma.product.findMany({
+        where: { active: true },
+        orderBy: { sortOrder: "asc" },
+        include: { stocks: { where: { deliverySlotId: slotIdInt } } },
+      }),
+      prisma.cartReservation.groupBy({
+        by: ["productId"],
+        where: { deliverySlotId: slotIdInt, expiresAt: { gt: now } },
+        _sum: { quantity: true },
+      }),
+    ]);
+
+    const cartHeldMap = new Map(cartReservations.map((r) => [r.productId, r._sum.quantity ?? 0]));
 
     return NextResponse.json(
       products.map((p) => {
         const s = p.stocks[0] ?? null;
-        const available = s ? s.totalStock - s.reservedStock : null;
+        const cartHeld = cartHeldMap.get(p.id) ?? 0;
+        const available = s ? s.totalStock - s.reservedStock - cartHeld : null;
         return {
           id: p.id,
           name: p.name,
@@ -51,7 +62,7 @@ export async function GET(req: NextRequest) {
       imageUrl: p.imageUrl,
       focalX: p.focalX,
       focalY: p.focalY,
-          imageScale: p.imageScale,
+      imageScale: p.imageScale,
       stock: null,
       hasStock: true,
     }))

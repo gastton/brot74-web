@@ -5,20 +5,17 @@ import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { customerName, customerPhone, customerAddress, deliverySlotId, items, notes, isDelivery } = body;
+    const { customerName, customerPhone, customerAddress, deliverySlotId, items, notes, isDelivery, sessionToken } = body;
 
     if (!customerName || !customerPhone || !deliverySlotId || !items?.length) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
     }
 
-    const slot = await prisma.deliverySlot.findUnique({
-      where: { id: deliverySlotId },
-    });
+    const slot = await prisma.deliverySlot.findUnique({ where: { id: deliverySlotId } });
     if (!slot || !slot.active) {
       return NextResponse.json({ error: "Fecha no disponible" }, { status: 400 });
     }
 
-    // Validar que la elección del cliente sea válida según el modo del slot
     const wantsDelivery = isDelivery ?? (slot.deliveryMode === "delivery");
     if (wantsDelivery && slot.deliveryMode === "pickup") {
       return NextResponse.json({ error: "Este slot no tiene delivery disponible" }, { status: 400 });
@@ -30,11 +27,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dirección requerida para delivery" }, { status: 400 });
     }
 
+    // Validate cart reservation if sessionToken provided
+    const now = new Date();
+    let reservationValid = false;
+    if (sessionToken) {
+      const reservations = await prisma.cartReservation.findMany({
+        where: { sessionToken, expiresAt: { gt: now } },
+      });
+      if (reservations.length > 0) {
+        const resMap = new Map(reservations.map((r) => [r.productId, r.quantity]));
+        reservationValid = (items as { productId: number; quantity: number }[]).every(
+          (item) => (resMap.get(item.productId) ?? 0) >= item.quantity
+        );
+      }
+    }
+
+    if (sessionToken && !reservationValid) {
+      return NextResponse.json({ error: "Tu reserva expiró. Volvé a intentar." }, { status: 409 });
+    }
+
     // Verify stock and calculate total
     let total = 0;
     const enrichedItems: { productId: number; quantity: number; unitPrice: number; name: string }[] = [];
 
-    for (const item of items) {
+    for (const item of items as { productId: number; quantity: number }[]) {
       const product = await prisma.product.findUnique({ where: { id: item.productId } });
       if (!product || !product.active) {
         return NextResponse.json({ error: `Producto no disponible: ${item.productId}` }, { status: 400 });
@@ -45,12 +61,21 @@ export async function POST(req: NextRequest) {
       });
 
       if (stock) {
-        const available = stock.totalStock - stock.reservedStock;
+        let available: number;
+        if (reservationValid) {
+          // The reservation already holds this stock — only count confirmed orders
+          available = stock.totalStock - stock.reservedStock;
+        } else {
+          // No reservation: deduct active cart reservations too
+          const agg = await prisma.cartReservation.aggregate({
+            where: { productId: item.productId, deliverySlotId, expiresAt: { gt: now } },
+            _sum: { quantity: true },
+          });
+          available = stock.totalStock - stock.reservedStock - (agg._sum.quantity ?? 0);
+        }
+
         if (available < item.quantity) {
-          return NextResponse.json(
-            { error: `Stock insuficiente para ${product.name}` },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: `Stock insuficiente para ${product.name}` }, { status: 400 });
         }
       }
 
@@ -58,7 +83,7 @@ export async function POST(req: NextRequest) {
       enrichedItems.push({ productId: item.productId, quantity: item.quantity, unitPrice: product.price, name: product.name });
     }
 
-    // Create order and reserve stock in a transaction
+    // Create order, reserve stock, and release cart reservation — all in one transaction
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
         data: {
@@ -79,7 +104,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Reserve stock
       for (const item of enrichedItems) {
         await tx.productStock.updateMany({
           where: { productId: item.productId, deliverySlotId },
@@ -87,10 +111,13 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      if (sessionToken) {
+        await tx.cartReservation.deleteMany({ where: { sessionToken } });
+      }
+
       return newOrder;
     });
 
-    // Send WhatsApp notification
     try {
       const msg = buildOrderMessage({
         id: order.id,

@@ -18,10 +18,29 @@ export async function GET() {
     include: { stocks: true },
   });
 
+  // Get active cart reservations per slot to account for them in hasStock
+  const slotIds = slots.map((s) => s.id);
+  const cartReservations = await prisma.cartReservation.groupBy({
+    by: ["deliverySlotId", "productId"],
+    where: { deliverySlotId: { in: slotIds }, expiresAt: { gt: now } },
+    _sum: { quantity: true },
+  });
+
+  // Map: slotId -> productId -> cartHeld
+  const cartMap = new Map<number, Map<number, number>>();
+  for (const r of cartReservations) {
+    if (!cartMap.has(r.deliverySlotId)) cartMap.set(r.deliverySlotId, new Map());
+    cartMap.get(r.deliverySlotId)!.set(r.productId, r._sum.quantity ?? 0);
+  }
+
   const visible = slots
     .filter((slot) => {
       const cutoffPassed = isCutoffPassed(slot, now);
-      const hasStock = slot.stocks.some((s) => s.totalStock - s.reservedStock > 0);
+      const slotCartMap = cartMap.get(slot.id) ?? new Map();
+      const hasStock = slot.stocks.some((s) => {
+        const cartHeld = slotCartMap.get(s.productId) ?? 0;
+        return s.totalStock - s.reservedStock - cartHeld > 0;
+      });
       return !cutoffPassed && hasStock;
     })
     .slice(0, 2)

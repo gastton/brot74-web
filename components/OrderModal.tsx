@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,8 @@ interface OrderModalProps {
   deliveryMode: "pickup" | "delivery" | "both";
   slotLabel: string;
   slotLocation: string;
+  sessionToken: string;
+  expiresAt: string;
   onRemoveItem: (productId: number) => void;
   onClose: () => void;
   onSuccess: (orderId: number) => void;
@@ -130,7 +132,21 @@ function TrashIcon() {
   );
 }
 
-export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
+function ClockIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+    </svg>
+  );
+}
+
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
   const [address, setAddress] = useState("");
@@ -140,6 +156,12 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
   const [step, setStep]       = useState<"form" | "payment">("form");
   const [orderId, setOrderId] = useState<number | null>(null);
   const [wantsDelivery, setWantsDelivery] = useState(deliveryMode === "delivery");
+  const [secondsLeft, setSecondsLeft] = useState(() =>
+    Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
+  );
+  const [expired, setExpired] = useState(false);
+
+  const orderDoneRef = useRef(false);
 
   const CVU     = process.env.NEXT_PUBLIC_CVU     ?? "";
   const ALIAS   = process.env.NEXT_PUBLIC_ALIAS   ?? "";
@@ -151,9 +173,43 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
   const modeLabel  = deliveryMode === "both" ? (isDelivery ? "Delivery" : "Retiro en casa") : deliveryMode === "delivery" ? "Delivery" : "Retiro en casa";
   const total      = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+  // Countdown timer
+  useEffect(() => {
+    if (step === "payment") return;
+
+    const interval = setInterval(() => {
+      const left = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+      setSecondsLeft(left);
+      if (left === 0) {
+        clearInterval(interval);
+        setExpired(true);
+        // Close modal after 4 seconds so user sees the message
+        setTimeout(onClose, 4000);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [expiresAt, step, onClose]);
+
+  // Release reservation on unmount if order was not completed
+  useEffect(() => {
+    return () => {
+      if (!orderDoneRef.current && sessionToken) {
+        fetch("/api/cart/release", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionToken }),
+          keepalive: true,
+        }).catch(() => {});
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (expired) { setError("Tu reserva expiró. Cerrá y volvé a intentar."); return; }
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
@@ -171,11 +227,13 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
           deliverySlotId: slotId,
           notes: notes.trim(),
           isDelivery,
+          sessionToken,
           items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Error al procesar el pedido"); return; }
+      orderDoneRef.current = true;
       setOrderId(data.orderId);
       setStep("payment");
     } catch {
@@ -184,6 +242,8 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
       setLoading(false);
     }
   }
+
+  const isUrgent = secondsLeft <= 180 && secondsLeft > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ padding: "19px" }}>
@@ -225,6 +285,28 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
             <CloseIcon />
           </button>
         </div>
+
+        {/* Countdown badge — only during form step */}
+        {step === "form" && items.length > 0 && (
+          <div
+            className="mx-[26px] mb-[14px] flex items-center gap-[7px] px-[12px] py-[8px] rounded-[10px] text-[13px] font-semibold"
+            style={{
+              background: expired
+                ? "rgba(166,68,46,.10)"
+                : isUrgent
+                ? "rgba(166,68,46,.08)"
+                : "rgba(14,35,60,.05)",
+              color: expired ? "#A6442E" : isUrgent ? "#A6442E" : "#7C766A",
+              transition: "background .3s, color .3s",
+            }}
+          >
+            <ClockIcon />
+            {expired
+              ? "Tu reserva expiró. Cerrando…"
+              : `Reserva confirmada por ${formatCountdown(secondsLeft)}`}
+          </div>
+        )}
+
         <div style={HAIR} />
 
         {/* ── Pantalla de pago (step = payment) ── */}
@@ -339,7 +421,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
             </div>
           ) : (
           <div className="brot-co-body space-y-[18px]">
-            {/* Resumen — columna derecha en desktop */}
+            {/* Resumen */}
             <div className="brot-co-order-col">
               <div className="font-bold text-[14.5px] text-navy mb-2">Productos</div>
               <div
@@ -384,7 +466,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
               </div>
             </div>
 
-            {/* Campos — columna derecha en desktop */}
+            {/* Campos */}
             <div className="brot-co-form space-y-[18px]">
               {/* Selector retiro / delivery */}
               {deliveryMode === "both" && (
@@ -398,9 +480,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                         onClick={() => setWantsDelivery(value)}
                         className={cn(
                           "flex items-center justify-center gap-2 p-3 rounded-xl text-[14px] font-semibold transition-all",
-                          wantsDelivery === value
-                            ? "text-navy"
-                            : "text-stone"
+                          wantsDelivery === value ? "text-navy" : "text-stone"
                         )}
                         style={{
                           border: `1.5px solid ${wantsDelivery === value ? "#C8851A" : "rgba(14,35,60,.16)"}`,
@@ -414,7 +494,6 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                 </div>
               )}
 
-              {/* Campos del formulario */}
               {[
                 { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v), placeholder: "Juan Pérez", required: true },
                 { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
@@ -469,7 +548,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || expired}
                 className="btn-primary"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BagIcon />}
