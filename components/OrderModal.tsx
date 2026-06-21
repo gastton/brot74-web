@@ -132,13 +132,6 @@ function TrashIcon() {
   );
 }
 
-function ClockIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
-    </svg>
-  );
-}
 
 function formatCountdown(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -243,7 +236,9 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     }
   }
 
-  const isUrgent = secondsLeft <= 180 && secondsLeft > 0;
+  const TOTAL_SECONDS = 15 * 60;
+  const isUrgent = secondsLeft <= 120;
+  const fillPct = ((secondsLeft / TOTAL_SECONDS) * 100).toFixed(2);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ padding: "19px" }}>
@@ -286,24 +281,69 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
           </button>
         </div>
 
-        {/* Countdown badge — only during form step */}
+        {/* Banda de reserva (v12) — solo durante el formulario con ítems */}
         {step === "form" && items.length > 0 && (
           <div
-            className="mx-[26px] mb-[14px] flex items-center gap-[7px] px-[12px] py-[8px] rounded-[10px] text-[13px] font-semibold"
+            className="mx-[26px] mb-[14px] rounded-[14px] overflow-hidden"
             style={{
-              background: expired
-                ? "rgba(166,68,46,.10)"
-                : isUrgent
-                ? "rgba(166,68,46,.08)"
-                : "rgba(14,35,60,.05)",
-              color: expired ? "#A6442E" : isUrgent ? "#A6442E" : "#7C766A",
-              transition: "background .3s, color .3s",
+              background: (expired || isUrgent) ? "rgba(166,68,46,.12)" : "rgba(200,133,26,.12)",
+              border: `1px solid ${(expired || isUrgent) ? "rgba(166,68,46,.28)" : "rgba(200,133,26,.22)"}`,
+              padding: "14px 16px 16px",
+              transition: "background .4s, border-color .4s",
             }}
           >
-            <ClockIcon />
-            {expired
-              ? "Tu reserva expiró. Cerrando…"
-              : `Reserva confirmada por ${formatCountdown(secondsLeft)}`}
+            <div className="flex items-center gap-3">
+              {/* Ícono */}
+              <span
+                className={(expired || isUrgent) ? "brot-rsv-pulse" : ""}
+                style={{
+                  flexShrink: 0,
+                  width: "30px",
+                  height: "30px",
+                  borderRadius: "9px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: (expired || isUrgent) ? "#A6442E" : "#C8851A",
+                  color: "#fff",
+                  transition: "background .4s",
+                }}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+                </svg>
+              </span>
+              {/* Texto */}
+              <span className="flex-1 min-w-0">
+                <span className="block font-bold text-[13.5px] text-navy leading-[1.2]">
+                  {expired ? "Tu reserva expiró" : "Te guardamos tu pedido"}
+                </span>
+                <span className="block text-[12px] text-stone mt-[2px]">
+                  {expired ? "Podés volver a intentar." : "Confirmá antes de que termine el tiempo."}
+                </span>
+              </span>
+              {/* MM:SS */}
+              <span
+                className="font-extrabold text-[23px] text-navy whitespace-nowrap"
+                style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".01em" }}
+              >
+                {formatCountdown(secondsLeft)}
+              </span>
+            </div>
+            {/* Barra de progreso */}
+            <div
+              className="relative h-[4px] rounded-full mt-[13px] overflow-hidden"
+              style={{ background: "rgba(14,35,60,.10)" }}
+            >
+              <span
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{
+                  width: `${fillPct}%`,
+                  background: (expired || isUrgent) ? "#A6442E" : "#C8851A",
+                  transition: "width .25s linear, background .4s",
+                }}
+              />
+            </div>
           </div>
         )}
 
