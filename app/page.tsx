@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import OrderModal from "@/components/OrderModal";
@@ -101,6 +101,7 @@ export default function Home() {
   const [reserveError, setReserveError]       = useState("");
   const [sessionToken, setSessionToken]       = useState("");
   const [reservationExpiresAt, setReservationExpiresAt] = useState("");
+  const cartRestoredRef = useRef(false);
 
   useEffect(() => {
     fetch("/api/delivery-slots")
@@ -120,19 +121,51 @@ export default function Home() {
   useEffect(() => {
     if (selectedSlotId) {
       fetchProducts(selectedSlotId);
-      setCart({});
     }
   }, [selectedSlotId, fetchProducts]);
+
+  // Restore cart from localStorage once slots finish loading
+  useEffect(() => {
+    if (loadingSlots || cartRestoredRef.current) return;
+    cartRestoredRef.current = true;
+    const saved = localStorage.getItem("brot74-cart");
+    if (!saved) return;
+    try {
+      const { slotId, cart: savedCart } = JSON.parse(saved);
+      if (!slotId || !savedCart || Object.keys(savedCart).length === 0) return;
+      const slot = slots.find((s) => s.id === slotId && !s.disabled);
+      if (slot) {
+        setSelectedSlotId(slotId);
+        setCart(savedCart);
+        setView("menu");
+      } else {
+        localStorage.removeItem("brot74-cart");
+      }
+    } catch {
+      localStorage.removeItem("brot74-cart");
+    }
+  }, [loadingSlots, slots]);
+
+  // Persist cart to localStorage on every change
+  useEffect(() => {
+    if (selectedSlotId && Object.keys(cart).length > 0) {
+      localStorage.setItem("brot74-cart", JSON.stringify({ slotId: selectedSlotId, cart }));
+    } else if (selectedSlotId) {
+      localStorage.removeItem("brot74-cart");
+    }
+  }, [cart, selectedSlotId]);
 
   function selectSlot(id: number) {
     setSelectedSlotId(id);
     setView("menu");
+    setCart({});
   }
 
   function goHome() {
     setView("home");
     setSelectedSlotId(null);
     setCart({});
+    localStorage.removeItem("brot74-cart");
   }
 
   function addToCart(productId: number) {
@@ -156,9 +189,17 @@ export default function Home() {
     });
   }
 
+  function changeCartQuantity(productId: number, newQuantity: number) {
+    if (newQuantity <= 0) {
+      removeItemFromCart(productId);
+    } else {
+      setCart((prev) => ({ ...prev, [productId]: newQuantity }));
+    }
+  }
+
   const cartItems = products
     .filter((p) => (cart[p.id] ?? 0) > 0)
-    .map((p) => ({ id: p.id, name: p.name, price: p.price, quantity: cart[p.id] }));
+    .map((p) => ({ id: p.id, name: p.name, price: p.price, quantity: cart[p.id], stock: p.stock }));
 
   const cartTotal    = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);
@@ -194,14 +235,21 @@ export default function Home() {
   }
 
   function handleModalClose() {
+    if (sessionToken) {
+      fetch("/api/cart/release", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionToken }),
+      }).catch(() => {});
+    }
     setShowModal(false);
     setSessionToken("");
     setReservationExpiresAt("");
-    // Refresh products so stock counts reflect released reservation
     if (selectedSlotId) fetchProducts(selectedSlotId);
   }
 
   function handleOrderSuccess(orderId: number) {
+    localStorage.removeItem("brot74-cart");
     setShowModal(false);
     window.location.href = `/confirmacion?order=${orderId}&status=pending`;
   }
@@ -348,6 +396,7 @@ export default function Home() {
             sessionToken={sessionToken}
             expiresAt={reservationExpiresAt}
             onRemoveItem={removeItemFromCart}
+            onChangeQuantity={changeCartQuantity}
             onClose={handleModalClose}
             onSuccess={handleOrderSuccess}
           />
@@ -368,23 +417,18 @@ export default function Home() {
           style={{ background: "#0E233C", minHeight: "100svh", padding: "56px 32px 80px", position: "relative", justifyContent: "center" }}
         >
           {/* Sello medallón */}
-          <div
-            className="brot-hero-seal mseal cream"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/sello_hero_claro.png"
+            alt="BROT 74"
             style={{
               width: "212px",
               height: "212px",
-              fontSize: "212px",
+              objectFit: "contain",
               filter: "drop-shadow(0 20px 36px rgba(0,0,0,.35))",
               flexShrink: 0,
             }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/ramillete-mono-amber.png" alt="BROT 74" />
-            <div className="wm">
-              <span className="b">BROT</span>
-              <span className="n">74</span>
-            </div>
-          </div>
+          />
 
           {/* Kicker */}
           <p

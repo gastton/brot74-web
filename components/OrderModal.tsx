@@ -10,6 +10,7 @@ interface CartItem {
   name: string;
   price: number;
   quantity: number;
+  stock: number | null; // available to new buyers at modal-open time
 }
 
 interface OrderModalProps {
@@ -21,6 +22,7 @@ interface OrderModalProps {
   sessionToken: string;
   expiresAt: string;
   onRemoveItem: (productId: number) => void;
+  onChangeQuantity: (productId: number, newQuantity: number) => void;
   onClose: () => void;
   onSuccess: (orderId: number) => void;
 }
@@ -125,12 +127,13 @@ function CopyButton({ value }: { value: string }) {
 
 function TrashIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
       <path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10 11v5M14 11v5"/>
     </svg>
   );
 }
+
 
 
 function formatCountdown(seconds: number): string {
@@ -139,7 +142,7 @@ function formatCountdown(seconds: number): string {
   return `${m}:${s}`;
 }
 
-export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onChangeQuantity, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
   const [address, setAddress] = useState("");
@@ -184,20 +187,17 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     return () => clearInterval(interval);
   }, [expiresAt, step, onClose]);
 
-  // Release reservation on unmount if order was not completed
+  // Release reservation if user closes the tab/navigates away mid-checkout
   useEffect(() => {
-    return () => {
+    function handleBeforeUnload() {
       if (!orderDoneRef.current && sessionToken) {
-        fetch("/api/cart/release", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionToken }),
-          keepalive: true,
-        }).catch(() => {});
+        const blob = new Blob([JSON.stringify({ sessionToken })], { type: "application/json" });
+        navigator.sendBeacon("/api/cart/release", blob);
       }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [sessionToken]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -474,9 +474,9 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                     className="flex items-center justify-between gap-3 pb-[14px]"
                     style={{ borderTop: i > 0 ? "1px solid rgba(14,35,60,.08)" : "none", paddingTop: i > 0 ? "14px" : "0" }}
                   >
-                    <span className="font-semibold text-[16px] text-navy">
+                    <span className="font-semibold text-[16px] text-navy leading-snug">
                       {item.name}{" "}
-                      <i className="not-italic font-medium text-[14px] text-stone">×{item.quantity}</i>
+                      <span className="font-medium text-[14px] text-stone">×{item.quantity}</span>
                     </span>
                     <span className="flex items-center gap-3 flex-none">
                       <span className="font-bold text-[16px] text-navy whitespace-nowrap">
@@ -486,10 +486,10 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                         type="button"
                         aria-label={`Quitar ${item.name}`}
                         onClick={() => onRemoveItem(item.id)}
-                        className="w-7 h-7 inline-flex items-center justify-center rounded-lg border-none bg-transparent cursor-pointer text-stone transition-colors"
+                        className="w-7 h-7 inline-flex items-center justify-center rounded-[8px] border-none bg-transparent cursor-pointer text-stone"
                         style={{ transition: "background .15s, color .15s" }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(166,68,46,.10)"; e.currentTarget.style.color = "#A6442E"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = ""; e.currentTarget.style.color = ""; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = ""; }}
                       >
                         <TrashIcon />
                       </button>
