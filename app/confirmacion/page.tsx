@@ -36,17 +36,13 @@ function ConfirmacionContent() {
         }}
       >
         {/* Sello / logo */}
-        <div
-          className="mseal navy mx-auto"
-          style={{ width: "116px", height: "116px", fontSize: "116px", filter: "drop-shadow(0 14px 26px rgba(14,35,60,.28))" }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/ramillete-mono-amber.png" alt="BROT 74" />
-          <div className="wm">
-            <span className="b">BROT</span>
-            <span className="n">74</span>
-          </div>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/sello-brot-navy.png"
+          alt="BROT 74"
+          className="mx-auto"
+          style={{ width: "116px", height: "116px", display: "block", filter: "drop-shadow(0 14px 26px rgba(14,35,60,.28))" }}
+        />
 
         {/* Título */}
         <h1 className="font-bold text-[33px] tracking-[-0.01em] text-navy mt-[26px] mb-0">
