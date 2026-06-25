@@ -535,7 +535,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
               )}
 
               {[
-                { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v), placeholder: "Juan Pérez", required: true },
+                { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },
                 { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
               ].map((field) => (
                 <div key={field.id}>
