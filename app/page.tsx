@@ -414,46 +414,82 @@ export default function Home() {
         {/* ── Hero (banda navy) ── */}
         <section
           className="flex flex-col items-center text-center"
-          style={{ background: "#0E233C", minHeight: "100svh", padding: "56px 32px 80px", position: "relative", justifyContent: "center" }}
+          style={{
+            background: "radial-gradient(120% 60% at 50% 22%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #0E233C",
+            minHeight: "100svh",
+            padding: "64px 40px 40px",
+            position: "relative",
+            justifyContent: "center",
+          }}
         >
-          {/* Sello medallón */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/sello_hero_claro.png"
-            alt="BROT 74"
+          {/* Sello invertido — ramillete crema sobre navy */}
+          <div
             style={{
-              width: "212px",
-              height: "212px",
-              objectFit: "contain",
-              filter: "drop-shadow(0 20px 36px rgba(0,0,0,.35))",
+              position: "relative",
+              width: "188px",
+              height: "188px",
+              fontSize: "188px",
               flexShrink: 0,
+              filter: "drop-shadow(0 20px 36px rgba(0,0,0,.35))",
             }}
-          />
+          >
+            <svg
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
+              viewBox="0 0 100 100"
+              aria-hidden="true"
+            >
+              <circle cx="50" cy="50" r="48" fill="none" stroke="#F4EEE2" strokeWidth="0.7" opacity="0.85" />
+              <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F4EEE2" strokeWidth="0.32" opacity="0.45" />
+            </svg>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingBottom: ".05em",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/ramillete-cream-ink.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "baseline",
+                  lineHeight: 1,
+                  marginTop: ".01em",
+                  fontFamily: "var(--font-jost, 'Jost', sans-serif)",
+                }}
+              >
+                <span style={{ fontWeight: 500, fontSize: ".115em", color: "#F4EEE2" }}>BROT</span>
+                <span style={{ fontWeight: 700, fontSize: ".115em", letterSpacing: "-.2em", marginLeft: ".18em", color: "#C8851A" }}>74</span>
+              </div>
+            </div>
+          </div>
 
           {/* Kicker */}
-          <p
-            className="brot-hero-kicker font-semibold uppercase tracking-[.3em]"
-            style={{ fontSize: "11px", color: "rgba(244,238,226,.62)", marginTop: "30px" }}
-          >
+          <p className="brot-hero-kicker" style={{ marginTop: "48px" }}>
             Micropanadería de masa madre
           </p>
 
           {/* Título */}
           <h1
-            className="brot-hero-title"
             style={{
               fontFamily: serif,
               fontWeight: 800,
-              fontSize: "41px",
-              lineHeight: 1.05,
-              letterSpacing: "-.025em",
+              fontSize: "clamp(40px, 7.5vw, 60px)",
+              lineHeight: 1.08,
+              letterSpacing: "-.015em",
               color: "#F4EEE2",
-              margin: "16px 0 0",
+              margin: "26px 0 0",
               maxWidth: "13ch",
+              textWrap: "balance" as React.CSSProperties["textWrap"],
             }}
           >
             Pan de fermentación natural,{" "}
-            <em style={{ fontStyle: "normal", color: "#EBB155" }}>como debe ser.</em>
+            <em style={{ fontStyle: "normal", color: "#C8851A" }}>como debe ser.</em>
           </h1>
 
           {/* CTA */}
@@ -461,23 +497,27 @@ export default function Home() {
             onClick={() => setView("slots")}
             className="brot-hero-cta inline-flex items-center gap-[11px] font-bold border-none cursor-pointer"
             style={{
-              marginTop: "30px",
-              fontSize: "15.5px",
-              letterSpacing: ".02em",
+              marginTop: "44px",
+              fontSize: "16px",
+              letterSpacing: ".01em",
               color: "#0E233C",
-              background: "#E49C24",
-              padding: "16px 28px",
+              background: "#C8851A",
+              padding: "18px 30px",
               borderRadius: "12px",
-              boxShadow: "0 16px 32px -14px rgba(228,156,36,.6)",
+              boxShadow: "0 16px 34px -14px rgba(200,133,26,.7)",
               transition: ctaTransition,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.background = "#E0A33A";
+              e.currentTarget.style.boxShadow = "0 20px 40px -14px rgba(200,133,26,.85)";
               const arrow = e.currentTarget.querySelector(".arrow") as HTMLElement | null;
               if (arrow) arrow.style.transform = "translateX(4px)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = "";
+              e.currentTarget.style.background = "#C8851A";
+              e.currentTarget.style.boxShadow = "0 16px 34px -14px rgba(200,133,26,.7)";
               const arrow = e.currentTarget.querySelector(".arrow") as HTMLElement | null;
               if (arrow) arrow.style.transform = "";
             }}
@@ -486,7 +526,7 @@ export default function Home() {
             <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>{"→"}</span>
           </button>
 
-          {/* Tagline (anclado al pie del hero) */}
+          {/* Tagline */}
           <div
             style={{
               position: "absolute",
@@ -494,10 +534,11 @@ export default function Home() {
               right: 0,
               bottom: "30px",
               textAlign: "center",
-              fontWeight: 600,
-              fontSize: "10.5px",
-              letterSpacing: ".1em",
+              fontWeight: 500,
+              fontSize: "12px",
+              letterSpacing: ".28em",
               textTransform: "uppercase",
+              textIndent: ".28em",
               color: "rgba(244,238,226,.42)",
             }}
           >
