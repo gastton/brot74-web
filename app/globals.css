@@ -113,21 +113,32 @@ textarea.brot-input {
   line-height: 1.5;
 }
 
-/* ── Sello monolínea (v4) ── */
-.mseal{position:relative;border-radius:50%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding-bottom:.0867em;
-  font-family:var(--font-jost,'Jost',sans-serif);}
-.mseal.navy{background:radial-gradient(120% 120% at 50% 18%,#16314f 0%,#0E233C 60%,#0A1B30 100%);}
-.mseal.cream{background:#F4EEE2;}
-.mseal::after{content:"";position:absolute;inset:.0467em;border-radius:50%;}
-.mseal.navy::after{border:.0046em solid rgba(244,238,226,.22);}
-.mseal.cream::after{border:.0046em solid rgba(14,35,60,.16);}
-.mseal img{height:.62em;width:auto;display:block;}
-.mseal .wm{display:inline-flex;align-items:baseline;margin-top:.0133em;line-height:1;}
-.mseal .wm .b{font-weight:500;font-size:.10em;letter-spacing:.06em;}
-.mseal .wm .n{font-weight:700;font-size:.10em;letter-spacing:-.11em;margin-left:.16em;color:#C8851A;}
-.mseal.navy .wm .b{color:#F4EEE2;}
-.mseal.cream .wm .b{color:#0E233C;}
+/* ── Hero v13 — kicker con filetes laterales ── */
+.brot-hero-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #E0A33A;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  text-indent: .34em;
+}
+.brot-hero-kicker::before,
+.brot-hero-kicker::after {
+  content: "";
+  width: 34px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(224,163,58,0), rgba(224,163,58,.7));
+}
+.brot-hero-kicker::after { transform: scaleX(-1); }
+
+@media (max-width: 520px) {
+  .brot-hero-kicker { gap: 11px; font-size: 11.5px; letter-spacing: .26em; text-indent: .26em; }
+  .brot-hero-kicker::before, .brot-hero-kicker::after { width: 20px; }
+}
 
 /* ═══════════════════════════════════════════
    v2 · Responsive (mobile-first)
@@ -136,17 +147,6 @@ textarea.brot-input {
 
 /* ── Hero desktop scaling ── */
 @media (min-width: 1024px) {
-  .brot-hero-seal {
-    width:     clamp(200px, 16vw, 240px) !important;
-    height:    clamp(200px, 16vw, 240px) !important;
-    font-size: clamp(200px, 16vw, 240px) !important;
-  }
-  .brot-hero-title {
-    font-size: clamp(46px, 4.6vw, 66px) !important;
-  }
-  .brot-hero-kicker {
-    margin-top: 40px !important;
-  }
   .brot-hero-cta {
     font-size: 16.5px !important;
     padding: 18px 32px !important;
