@@ -256,6 +256,7 @@ export default function Home() {
 
   /* ─── SLOTS VIEW ────────────────────────────────────────── */
   if (view === "slots") {
+    const hasActiveSlots = !loadingSlots && slots.some((s) => !s.disabled);
     return (
       <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
         <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 py-10">
@@ -266,8 +267,8 @@ export default function Home() {
             </h2>
           </header>
 
-          {/* Nota "Cómo funciona" */}
-          <NotaPrePedido />
+          {/* Nota "Cómo funciona" — solo cuando hay fechas activas */}
+          {hasActiveSlots && <NotaPrePedido />}
 
           <DateSelector
             slots={slots}
