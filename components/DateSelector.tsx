@@ -147,10 +147,10 @@ function NoSlotsEmptyState() {
         <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-[10px] text-left">
           <input
             type="text"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="Tu email o WhatsApp"
-            aria-label="Tu email o WhatsApp"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="Tu WhatsApp"
+            aria-label="Tu WhatsApp"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             required
