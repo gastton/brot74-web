@@ -18,7 +18,7 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
-  title: "BROT 74 :: Panadería Artesanal",
+  title: "BROT 74",
   description: "Pedidos de pan artesanal de fermentación natural.",
 };
 
