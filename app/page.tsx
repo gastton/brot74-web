@@ -413,7 +413,7 @@ export default function Home() {
 
         {/* ── Hero (banda navy) ── */}
         <section
-          className="flex flex-col items-center text-center"
+          className="brot-hero-section flex flex-col items-center text-center"
           style={{
             background: "radial-gradient(120% 60% at 50% 22%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #0E233C",
             minHeight: "100svh",
@@ -424,6 +424,7 @@ export default function Home() {
         >
           {/* Sello invertido — ramillete crema sobre navy */}
           <div
+            className="brot-hero-seal-wrap"
             style={{
               position: "relative",
               width: "188px",
@@ -476,6 +477,7 @@ export default function Home() {
 
           {/* Título */}
           <h1
+            className="brot-hero-h1"
             style={{
               fontFamily: serif,
               fontWeight: 800,
@@ -528,6 +530,7 @@ export default function Home() {
 
           {/* Tagline */}
           <div
+            className="brot-hero-foot"
             style={{
               position: "absolute",
               left: 0,
