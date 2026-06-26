@@ -92,15 +92,26 @@ function NoSlotsEmptyState() {
   const [value, setValue] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!value.trim()) return;
+    setError("");
     setLoading(true);
     try {
-      // TODO: POST value to waitlist backend
-      await new Promise((r) => setTimeout(r, 400));
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: value.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Error al guardar");
+      }
       setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al guardar. Intentá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -157,6 +168,9 @@ function NoSlotsEmptyState() {
             className="brot-input"
             style={{ fontSize: "15.5px", fontWeight: 500 }}
           />
+          {error && (
+            <p className="text-[13px] text-center m-0" style={{ color: "#A6442E" }}>{error}</p>
+          )}
           <button
             type="submit"
             disabled={loading}

@@ -105,3 +105,11 @@ model OrderItem {
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id])
 }
+
+model WaitlistEntry {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
