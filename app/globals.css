@@ -154,6 +154,23 @@ textarea.brot-input {
   }
 }
 
+/* ── Hero fix: compresión vertical en pantallas bajas (v17) ── */
+@media (max-height: 760px) {
+  .brot-hero-section { padding: 40px 40px 28px !important; }
+  .brot-hero-seal-wrap { width: 148px !important; height: 148px !important; font-size: 148px !important; }
+  .brot-hero-kicker { margin-top: 30px !important; }
+  .brot-hero-h1 { margin-top: 20px !important; font-size: clamp(32px, 7vw, 46px) !important; }
+  .brot-hero-cta { margin-top: 30px !important; }
+  .brot-hero-foot { bottom: 20px !important; }
+}
+@media (max-height: 640px) {
+  .brot-hero-seal-wrap { width: 124px !important; height: 124px !important; font-size: 124px !important; }
+  .brot-hero-kicker { margin-top: 22px !important; }
+  .brot-hero-h1 { margin-top: 16px !important; font-size: clamp(29px, 6.6vw, 40px) !important; }
+  .brot-hero-cta { margin-top: 24px !important; padding: 15px 26px !important; }
+  .brot-hero-foot { bottom: 14px !important; }
+}
+
 /* ── DateSelector: horizontal card at 900px+ ── */
 @media (min-width: 900px) {
   .brot-card-article {
