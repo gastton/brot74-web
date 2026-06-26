@@ -270,11 +270,27 @@ export default function Home() {
           {/* Nota "Cómo funciona" — solo cuando hay fechas activas */}
           {hasActiveSlots && <NotaPrePedido />}
 
-          <DateSelector
-            slots={slots}
-            selectedId={selectedSlotId}
-            onChange={(id) => selectSlot(id)}
-          />
+          {loadingSlots ? (
+            <div className="flex justify-center items-center py-20">
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  border: "3px solid rgba(14,35,60,.12)",
+                  borderTopColor: "#0E233C",
+                  animation: "spin 0.7s linear infinite",
+                }}
+              />
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          ) : (
+            <DateSelector
+              slots={slots}
+              selectedId={selectedSlotId}
+              onChange={(id) => selectSlot(id)}
+            />
+          )}
         </main>
       </div>
     );
