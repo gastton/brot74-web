@@ -216,6 +216,28 @@ textarea.brot-input {
     padding: 40px !important;
     overflow-y: auto;
   }
+  .brot-modal-desc.is-collapsed {
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+    overflow: visible !important;
+  }
+  .brot-modal-more {
+    display: none !important;
+  }
+  .brot-modal-rule {
+    margin-top: 26px !important;
+  }
+  .brot-modal-foot {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 16px !important;
+    margin-top: 22px !important;
+  }
+  .brot-modal-cta {
+    flex: 1;
+    padding: 17px !important;
+    width: auto !important;
+  }
 }
 
 /* ── OrderModal checkout (form step): two columns at 900px+ ── */
