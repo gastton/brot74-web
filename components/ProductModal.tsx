@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
 
@@ -53,6 +54,7 @@ export default function ProductModal({
   onClose,
   onCheckout,
 }: ProductModalProps) {
+  const [descCollapsed, setDescCollapsed] = useState(true);
   const remaining = product.stock !== null ? product.stock - quantity : null;
   const isOutOfStock = !product.hasStock || (remaining !== null && remaining <= 0 && quantity === 0);
   const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0);
@@ -131,9 +133,15 @@ export default function ProductModal({
 
         {/* Cuerpo */}
         <div className="brot-modal-body px-6 pb-6 pt-[22px]">
+          {/* Overline */}
+          <div className="brot-modal-kicker flex items-center gap-[9px] mb-[14px]" style={{ fontSize: "11px", fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#C8851A" }}>
+            <span>Masa madre · Fermentación 18 h</span>
+            <span style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, rgba(200,133,26,.4), rgba(200,133,26,0))" }} />
+          </div>
+
           {/* Nombre + precio */}
           <div className="flex items-baseline justify-between gap-[14px]">
-            <h3 className="font-bold text-[26px] tracking-[-0.01em] text-navy m-0" style={{ lineHeight: 1.1 }}>
+            <h3 className="font-extrabold text-[27px] text-navy m-0" style={{ letterSpacing: "-.015em", lineHeight: 1.1 }}>
               {product.name}
             </h3>
             <div className="font-bold text-[22px] whitespace-nowrap" style={{ color: "#C8851A" }}>
@@ -143,17 +151,39 @@ export default function ProductModal({
 
           {/* Gramaje */}
           {product.weight && (
-            <div className="font-medium text-[13.5px] text-stone mt-[3px]">{product.weight}</div>
+            <div className="font-semibold text-[13px] text-stone mt-[6px]" style={{ letterSpacing: ".02em" }}>{product.weight}</div>
           )}
 
           {/* Descripción */}
           {product.description && (
-            <p
-              className="text-[16px] leading-[1.55] mt-4"
-              style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", color: "#3a4a5e" }}
-            >
-              {product.description}
-            </p>
+            <div className="mt-4">
+              <p
+                className={`brot-modal-desc text-[16px] text-[#3a4a5e] m-0${descCollapsed ? " is-collapsed" : ""}`}
+                style={{
+                  lineHeight: 1.6,
+                  ...(descCollapsed ? {
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical" as const,
+                    overflow: "hidden",
+                  } : {}),
+                }}
+              >
+                {product.description}
+              </p>
+              <button
+                type="button"
+                aria-expanded={!descCollapsed}
+                onClick={() => setDescCollapsed((c) => !c)}
+                className="brot-modal-more inline-flex items-center gap-[6px] mt-[11px] border-none bg-transparent p-0 cursor-pointer font-bold text-[13.5px]"
+                style={{ color: "#C8851A", letterSpacing: ".01em", alignSelf: "flex-start" }}
+              >
+                <span>{descCollapsed ? "Seguir leyendo" : "Ver menos"}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "transform .2s ease", transform: descCollapsed ? "" : "rotate(180deg)" }}>
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </div>
           )}
 
           {/* Ingredientes */}
@@ -169,11 +199,23 @@ export default function ProductModal({
             </div>
           )}
 
+          {!slotSelected && (
+            <p className="mt-4 text-[13px] font-medium text-stone bg-[#F4EEE2] rounded-xl px-4 py-3">
+              Elegí una fecha de entrega para agregar al pedido
+            </p>
+          )}
+
+          {/* Divisor */}
+          <div className="brot-modal-rule" style={{ height: "1px", background: "rgba(14,35,60,.10)", marginTop: "22px" }} />
+
+          {/* Pie: stock + controles */}
+          <div className="brot-modal-foot flex flex-col gap-[14px] mt-[18px]">
+
           {/* Stock */}
           {stockText && (
-            <div className="flex items-center gap-2 mt-[18px]">
+            <div className="flex items-center gap-2">
               {!isOutOfStock && (
-                <span className="w-[7px] h-[7px] rounded-full flex-none" style={{ background: stockColor }} />
+                <span className="w-2 h-2 rounded-full flex-none" style={{ background: stockColor, boxShadow: "0 0 0 4px rgba(22,198,90,.16)" }} />
               )}
               <span
                 className="font-semibold text-[13.5px] whitespace-nowrap"
@@ -184,12 +226,6 @@ export default function ProductModal({
             </div>
           )}
 
-          {!slotSelected && (
-            <p className="mt-4 text-[13px] font-medium text-stone bg-[#F4EEE2] rounded-xl px-4 py-3">
-              Elegí una fecha de entrega para agregar al pedido
-            </p>
-          )}
-
           {/* Controles */}
           {slotSelected && (
             <>
@@ -197,7 +233,7 @@ export default function ProductModal({
                 <button
                   onClick={onAdd}
                   disabled={!canAdd}
-                  className="mt-[18px] w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
+                  className="brot-modal-cta w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
                   style={{
                     background: canAdd ? "#0E233C" : "#0E233C",
                     color: "#F4EEE2",
@@ -212,7 +248,7 @@ export default function ProductModal({
                 </button>
               ) : (
                 /* Stepper + subtotal */
-                <div className="flex items-center justify-between gap-[14px] mt-[18px]">
+                <div className="flex items-center justify-between gap-[14px]">
                   {/* Stepper */}
                   <div
                     className="inline-flex items-center gap-1"
@@ -280,6 +316,8 @@ export default function ProductModal({
               )}
             </>
           )}
+
+          </div>{/* /brot-modal-foot */}
 
           {/* Barra de carrito */}
           {cartCount > 0 && (
