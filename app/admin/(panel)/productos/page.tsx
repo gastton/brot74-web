@@ -52,6 +52,7 @@ export default function ProductosPage() {
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -69,6 +70,7 @@ export default function ProductosPage() {
     setEditing(null);
     setForm(emptyForm);
     setImagePreview("");
+    setUploadError("");
     setShowForm(true);
   }
 
@@ -89,6 +91,7 @@ export default function ProductosPage() {
       sortOrder: String(p.sortOrder),
     });
     setImagePreview(p.imageUrl);
+    setUploadError("");
     setShowForm(true);
   }
 
@@ -102,18 +105,29 @@ export default function ProductosPage() {
   }
 
   async function handleImageUpload(file: File) {
+    const previousPreview = imagePreview;
+    setUploadError("");
     setUploading(true);
     // Preview local inmediato
     setImagePreview(URL.createObjectURL(file));
 
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    if (res.ok) {
-      setForm((f) => ({ ...f, imageUrl: data.url }));
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setForm((f) => ({ ...f, imageUrl: data.url }));
+      } else {
+        setImagePreview(previousPreview);
+        setUploadError(data.error || "No se pudo subir la imagen. Probá de nuevo.");
+      }
+    } catch {
+      setImagePreview(previousPreview);
+      setUploadError("Error de conexión. Probá de nuevo.");
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function handleSave() {
@@ -286,6 +300,11 @@ export default function ProductosPage() {
                       )}
                     </div>
                   </button>
+                )}
+                {uploadError && (
+                  <div className="mt-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm">
+                    {uploadError}
+                  </div>
                 )}
               </div>
 

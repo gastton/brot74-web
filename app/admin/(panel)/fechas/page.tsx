@@ -554,17 +554,32 @@ function SlotImageTrigger({ slot, images, onSave }: {
   const [scale, setScale] = useState(slot.imageScale ?? 1);
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleImageUpload(file: File) {
+    const previousImage = selectedImage;
+    setUploadError("");
     setUploading(true);
     setSelectedImage(URL.createObjectURL(file));
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    if (res.ok) { setSelectedImage(data.url); setFocalX(50); setFocalY(50); setScale(1); }
-    setUploading(false);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSelectedImage(data.url); setFocalX(50); setFocalY(50); setScale(1);
+      } else {
+        setSelectedImage(previousImage);
+        setUploadError(data.error || "No se pudo subir la imagen. Probá de nuevo.");
+      }
+    } catch {
+      setSelectedImage(previousImage);
+      setUploadError("Error de conexión. Probá de nuevo.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handleOpen() {
@@ -572,6 +587,7 @@ function SlotImageTrigger({ slot, images, onSave }: {
     setFocalX(slot.imageFocalX);
     setFocalY(slot.imageFocalY);
     setScale(slot.imageScale ?? 1);
+    setUploadError("");
     setShowModal(true);
   }
 
@@ -635,6 +651,12 @@ function SlotImageTrigger({ slot, images, onSave }: {
               className="w-full text-xs text-muted hover:text-brown transition-colors py-1 mb-3">
               {uploading ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Subiendo...</span> : "Cambiar imagen"}
             </button>
+
+            {uploadError && (
+              <div className="mb-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm">
+                {uploadError}
+              </div>
+            )}
 
             <button onClick={handleSave} className="w-full btn-primary rounded-xl py-3 text-sm flex items-center justify-center gap-2">
               <Check className="w-4 h-4" /> Guardar

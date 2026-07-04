@@ -19,7 +19,10 @@ export async function POST(req: NextRequest) {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const filename = `products/product-${Date.now()}.${ext}`;
 
-  const blob = await put(filename, file, { access: "public" });
-
-  return NextResponse.json({ url: blob.url });
+  try {
+    const blob = await put(filename, file, { access: "public" });
+    return NextResponse.json({ url: blob.url });
+  } catch {
+    return NextResponse.json({ error: "No se pudo subir la imagen. Probá de nuevo." }, { status: 500 });
+  }
 }
