@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 interface Slot {
   id: number;
@@ -554,12 +555,10 @@ function SlotImageTrigger({ slot, images, onSave }: {
   const [scale, setScale] = useState(slot.imageScale ?? 1);
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleImageUpload(file: File) {
     const previousImage = selectedImage;
-    setUploadError("");
     setUploading(true);
     setSelectedImage(URL.createObjectURL(file));
 
@@ -570,13 +569,16 @@ function SlotImageTrigger({ slot, images, onSave }: {
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setSelectedImage(data.url); setFocalX(50); setFocalY(50); setScale(1);
+        const weekday = new Date(slot.date).toLocaleDateString("es-AR", { weekday: "long" });
+        const day = new Date(slot.date).getDate();
+        toastSuccess(`la foto de la fecha del ${weekday} ${day}`);
       } else {
         setSelectedImage(previousImage);
-        setUploadError(data.error || "No se pudo subir la imagen. Probá de nuevo.");
+        toastError(data.error || "No se pudo subir la imagen. Probá de nuevo.", { onRetry: () => handleImageUpload(file) });
       }
     } catch {
       setSelectedImage(previousImage);
-      setUploadError("Error de conexión. Probá de nuevo.");
+      toastError("Error de conexión. Probá de nuevo.", { onRetry: () => handleImageUpload(file) });
     } finally {
       setUploading(false);
     }
@@ -587,7 +589,6 @@ function SlotImageTrigger({ slot, images, onSave }: {
     setFocalX(slot.imageFocalX);
     setFocalY(slot.imageFocalY);
     setScale(slot.imageScale ?? 1);
-    setUploadError("");
     setShowModal(true);
   }
 
@@ -651,12 +652,6 @@ function SlotImageTrigger({ slot, images, onSave }: {
               className="w-full text-xs text-muted hover:text-brown transition-colors py-1 mb-3">
               {uploading ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-3 h-3 animate-spin" /> Subiendo...</span> : "Cambiar imagen"}
             </button>
-
-            {uploadError && (
-              <div className="mb-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm">
-                {uploadError}
-              </div>
-            )}
 
             <button onClick={handleSave} className="w-full btn-primary rounded-xl py-3 text-sm flex items-center justify-center gap-2">
               <Check className="w-4 h-4" /> Guardar
