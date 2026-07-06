@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/auth";
 import AdminNav from "@/components/admin/AdminNav";
+import "./toast.css";
 
 export default async function AdminLayout({
   children,

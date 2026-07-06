@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 interface Slot {
   id: number;
@@ -557,14 +558,30 @@ function SlotImageTrigger({ slot, images, onSave }: {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleImageUpload(file: File) {
+    const previousImage = selectedImage;
     setUploading(true);
     setSelectedImage(URL.createObjectURL(file));
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    if (res.ok) { setSelectedImage(data.url); setFocalX(50); setFocalY(50); setScale(1); }
-    setUploading(false);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setSelectedImage(data.url); setFocalX(50); setFocalY(50); setScale(1);
+        const weekday = new Date(slot.date).toLocaleDateString("es-AR", { weekday: "long" });
+        const day = new Date(slot.date).getDate();
+        toastSuccess(`la foto de la fecha del ${weekday} ${day}`);
+      } else {
+        setSelectedImage(previousImage);
+        toastError(data.error || "No se pudo subir la imagen. Probá de nuevo.", { onRetry: () => handleImageUpload(file) });
+      }
+    } catch {
+      setSelectedImage(previousImage);
+      toastError("Error de conexión. Probá de nuevo.", { onRetry: () => handleImageUpload(file) });
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handleOpen() {

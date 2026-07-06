@@ -1,0 +1,75 @@
+/* ============================================================
+   BROT 74 — Componente Toast (admin) · toast.css
+   Notificaciones de subida de imagen (fecha / producto).
+   Paleta y tipografía de la web (Hanken Grotesk).
+   Ver _design/design_cambios_v23.
+   ============================================================ */
+:root{
+  --navy:#0E233C; --amber:#C8851A; --cream:#F4EEE2;
+  --open:#16C65A; --terra-soft:#C65C42;
+}
+
+.toast-stack{position:fixed;left:0;right:0;bottom:22px;z-index:60;display:flex;flex-direction:column;
+  align-items:center;gap:12px;padding:0 16px;pointer-events:none;}
+
+.toast{pointer-events:auto;width:100%;max-width:428px;position:relative;overflow:hidden;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:start;gap:14px;
+  background:var(--navy);color:var(--cream);border-radius:16px;
+  padding:16px 16px 17px;box-shadow:0 22px 44px -18px rgba(14,35,60,.7),0 4px 12px -6px rgba(0,0,0,.4);
+  border:1px solid rgba(244,238,226,.08);font-family:'Hanken Grotesk',system-ui,sans-serif;
+  animation:toast-in .42s cubic-bezier(.16,.84,.36,1) both;}
+.toast.is-leaving{animation:toast-out .28s cubic-bezier(.4,0,.7,.2) forwards;}
+
+/* franja de acento */
+.toast::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--terra-soft);}
+
+.toast__icon{flex:0 0 auto;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  background:rgba(198,92,66,.18);color:var(--terra-soft);margin-left:2px;}
+
+/* variante de éxito */
+.toast.is-ok::before{background:var(--open);}
+.toast.is-ok .toast__icon{background:rgba(22,198,90,.16);color:#3FD97C;}
+.toast.is-ok .toast__timer{background:linear-gradient(90deg,var(--open),var(--amber));}
+
+.toast__body{min-width:0;padding-top:1px;}
+.toast__title{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.25;margin:0;}
+.toast__desc{margin:3px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:rgba(244,238,226,.7);word-break:break-word;}
+.toast__desc b{color:var(--cream);font-weight:600;}
+.toast__actions{display:flex;align-items:center;gap:8px;margin-top:11px;}
+.toast__retry{appearance:none;border:0;cursor:pointer;font-family:inherit;
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--cream);color:var(--navy);font-size:13px;font-weight:700;letter-spacing:.01em;
+  padding:9px 14px;border-radius:9px;transition:transform .16s,box-shadow .16s,background .16s;}
+.toast__retry:hover{transform:translateY(-1px);box-shadow:0 8px 18px -8px rgba(0,0,0,.5);}
+.toast__retry:active{transform:translateY(0);}
+.toast__retry svg{transition:transform .5s cubic-bezier(.2,.7,.3,1);}
+.toast__retry:hover svg{transform:rotate(-180deg);}
+.toast__ghost{appearance:none;border:0;background:none;cursor:pointer;font-family:inherit;
+  color:rgba(244,238,226,.62);font-size:13px;font-weight:600;padding:9px 6px;transition:color .16s;}
+.toast__ghost:hover{color:var(--cream);}
+
+.toast:not(.has-actions){align-items:center;}
+.toast:not(.has-actions) .toast__body{padding-top:0;}
+
+.toast__close{flex:0 0 auto;appearance:none;border:0;background:none;cursor:pointer;color:rgba(244,238,226,.5);
+  width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  transition:color .16s,background .16s;margin:-2px -2px 0 0;}
+.toast__close:hover{color:var(--cream);background:rgba(244,238,226,.1);}
+
+/* barra de auto-cierre */
+.toast__timer{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;
+  background:linear-gradient(90deg,var(--terra-soft),var(--amber));opacity:.9;}
+.toast.is-running .toast__timer{animation:toast-timer var(--dur,7s) linear forwards;}
+.toast:hover .toast__timer{animation-play-state:paused;}
+
+@keyframes toast-in{from{opacity:0;transform:translateY(26px) scale(.97);}to{opacity:1;transform:none;}}
+@keyframes toast-out{to{opacity:0;transform:translateY(14px) scale(.97);}}
+@keyframes toast-timer{from{transform:scaleX(1);}to{transform:scaleX(0);}}
+@media (prefers-reduced-motion:reduce){
+  .toast{animation:none;} .toast.is-running .toast__timer{animation:none;} .toast__retry:hover svg{transform:none;}
+}
+
+/* desktop: esquina inferior derecha */
+@media (min-width:760px){
+  .toast-stack{align-items:flex-end;right:24px;left:auto;bottom:24px;padding:0;max-width:none;}
+}

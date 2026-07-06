@@ -6,6 +6,7 @@ import Image from "next/image";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import FocalPicker from "@/components/FocalPicker";
 import { formatCurrency } from "@/lib/utils";
+import { toastError, toastSuccess } from "@/lib/toast";
 
 const DAYS = [
   { key: "lunes",     label: "Lunes",      short: "L" },
@@ -102,18 +103,29 @@ export default function ProductosPage() {
   }
 
   async function handleImageUpload(file: File) {
+    const previousPreview = imagePreview;
     setUploading(true);
     // Preview local inmediato
     setImagePreview(URL.createObjectURL(file));
 
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
-    const data = await res.json();
-    if (res.ok) {
-      setForm((f) => ({ ...f, imageUrl: data.url }));
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setForm((f) => ({ ...f, imageUrl: data.url }));
+        toastSuccess("la foto del producto");
+      } else {
+        setImagePreview(previousPreview);
+        toastError(data.error || "No se pudo subir la imagen. Probá de nuevo.", { onRetry: () => handleImageUpload(file) });
+      }
+    } catch {
+      setImagePreview(previousPreview);
+      toastError("Error de conexión. Probá de nuevo.", { onRetry: () => handleImageUpload(file) });
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   }
 
   async function handleSave() {
