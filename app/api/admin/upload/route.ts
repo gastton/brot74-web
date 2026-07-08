@@ -5,6 +5,8 @@ import sharp from "sharp";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const HEIC_EXTENSIONS = ["heic", "heif"];
+const ALLOWED_FOLDERS = ["products", "dates"] as const;
+type UploadFolder = (typeof ALLOWED_FOLDERS)[number];
 const MAX_ORIGINAL_BYTES = 5 * 1024 * 1024; // 5MB
 const MAX_WIDTH = 1200;
 const TARGET_BYTES = 150 * 1024; // 150KB, con margen bajo el límite de 200KB del ticket
@@ -29,6 +31,10 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
+  const folderInput = formData.get("folder");
+  const folder: UploadFolder = ALLOWED_FOLDERS.includes(folderInput as UploadFolder)
+    ? (folderInput as UploadFolder)
+    : "products";
 
   if (!file) return NextResponse.json({ error: "No se recibió archivo" }, { status: 400 });
 
@@ -61,7 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "El archivo está dañado o no es una imagen válida." }, { status: 400 });
   }
 
-  const filename = `products/product-${Date.now()}.webp`;
+  const filename = `${folder}/${folder === "dates" ? "date" : "product"}-${Date.now()}.webp`;
 
   try {
     const blob = await put(filename, optimized, { access: "public", contentType: "image/webp" });
