@@ -534,7 +534,14 @@ const styles = `
     .footer-watermark{ opacity: 0.26; }
   }
   @media (max-width: 760px){
-    .footer-watermark{ display: none; }
+    .footer-watermark{
+      position: static;
+      display: block;
+      width: 70px;
+      max-width: none;
+      margin: 0 auto 14px;
+      transform: none;
+    }
   }
 
   @media (max-width: 760px){
