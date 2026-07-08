@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 
 const DAY_MAP: Record<number, string> = { 1: "lunes", 6: "sabado" };
-const DELIVERY_DAYS = new Set<number>(); // Por defecto todo es retiro, el admin lo cambia manualmente
 const TARGET_DAYS = [1, 6];        // Lunes, Sábado
 const DEFAULT_STOCK = 8;
 

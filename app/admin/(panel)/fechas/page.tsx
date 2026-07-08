@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp, ImageIcon, ZoomIn } from "lucide-react";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import { toastError, toastSuccess } from "@/lib/toast";
@@ -34,7 +32,6 @@ const MONTHS = [
 export default function FechasPage() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -53,15 +50,12 @@ export default function FechasPage() {
   const [genYear, setGenYear] = useState(nextYear);
 
   async function fetchAll() {
-    const [slotsRes, productsRes, imagesRes] = await Promise.all([
+    const [slotsRes, productsRes] = await Promise.all([
       fetch("/api/admin/slots"),
       fetch("/api/admin/products"),
-      fetch("/api/admin/images"),
     ]);
     const slotsData = await slotsRes.json();
     const productsData = await productsRes.json();
-    const imagesData = await imagesRes.json();
-    setImages(imagesData);
     setSlots(slotsData.map((s: Slot & { stocks: { product: { name: string }, totalStock: number, reservedStock: number, id: number, productId: number, deliverySlotId: number }[] }) => ({
       ...s,
       stocks: s.stocks.map((st) => ({
@@ -219,7 +213,6 @@ export default function FechasPage() {
             title="Próximas fechas"
             slots={upcoming}
             products={products}
-            images={images}
             stockEdits={stockEdits}
             setStockEdits={setStockEdits}
             onToggle={toggleActive}
@@ -255,7 +248,6 @@ export default function FechasPage() {
                     onUpdateDetails={updateDetails}
                     onUpdateImage={updateImage}
                     onUpdateCutoff={updateCutoff}
-                    images={images}
                     muted
                   />
                 </div>
@@ -423,8 +415,8 @@ export default function FechasPage() {
   );
 }
 
-function SlotList({ title, slots, products, images, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, onUpdateDetails, onUpdateImage, onUpdateCutoff, muted }: {
-  title: string; slots: Slot[]; products: Product[]; images: string[];
+function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, onUpdateDetails, onUpdateImage, onUpdateCutoff, muted }: {
+  title: string; slots: Slot[]; products: Product[];
   stockEdits: Record<string, string>; setStockEdits: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
   onToggle: (s: Slot) => void; onDelete: (id: number) => void;
   onSaveStock: (productId: number, deliverySlotId: number, key: string) => void;
@@ -453,7 +445,7 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
-                <SlotImageTrigger slot={slot} images={images} onSave={(imageUrl, focalX, focalY, imageScale) => onUpdateImage(slot, imageUrl, focalX, focalY, imageScale)} />
+                <SlotImageTrigger slot={slot} onSave={(imageUrl, focalX, focalY, imageScale) => onUpdateImage(slot, imageUrl, focalX, focalY, imageScale)} />
                 <div className="relative group">
                   <button onClick={() => onToggle(slot)} className="p-2 text-amber hover:text-amber-light transition-colors">
                     {slot.active ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
@@ -543,9 +535,8 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
 
 const HERO_IMAGE_FALLBACK = "/products/product-1779659787800.jpeg";
 
-function SlotImageTrigger({ slot, images, onSave }: {
+function SlotImageTrigger({ slot, onSave }: {
   slot: Slot;
-  images: string[];
   onSave: (imageUrl: string, focalX: number, focalY: number, imageScale: number) => void;
 }) {
   const [showModal, setShowModal] = useState(false);

@@ -213,7 +213,7 @@ function NoSlotsEmptyState() {
   );
 }
 
-export default function DateSelector({ slots, selectedId, onChange }: DateSelectorProps) {
+export default function DateSelector({ slots, onChange }: DateSelectorProps) {
   const visibleSlots = slots.filter((s) => !s.disabled);
 
   if (visibleSlots.length === 0) {
