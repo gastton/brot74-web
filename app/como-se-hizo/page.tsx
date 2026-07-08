@@ -651,7 +651,7 @@ const content = `
     <div class="section-head">
       <span class="section-num">02</span>
       <div>
-        <h2 data-es="La comanda" data-en="The order slip">La comanda</h2>
+        <h2 data-es="La receta" data-en="The recipe">La receta</h2>
         <div class="section-sub" data-es="lo que efectivamente entró al horno" data-en="what actually went into the oven">lo que efectivamente entró al horno</div>
       </div>
     </div>
