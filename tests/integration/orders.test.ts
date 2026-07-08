@@ -1,0 +1,147 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
+
+vi.mock("@/lib/whatsapp", () => ({
+  sendWhatsAppNotification: vi.fn(),
+  buildOrderMessage: vi.fn(() => "mock message"),
+}));
+
+import { POST } from "@/app/api/orders/route";
+import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { prisma } from "@/lib/db";
+import { createProduct, createDeliverySlot, createProductStock, createCartReservation } from "../helpers/factories";
+
+function makeRequest(body: unknown) {
+  return new NextRequest("http://localhost/api/orders", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+function baseOrder(overrides: Record<string, unknown> = {}) {
+  return {
+    customerName: "Gaston",
+    customerPhone: "1122334455",
+    deliverySlotId: 0,
+    items: [{ productId: 0, quantity: 1 }],
+    ...overrides,
+  };
+}
+
+describe("POST /api/orders", () => {
+  beforeEach(() => {
+    vi.mocked(sendWhatsAppNotification).mockReset();
+  });
+
+  it("crea el pedido, reserva stock y libera la reserva de carrito", async () => {
+    const product = await createProduct({ price: 1500 });
+    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    await createProductStock(product.id, slot.id, { totalStock: 5, reservedStock: 0 });
+    const sessionToken = crypto.randomUUID();
+    await createCartReservation(product.id, slot.id, { sessionToken, quantity: 2 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 2 }], sessionToken }))
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.total).toBe(3000);
+
+    const stock = await prisma.productStock.findUnique({
+      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
+    });
+    expect(stock?.reservedStock).toBe(2);
+
+    const cartReservations = await prisma.cartReservation.findMany({ where: { sessionToken } });
+    expect(cartReservations).toHaveLength(0);
+
+    const order = await prisma.order.findUnique({ where: { id: json.orderId }, include: { items: true } });
+    expect(order?.items).toHaveLength(1);
+  });
+
+  it("devuelve 400 si el slot está inactivo", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot({ active: false });
+    await createProductStock(product.id, slot.id);
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("devuelve 400 si pide delivery en un slot solo pickup", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    await createProductStock(product.id, slot.id);
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({
+          deliverySlotId: slot.id,
+          items: [{ productId: product.id, quantity: 1 }],
+          isDelivery: true,
+          customerAddress: "Calle Falsa 123",
+        })
+      )
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("devuelve 400 si falta la dirección para delivery", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot({ deliveryMode: "delivery" });
+    await createProductStock(product.id, slot.id);
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }], isDelivery: true }))
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("devuelve 400 si el stock es insuficiente", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    await createProductStock(product.id, slot.id, { totalStock: 1 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 5 }] }))
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("devuelve 409 si el sessionToken expiró o no cubre la cantidad pedida", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+    const sessionToken = crypto.randomUUID();
+    await createCartReservation(product.id, slot.id, { sessionToken, expiresAt: new Date(Date.now() - 1000) });
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }], sessionToken })
+      )
+    );
+
+    expect(res.status).toBe(409);
+  });
+
+  it("crea el pedido igual si falla la notificación de WhatsApp", async () => {
+    vi.mocked(sendWhatsAppNotification).mockRejectedValueOnce(new Error("network down"));
+
+    const product = await createProduct();
+    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(200);
+  });
+});
