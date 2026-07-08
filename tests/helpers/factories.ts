@@ -63,3 +63,22 @@ export async function createCartReservation(
     },
   });
 }
+
+export async function createOrder(
+  deliverySlotId: number,
+  items: { productId: number; quantity: number; unitPrice: number }[] = [],
+  overrides: Partial<Prisma.OrderUncheckedCreateInput> = {}
+) {
+  return prisma.order.create({
+    data: {
+      customerName: "Cliente Test",
+      customerPhone: "1122334455",
+      deliverySlotId,
+      total: items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
+      status: "pending",
+      items: { create: items },
+      ...overrides,
+    },
+    include: { items: true },
+  });
+}
