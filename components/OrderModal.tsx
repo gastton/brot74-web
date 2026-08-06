@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -393,31 +394,42 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
             <div>
               <div className="flex gap-2">
                 {([
-                  { id: "mp", label: "MP" },
-                  { id: "nx", label: "NX" },
-                  { id: "md", label: "MD" },
+                  { id: "mp", label: "MP", logo: "/billeteras/mp.webp" },
+                  { id: "nx", label: "NX", logo: "/billeteras/nx.webp" },
+                  { id: "md", label: "MD", logo: "/billeteras/md.webp" },
                   { id: "ot", label: "OT" },
-                ] as const).map((w) => (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => handleWalletClick(w.id)}
-                    className="flex-1 min-w-0 font-bold text-[15px] tracking-[.01em]"
-                    style={{
-                      background: copiedWallet === w.id ? "#3F8F5B" : "#0E233C",
-                      color: "#F4EEE2",
-                      border: "none",
-                      borderRadius: "14px",
-                      padding: "15px 6px",
-                      cursor: "pointer",
-                      transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, background .2s",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-                  >
-                    {copiedWallet === w.id ? "✓" : w.label}
-                  </button>
-                ))}
+                ] as const).map((w) => {
+                  const isCopied = copiedWallet === w.id;
+                  const hasLogo = "logo" in w;
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      aria-label={hasLogo ? w.label : undefined}
+                      onClick={() => handleWalletClick(w.id)}
+                      className="flex-1 min-w-0 relative font-bold text-[15px] tracking-[.01em] overflow-hidden"
+                      style={{
+                        background: hasLogo ? "transparent" : (isCopied ? "#3F8F5B" : "#0E233C"),
+                        color: "#F4EEE2",
+                        border: "none",
+                        borderRadius: "14px",
+                        padding: hasLogo ? 0 : "15px 6px",
+                        height: "56px",
+                        cursor: "pointer",
+                        boxShadow: isCopied && hasLogo ? "0 0 0 3px #3F8F5B" : "none",
+                        transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, background .2s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; if (!hasLogo) e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; if (!hasLogo) e.currentTarget.style.boxShadow = "none"; }}
+                    >
+                      {hasLogo ? (
+                        <Image src={w.logo} alt={w.label} fill className="object-cover" sizes="90px" />
+                      ) : (
+                        isCopied ? "✓" : w.label
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
                 Abrí tu app con el alias ya copiado
