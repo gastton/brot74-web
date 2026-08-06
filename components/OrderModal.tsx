@@ -37,6 +37,33 @@ const HAIR = { height: "1px", background: "rgba(14,35,60,.10)" } as const;
 
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
+// Deep links para abrir cada billetera desde el botón de pago.
+// NX y MD son la mejor estimación disponible (no documentados oficialmente
+// por el proveedor) — actualizar acá si se confirma el esquema real.
+const WALLET_APPS: Record<string, { scheme: string; androidPackage: string }> = {
+  mp: { scheme: "mercadopago", androidPackage: "com.mercadopago.wallet" },
+  nx: { scheme: "naranjax", androidPackage: "com.tarjetanaranja.ncuenta" },
+  md: { scheme: "modo", androidPackage: "com.playdigital.modo" },
+};
+
+function isAndroid() {
+  return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+}
+
+// Android: intent:// es más confiable que el esquema simple en Chrome — si la
+// app no está instalada, cae al fallback (ficha de Play Store) en vez de no hacer nada.
+// iOS/desktop: esquema simple; si la app no está instalada no pasa nada visible.
+function openWalletApp(id: string) {
+  const app = WALLET_APPS[id];
+  if (!app) return;
+  if (isAndroid()) {
+    const fallback = encodeURIComponent(`https://play.google.com/store/apps/details?id=${app.androidPackage}`);
+    window.location.href = `intent://#Intent;scheme=${app.scheme};package=${app.androidPackage};S.browser_fallback_url=${fallback};end`;
+  } else {
+    window.location.href = `${app.scheme}://`;
+  }
+}
+
 function CloseIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2" strokeLinecap="round">
@@ -191,9 +218,9 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     onClose();
   }
 
-  function handleWalletClick(id: string, scheme?: string) {
+  function handleWalletClick(id: string) {
     navigator.clipboard?.writeText(ALIAS).catch(() => {});
-    if (scheme) window.location.href = scheme;
+    openWalletApp(id);
     setCopiedWallet(id);
     setTimeout(() => setCopiedWallet((w) => (w === id ? null : w)), 1400);
     setToastVisible(true);
@@ -364,15 +391,15 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
             <div>
               <div className="flex gap-2">
                 {([
-                  { id: "mp", label: "MP", scheme: "mercadopago://" },
-                  { id: "nx", label: "NX", scheme: "naranjax://" },
-                  { id: "md", label: "MD", scheme: "modo://" },
+                  { id: "mp", label: "MP" },
+                  { id: "nx", label: "NX" },
+                  { id: "md", label: "MD" },
                   { id: "ot", label: "OT" },
                 ] as const).map((w) => (
                   <button
                     key={w.id}
                     type="button"
-                    onClick={() => handleWalletClick(w.id, "scheme" in w ? w.scheme : undefined)}
+                    onClick={() => handleWalletClick(w.id)}
                     className="flex-1 min-w-0 font-bold text-[15px] tracking-[.01em]"
                     style={{
                       background: copiedWallet === w.id ? "#3F8F5B" : "#0E233C",
