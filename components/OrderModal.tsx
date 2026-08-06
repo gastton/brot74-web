@@ -40,22 +40,30 @@ const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s"
 // Deep links para abrir cada billetera desde el botón de pago.
 // NX y MD son la mejor estimación disponible (no documentados oficialmente
 // por el proveedor) — actualizar acá si se confirma el esquema real.
-const WALLET_APPS: Record<string, { scheme: string }> = {
-  mp: { scheme: "mercadopago" },
-  nx: { scheme: "naranjax" },
-  md: { scheme: "modo" },
+const WALLET_APPS: Record<string, { scheme: string; androidPackage: string }> = {
+  mp: { scheme: "mercadopago", androidPackage: "com.mercadopago.wallet" },
+  nx: { scheme: "naranjax", androidPackage: "com.tarjetanaranja.ncuenta" },
+  md: { scheme: "modo", androidPackage: "com.playdigital.modo" },
 };
 
-// Solo el intento directo del esquema, sin fallback propio: tanto intent://
-// (exige scheme+package exactos) como el fallback por timer + document.hidden
-// (poco confiable — Android/Chrome puede abrir Play Store por su cuenta sin
-// que la pestaña se marque como oculta, duplicando la redirección) mostraron
-// problemas en pruebas reales. Si la app no abre, el usuario igual tiene el
-// alias copiado al portapapeles.
+function isAndroid() {
+  return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+}
+
+// Android: intent:// con fallback a Play Store. No abre la app directo (el
+// esquema no matchea el intent-filter real de estas apps), pero al menos
+// deja al usuario en la ficha correcta desde donde "Abrir" sí funciona —
+// mejor que las otras variantes probadas (nada, o Play Store duplicado).
+// iOS/desktop: esquema simple; si la app no está instalada no pasa nada visible.
 function openWalletApp(id: string) {
   const app = WALLET_APPS[id];
   if (!app) return;
-  window.location.href = `${app.scheme}://`;
+  if (isAndroid()) {
+    const fallback = encodeURIComponent(`https://play.google.com/store/apps/details?id=${app.androidPackage}`);
+    window.location.href = `intent://#Intent;scheme=${app.scheme};package=${app.androidPackage};S.browser_fallback_url=${fallback};end`;
+  } else {
+    window.location.href = `${app.scheme}://`;
+  }
 }
 
 function CloseIcon() {
