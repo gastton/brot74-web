@@ -397,36 +397,29 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                   { id: "mp", label: "MP", logo: "/billeteras/mp.webp" },
                   { id: "nx", label: "NX", logo: "/billeteras/nx.webp" },
                   { id: "md", label: "MD", logo: "/billeteras/md.webp" },
-                  { id: "ot", label: "OT" },
+                  { id: "ot", label: "Otro banco", logo: "/billeteras/banco.webp" },
                 ] as const).map((w) => {
                   const isCopied = copiedWallet === w.id;
-                  const hasLogo = "logo" in w;
                   return (
                     <button
                       key={w.id}
                       type="button"
-                      aria-label={hasLogo ? w.label : undefined}
+                      aria-label={w.label}
                       onClick={() => handleWalletClick(w.id)}
-                      className="flex-1 min-w-0 relative font-bold text-[15px] tracking-[.01em] overflow-hidden"
+                      className="flex-1 min-w-0 relative overflow-hidden"
                       style={{
-                        background: hasLogo ? "transparent" : (isCopied ? "#3F8F5B" : "#0E233C"),
-                        color: "#F4EEE2",
                         border: "none",
                         borderRadius: "14px",
-                        padding: hasLogo ? 0 : "15px 6px",
+                        padding: 0,
                         height: "56px",
                         cursor: "pointer",
-                        boxShadow: isCopied && hasLogo ? "0 0 0 3px #3F8F5B" : "none",
-                        transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, background .2s",
+                        boxShadow: isCopied ? "0 0 0 3px #3F8F5B" : "none",
+                        transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; if (!hasLogo) e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; if (!hasLogo) e.currentTarget.style.boxShadow = "none"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
                     >
-                      {hasLogo ? (
-                        <Image src={w.logo} alt={w.label} fill className="object-cover" sizes="90px" />
-                      ) : (
-                        isCopied ? "✓" : w.label
-                      )}
+                      <Image src={w.logo} alt={w.label} fill className="object-cover" sizes="90px" />
                     </button>
                   );
                 })}
