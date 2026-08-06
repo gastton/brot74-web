@@ -50,17 +50,20 @@ function isAndroid() {
   return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
 }
 
-// Android: intent:// es más confiable que el esquema simple en Chrome — si la
-// app no está instalada, cae al fallback (ficha de Play Store) en vez de no hacer nada.
-// iOS/desktop: esquema simple; si la app no está instalada no pasa nada visible.
+// Esquema simple + timer: intentamos el esquema custom directo (más laxo que
+// intent://, que exige que el paquete tenga registrado exactamente ese
+// scheme+package y puede fallar aunque la app esté instalada). Si a los 2s
+// seguimos con la pestaña visible, asumimos que no abrió y vamos al fallback
+// (solo en Android, por ahora — en iOS no hay fallback, como se definió).
 function openWalletApp(id: string) {
   const app = WALLET_APPS[id];
   if (!app) return;
+  window.location.href = `${app.scheme}://`;
   if (isAndroid()) {
-    const fallback = encodeURIComponent(`https://play.google.com/store/apps/details?id=${app.androidPackage}`);
-    window.location.href = `intent://#Intent;scheme=${app.scheme};package=${app.androidPackage};S.browser_fallback_url=${fallback};end`;
-  } else {
-    window.location.href = `${app.scheme}://`;
+    const fallback = `https://play.google.com/store/apps/details?id=${app.androidPackage}`;
+    setTimeout(() => {
+      if (!document.hidden) window.location.href = fallback;
+    }, 2000);
   }
 }
 
