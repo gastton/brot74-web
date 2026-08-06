@@ -40,31 +40,22 @@ const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s"
 // Deep links para abrir cada billetera desde el botón de pago.
 // NX y MD son la mejor estimación disponible (no documentados oficialmente
 // por el proveedor) — actualizar acá si se confirma el esquema real.
-const WALLET_APPS: Record<string, { scheme: string; androidPackage: string }> = {
-  mp: { scheme: "mercadopago", androidPackage: "com.mercadopago.wallet" },
-  nx: { scheme: "naranjax", androidPackage: "com.tarjetanaranja.ncuenta" },
-  md: { scheme: "modo", androidPackage: "com.playdigital.modo" },
+const WALLET_APPS: Record<string, { scheme: string }> = {
+  mp: { scheme: "mercadopago" },
+  nx: { scheme: "naranjax" },
+  md: { scheme: "modo" },
 };
 
-function isAndroid() {
-  return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
-}
-
-// Esquema simple + timer: intentamos el esquema custom directo (más laxo que
-// intent://, que exige que el paquete tenga registrado exactamente ese
-// scheme+package y puede fallar aunque la app esté instalada). Si a los 2s
-// seguimos con la pestaña visible, asumimos que no abrió y vamos al fallback
-// (solo en Android, por ahora — en iOS no hay fallback, como se definió).
+// Solo el intento directo del esquema, sin fallback propio: tanto intent://
+// (exige scheme+package exactos) como el fallback por timer + document.hidden
+// (poco confiable — Android/Chrome puede abrir Play Store por su cuenta sin
+// que la pestaña se marque como oculta, duplicando la redirección) mostraron
+// problemas en pruebas reales. Si la app no abre, el usuario igual tiene el
+// alias copiado al portapapeles.
 function openWalletApp(id: string) {
   const app = WALLET_APPS[id];
   if (!app) return;
   window.location.href = `${app.scheme}://`;
-  if (isAndroid()) {
-    const fallback = `https://play.google.com/store/apps/details?id=${app.androidPackage}`;
-    setTimeout(() => {
-      if (!document.hidden) window.location.href = fallback;
-    }, 2000);
-  }
 }
 
 function CloseIcon() {
