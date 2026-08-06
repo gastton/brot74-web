@@ -240,6 +240,18 @@ textarea.brot-input {
   }
 }
 
+/* ── OrderModal backdrop (v25): scroll cuando el contenido no entra en el viewport ── */
+.brot-co-backdrop {
+  align-items: center;
+  align-items: safe center;
+}
+
+/* ── OrderModal checkout (form step) v25: lista de productos con scroll a partir del 5º ítem ── */
+.brot-co-lines {
+  max-height: 170px;
+  overflow-y: auto;
+}
+
 /* ── OrderModal checkout (form step): two columns at 900px+ ── */
 @media (min-width: 900px) {
   .brot-co-modal {
@@ -271,6 +283,15 @@ textarea.brot-input {
   .brot-co-form > * {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
+  }
+  .brot-co-actions {
+    grid-column: 1 / -1;
+    order: 3;
+    justify-content: flex-end;
+    margin-top: 6px !important;
+  }
+  .brot-co-actions > * {
+    flex: 0 0 auto !important;
   }
 }
 
