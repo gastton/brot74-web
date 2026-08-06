@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -133,6 +132,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
   const [toastVisible, setToastVisible] = useState(false);
 
   const orderDoneRef = useRef(false);
+  const successScheduledRef = useRef(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const CVU     = process.env.NEXT_PUBLIC_CVU     ?? "";
@@ -174,7 +174,10 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [sessionToken]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  // "Pagar": solo valida y pasa a la pantalla de transferencia — el pedido
+  // todavía no existe en la DB, se crea recién cuando el usuario elige una
+  // opción de pago (ver handleWalletClick).
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (expired) { setError("Tu reserva expiró. Cerrá y volvé a intentar."); return; }
@@ -182,9 +185,20 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
     if (isDelivery && !address.trim()) { setError("La dirección es requerida para delivery"); return; }
+    setStep("payment");
+  }
 
+  // Crea el pedido recién cuando el usuario elige una opción de pago.
+  // Si ya se creó (o se está creando) por un click anterior, no repite el
+  // POST — solo copia el alias / reintenta abrir la app.
+  async function createOrder(): Promise<number | null> {
+    if (orderId) return orderId;
+    if (orderDoneRef.current) return null; // ya hay un POST en curso
+    orderDoneRef.current = true;
     setLoading(true);
+    setError("");
     try {
+      const digits = phone.replace(/\D/g, "");
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -199,12 +213,17 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
         }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error ?? "Error al procesar el pedido"); return; }
-      orderDoneRef.current = true;
+      if (!res.ok) {
+        orderDoneRef.current = false;
+        setError(data.error ?? "Error al procesar el pedido");
+        return null;
+      }
       setOrderId(data.orderId);
-      setStep("payment");
+      return data.orderId;
     } catch {
+      orderDoneRef.current = false;
       setError("Error de conexión. Intentá de nuevo.");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -221,7 +240,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     onClose();
   }
 
-  function handleWalletClick(id: string) {
+  async function handleWalletClick(id: string) {
     navigator.clipboard?.writeText(ALIAS).catch(() => {});
     openWalletApp(id);
     setCopiedWallet(id);
@@ -229,6 +248,12 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     setToastVisible(true);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 1600);
+
+    const newOrderId = await createOrder();
+    if (newOrderId != null && !successScheduledRef.current) {
+      successScheduledRef.current = true;
+      setTimeout(() => onSuccess(newOrderId), 1000);
+    }
   }
 
   return (
@@ -341,7 +366,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
         <div style={HAIR} />
 
         {/* ── Pantalla de pago (step = payment) ── */}
-        {step === "payment" && orderId ? (
+        {step === "payment" ? (
           <div className="brot-cf-body px-[26px] py-[24px] space-y-[22px]">
             {/* Total */}
             <div className="brot-cf-tot text-center">
@@ -425,8 +450,13 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                 })}
               </div>
               <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
-                Abrí tu app con el alias ya copiado
+                {loading ? "Confirmando tu pedido…" : "Abrí tu app con el alias ya copiado"}
               </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center" style={{ marginTop: "14px" }}>
+                  {error}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -609,7 +639,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
               </button>
               <button
                 type="submit"
-                disabled={loading || expired}
+                disabled={expired}
                 className="flex-1 min-w-0 font-bold text-[13.5px] tracking-[.01em] whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{
                   border: "none",
@@ -617,14 +647,14 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                   color: "#F4EEE2",
                   borderRadius: "14px",
                   padding: "14px 6px",
-                  cursor: (loading || expired) ? "not-allowed" : "pointer",
-                  opacity: (loading || expired) ? 0.4 : 1,
+                  cursor: expired ? "not-allowed" : "pointer",
+                  opacity: expired ? 0.4 : 1,
                   transition: ctaTransition,
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin inline-block" /> : "Confirmar y pagar"}
+                Pagar
               </button>
             </div>
           </div>
