@@ -599,13 +599,13 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
         )}
       </div>
 
-      {/* Toast "Alias copiado" */}
+      {/* Toast "Alias copiado" — arriba, lejos del toast nativo de Android (que aparece abajo) */}
       {step === "payment" && (
         <div
           className="fixed left-1/2 z-50"
           style={{
-            bottom: "28px",
-            transform: toastVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(12px)",
+            top: "28px",
+            transform: toastVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(-12px)",
             background: "#0E233C",
             color: "#F4EEE2",
             fontWeight: 600,
