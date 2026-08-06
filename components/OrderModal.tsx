@@ -133,6 +133,11 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
 
   const orderDoneRef = useRef(false);
   const successScheduledRef = useRef(false);
+  // Se marca apenas el usuario toca una opción de pago — antes de intentar
+  // abrir la app. En Android, navegar a un esquema/intent:// puede disparar
+  // beforeunload; sin este guard, el handler de abajo alcanza a liberar la
+  // reserva antes de que el pedido termine de crearse.
+  const walletChosenRef = useRef(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const CVU     = process.env.NEXT_PUBLIC_CVU     ?? "";
@@ -165,7 +170,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
   // Release reservation if user closes the tab/navigates away mid-checkout
   useEffect(() => {
     function handleBeforeUnload() {
-      if (!orderDoneRef.current && sessionToken) {
+      if (!orderDoneRef.current && !walletChosenRef.current && sessionToken) {
         const blob = new Blob([JSON.stringify({ sessionToken })], { type: "application/json" });
         navigator.sendBeacon("/api/cart/release", blob);
       }
@@ -215,6 +220,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
       const data = await res.json();
       if (!res.ok) {
         orderDoneRef.current = false;
+        walletChosenRef.current = false;
         setError(data.error ?? "Error al procesar el pedido");
         return null;
       }
@@ -222,6 +228,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
       return data.orderId;
     } catch {
       orderDoneRef.current = false;
+      walletChosenRef.current = false;
       setError("Error de conexión. Intentá de nuevo.");
       return null;
     } finally {
@@ -241,6 +248,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
   }
 
   async function handleWalletClick(id: string) {
+    walletChosenRef.current = true;
     navigator.clipboard?.writeText(ALIAS).catch(() => {});
     openWalletApp(id);
     setCopiedWallet(id);
