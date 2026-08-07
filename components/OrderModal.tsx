@@ -425,12 +425,12 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
 
             {/* Billeteras: copian el alias y, cuando corresponde, intentan abrir la app */}
             <div>
-              <div className="flex gap-2">
+              <div className="flex gap-[10px] justify-center">
                 {([
-                  { id: "mp", label: "MP", logo: "/billeteras/mp.webp" },
-                  { id: "nx", label: "NX", logo: "/billeteras/nx.webp" },
-                  { id: "md", label: "MD", logo: "/billeteras/md.webp" },
-                  { id: "ot", label: "Otro banco", logo: "/billeteras/banco.webp" },
+                  { id: "mp", label: "Mercado Pago", logo: "/billeteras/mp-cream.png" },
+                  { id: "nx", label: "NaranjaX", logo: "/billeteras/nx-cream.png" },
+                  { id: "md", label: "Modo", logo: "/billeteras/md-cream.png" },
+                  { id: "ot", label: "Otro banco", logo: "/billeteras/banco-cream.png" },
                 ] as const).map((w) => {
                   const isCopied = copiedWallet === w.id;
                   return (
@@ -439,12 +439,14 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                       type="button"
                       aria-label={w.label}
                       onClick={() => handleWalletClick(w.id)}
-                      className="flex-1 min-w-0 relative overflow-hidden"
+                      className="relative overflow-hidden flex-none"
                       style={{
-                        border: "none",
-                        borderRadius: "14px",
-                        padding: 0,
+                        width: "56px",
                         height: "56px",
+                        border: "none",
+                        borderRadius: "50%",
+                        padding: 0,
+                        background: "#F4EEE2",
                         cursor: "pointer",
                         boxShadow: isCopied ? "0 0 0 3px #3F8F5B" : "none",
                         transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
@@ -452,7 +454,14 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                       onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
                     >
-                      <Image src={w.logo} alt={w.label} fill className="object-cover" sizes="90px" />
+                      <Image
+                        src={w.logo}
+                        alt={w.label}
+                        fill
+                        className="object-cover"
+                        style={{ borderRadius: "50%", transform: "scale(1.5)" }}
+                        sizes="56px"
+                      />
                     </button>
                   );
                 })}

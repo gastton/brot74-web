@@ -291,7 +291,7 @@ textarea.brot-input {
     margin-top: 6px !important;
   }
   .brot-co-actions > * {
-    flex: 0 1 220px !important;
+    flex: 0 0 160px !important;
   }
 }
 
