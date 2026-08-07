@@ -573,7 +573,7 @@ const content = `
         <p class="lede" data-es="brot74.com es un e-commerce de pre-venta de pan con reserva de stock, fechas de entrega y panel de administración. Todo el diseño, la implementación, el testing y el pipeline de CI se hicieron trabajando junto a Claude." data-en="brot74.com is a pre-order bakery e-commerce with stock reservations, delivery dates and an admin panel. Design, implementation, testing and the CI pipeline were all built working alongside Claude.">brot74.com es un e-commerce de pre-venta de pan con reserva de stock, fechas de entrega y panel de administración. Todo el diseño, la implementación, el testing y el pipeline de CI se hicieron trabajando junto a Claude.</p>
         <div class="stat-row">
           <span class="stat-chip"><b>90</b> <span data-es="commits" data-en="commits">commits</span></span>
-          <span class="stat-chip"><b>~46</b> <span data-es="días, idea → prod" data-en="days, idea → prod">días, idea → prod</span></span>
+          <span class="stat-chip"><b>~23</b> <span data-es="días, idea → prod" data-en="days, idea → prod">días, idea → prod</span></span>
           <span class="stat-chip"><b>1</b> <span data-es="design system desde cero" data-en="design system from scratch">design system desde cero</span></span>
           <span class="stat-chip"><b>19</b> <span data-es="iteraciones de UI" data-en="UI iterations">iteraciones de UI</span></span>
           <span class="stat-chip"><b>17</b> <span data-es="suites de integración" data-en="integration suites">suites de integración</span></span>
@@ -593,8 +593,8 @@ const content = `
           <div class="docket-row"><span class="k" data-es="Compañero IA" data-en="AI teammate">Compañero IA</span><span class="v">Claude Code</span></div>
           <div class="docket-row"><span class="k" data-es="Diseño UI" data-en="UI design">Diseño UI</span><span class="v">Claude</span></div>
           <div class="docket-row"><span class="k" data-es="Logo" data-en="Logo">Logo</span><span class="v">Gemini + ChatGPT</span></div>
-          <div class="docket-row"><span class="k" data-es="Período" data-en="Period">Período</span><span class="v">05/2026 – 07/2026</span></div>
-          <div class="docket-row"><span class="k" data-es="Dedicación" data-en="Commitment">Dedicación</span><span class="v" data-es="part-time → full-time (últ. 2 sem.)" data-en="part-time → full-time (last 2 wks)">part-time → full-time (últ. 2 sem.)</span></div>
+          <div class="docket-row"><span class="k" data-es="Período" data-en="Period">Período</span><span class="v" data-es="Junio 2026" data-en="June 2026">Junio 2026</span></div>
+          <div class="docket-row"><span class="k" data-es="Dedicación" data-en="Commitment">Dedicación</span><span class="v" data-es="Part-Time" data-en="Part-Time">Part-Time</span></div>
           <div class="docket-row"><span class="k" data-es="Estado" data-en="Status">Estado</span><span class="v" data-es="en producción" data-en="in production">en producción</span></div>
         </div>
       </div>
@@ -623,9 +623,9 @@ const content = `
       <div class="stage reveal">
         <div class="stage-head">
           <span class="stage-title" data-es="Desarrollo asistido por IA" data-en="AI-assisted development">Desarrollo asistido por IA</span>
-          <span class="stage-when" data-es="mayo → julio 2026 · part-time → full-time" data-en="May → July 2026 · part-time → full-time">mayo → julio 2026 · part-time → full-time</span>
+          <span class="stage-when" data-es="junio 2026 · part-time" data-en="June 2026 · part-time">junio 2026 · part-time</span>
         </div>
-        <p class="stage-desc" data-es="Desde el scaffold inicial (<code>create-next-app</code>) hasta la lógica de negocio: reserva de stock con TTL, fechas de entrega con cupo, panel de admin, autenticación, upload de imágenes. Migración de SQLite a PostgreSQL en la primera semana. Arrancó part-time y pasó a full-time en las últimas dos semanas." data-en="From the initial scaffold (<code>create-next-app</code>) to the business logic: TTL-based stock reservation, capacity-limited delivery dates, admin panel, authentication, image uploads. SQLite → PostgreSQL migration in the first week. Started part-time, then shifted to full-time over the final two weeks.">Desde el scaffold inicial (<code>create-next-app</code>) hasta la lógica de negocio: reserva de stock con TTL, fechas de entrega con cupo, panel de admin, autenticación, upload de imágenes. Migración de SQLite a PostgreSQL en la primera semana. Arrancó part-time y pasó a full-time en las últimas dos semanas.</p>
+        <p class="stage-desc" data-es="Desde el scaffold inicial (<code>create-next-app</code>) hasta la lógica de negocio: reserva de stock con TTL, fechas de entrega con cupo, panel de admin, autenticación, upload de imágenes. Migración de SQLite a PostgreSQL en la primera semana. Todo part-time, en junio de 2026." data-en="From the initial scaffold (<code>create-next-app</code>) to the business logic: TTL-based stock reservation, capacity-limited delivery dates, admin panel, authentication, image uploads. SQLite → PostgreSQL migration in the first week. All part-time, over June 2026.">Desde el scaffold inicial (<code>create-next-app</code>) hasta la lógica de negocio: reserva de stock con TTL, fechas de entrega con cupo, panel de admin, autenticación, upload de imágenes. Migración de SQLite a PostgreSQL en la primera semana. Todo part-time, en junio de 2026.</p>
       </div>
 
       <div class="stage reveal">
