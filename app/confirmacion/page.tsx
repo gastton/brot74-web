@@ -65,11 +65,13 @@ function ConfirmacionContent() {
 
         {/* Pill WhatsApp */}
         <div
-          className="mt-[26px] flex items-center justify-center gap-[6px] flex-wrap font-semibold text-[16px] leading-[1.45] text-navy"
+          className="mt-[26px] flex items-start justify-center gap-[8px] font-semibold text-[16px] leading-[1.45] text-navy"
           style={{ background: "#FBF1DF", borderRadius: "16px", padding: "18px 22px" }}
         >
-          Nos vamos a comunicar por WhatsApp para confirmarte el pedido.
-          <WheatIcon />
+          <span className="mt-[3px] flex-none">
+            <WheatIcon />
+          </span>
+          <span>Una vez acreditado tu pago, recibirás un mensaje de WhatsApp avisándote que tu pedido está confirmado.</span>
         </div>
 
         {/* CTA Volver */}
