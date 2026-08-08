@@ -27,16 +27,14 @@ export function buildOrderMessage(order: {
   items: { name: string; quantity: number; unitPrice: number }[];
 }): string {
   const lines = [
-    `🍞 *Nuevo pedido BROT.74 #${order.id}*`,
-    ``,
-    `👤 ${order.customerName}`,
-    `📞 ${order.customerPhone}`,
-    order.isDelivery ? `📍 Delivery: ${order.customerAddress}` : `🏠 Retiro en casa`,
-    `📅 ${order.slotLabel}`,
+    `*Nuevo pedido* 📅 ${order.slotLabel}`,
+    `*#${order.id}*`,
+    `*Cliente*`,
+    `• Nombre: ${order.customerName}`,
+    `• Teléfono: ${order.customerPhone}`,
     ``,
     `*Productos:*`,
     ...order.items.map((i) => `• ${i.name} x${i.quantity}`),
-    ...(order.notes?.trim() ? [``, `📝 *Nota:* ${order.notes.trim()}`] : []),
   ];
   return lines.join("\n");
 }
