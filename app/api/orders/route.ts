@@ -5,7 +5,7 @@ import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { customerName, customerPhone, customerAddress, deliverySlotId, items, notes, isDelivery, sessionToken } = body;
+    const { customerName, customerPhone, deliverySlotId, items, notes, sessionToken } = body;
 
     if (!customerName || !customerPhone || !deliverySlotId || !items?.length) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -14,17 +14,6 @@ export async function POST(req: NextRequest) {
     const slot = await prisma.deliverySlot.findUnique({ where: { id: deliverySlotId } });
     if (!slot || !slot.active) {
       return NextResponse.json({ error: "Fecha no disponible" }, { status: 400 });
-    }
-
-    const wantsDelivery = isDelivery ?? (slot.deliveryMode === "delivery");
-    if (wantsDelivery && slot.deliveryMode === "pickup") {
-      return NextResponse.json({ error: "Este slot no tiene delivery disponible" }, { status: 400 });
-    }
-    if (!wantsDelivery && slot.deliveryMode === "delivery") {
-      return NextResponse.json({ error: "Este slot es solo delivery" }, { status: 400 });
-    }
-    if (wantsDelivery && !customerAddress) {
-      return NextResponse.json({ error: "Dirección requerida para delivery" }, { status: 400 });
     }
 
     // Validate cart reservation if sessionToken provided
@@ -89,7 +78,6 @@ export async function POST(req: NextRequest) {
         data: {
           customerName,
           customerPhone,
-          customerAddress: customerAddress ?? "",
           deliverySlotId,
           total,
           notes: notes ?? "",
@@ -123,11 +111,8 @@ export async function POST(req: NextRequest) {
         id: order.id,
         customerName,
         customerPhone,
-        customerAddress,
         total,
-        isDelivery: wantsDelivery,
         slotLabel: slot.dayLabel,
-        notes,
         items: enrichedItems,
       });
       await sendWhatsAppNotification(msg);

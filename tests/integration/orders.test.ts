@@ -35,7 +35,7 @@ describe("POST /api/orders", () => {
 
   it("crea el pedido, reserva stock y libera la reserva de carrito", async () => {
     const product = await createProduct({ price: 1500 });
-    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 5, reservedStock: 0 });
     const sessionToken = crypto.randomUUID();
     await createCartReservation(product.id, slot.id, { sessionToken, quantity: 2 });
@@ -72,40 +72,9 @@ describe("POST /api/orders", () => {
     expect(res.status).toBe(400);
   });
 
-  it("devuelve 400 si pide delivery en un slot solo pickup", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
-    await createProductStock(product.id, slot.id);
-
-    const res = await POST(
-      makeRequest(
-        baseOrder({
-          deliverySlotId: slot.id,
-          items: [{ productId: product.id, quantity: 1 }],
-          isDelivery: true,
-          customerAddress: "Calle Falsa 123",
-        })
-      )
-    );
-
-    expect(res.status).toBe(400);
-  });
-
-  it("devuelve 400 si falta la dirección para delivery", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot({ deliveryMode: "delivery" });
-    await createProductStock(product.id, slot.id);
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }], isDelivery: true }))
-    );
-
-    expect(res.status).toBe(400);
-  });
-
   it("devuelve 400 si el stock es insuficiente", async () => {
     const product = await createProduct();
-    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 1 });
 
     const res = await POST(
@@ -117,7 +86,7 @@ describe("POST /api/orders", () => {
 
   it("devuelve 409 si el sessionToken expiró o no cubre la cantidad pedida", async () => {
     const product = await createProduct();
-    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 5 });
     const sessionToken = crypto.randomUUID();
     await createCartReservation(product.id, slot.id, { sessionToken, expiresAt: new Date(Date.now() - 1000) });
@@ -135,7 +104,7 @@ describe("POST /api/orders", () => {
     vi.mocked(sendWhatsAppNotification).mockRejectedValueOnce(new Error("network down"));
 
     const product = await createProduct();
-    const slot = await createDeliverySlot({ deliveryMode: "pickup" });
+    const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 5 });
 
     const res = await POST(

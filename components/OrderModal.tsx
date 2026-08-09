@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 
 interface CartItem {
   id: number;
@@ -16,7 +15,6 @@ interface CartItem {
 interface OrderModalProps {
   items: CartItem[];
   slotId: number;
-  deliveryMode: "pickup" | "delivery" | "both";
   slotLabel: string;
   slotLocation: string;
   sessionToken: string;
@@ -82,22 +80,6 @@ function BagIcon({ stroke = "#F4EEE2" }: { stroke?: string }) {
   );
 }
 
-function TruckIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-    </svg>
-  );
-}
-
-function HomeIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/><path d="M9 21V12h6v9"/>
-    </svg>
-  );
-}
-
 function TrashIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -115,15 +97,13 @@ function formatCountdown(seconds: number): string {
   return `${m}:${s}`;
 }
 
-export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onChangeQuantity, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onChangeQuantity, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
-  const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [step, setStep]       = useState<"form" | "payment">("form");
   const [orderId, setOrderId] = useState<number | null>(null);
-  const [wantsDelivery, setWantsDelivery] = useState(deliveryMode === "delivery");
   const [secondsLeft, setSecondsLeft] = useState(() =>
     Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
   );
@@ -145,9 +125,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
   const TITULAR = process.env.NEXT_PUBLIC_TITULAR ?? "";
   const CUIT    = process.env.NEXT_PUBLIC_CUIT    ?? "";
 
-  const isDelivery = deliveryMode === "delivery" ? true : deliveryMode === "pickup" ? false : wantsDelivery;
-  const modeLabel  = deliveryMode === "both" ? (isDelivery ? "Delivery" : "Retiro en casa") : deliveryMode === "delivery" ? "Delivery" : "Retiro en casa";
-  const total      = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   // Countdown timer
   useEffect(() => {
@@ -189,7 +167,6 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
-    if (isDelivery && !address.trim()) { setError("La dirección es requerida para delivery"); return; }
     setStep("payment");
   }
 
@@ -210,9 +187,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
         body: JSON.stringify({
           customerName: name.trim(),
           customerPhone: digits,
-          customerAddress: isDelivery ? address.trim() : "",
           deliverySlotId: slotId,
-          isDelivery,
           sessionToken,
           items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
@@ -289,7 +264,7 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                 className="text-[14.5px] text-stone mt-[5px]"
                 style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
               >
-                {slotLabel}{slotLocation ? ` · ${slotLocation}` : ` · ${modeLabel}`}
+                {slotLabel}{slotLocation ? ` · ${slotLocation}` : ` · Retiro en casa`}
               </div>
             )}
           </div>
@@ -566,32 +541,6 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
 
             {/* Campos */}
             <div className="brot-co-form space-y-[18px]">
-              {/* Selector retiro / delivery */}
-              {deliveryMode === "both" && (
-                <div>
-                  <label className="block font-bold text-[14.5px] text-navy mb-[5px]">¿Cómo querés recibirlo?</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[{ label: "Retiro en casa", value: false, icon: <HomeIcon /> }, { label: "Delivery", value: true, icon: <TruckIcon /> }].map(({ label, value, icon }) => (
-                      <button
-                        key={String(value)}
-                        type="button"
-                        onClick={() => setWantsDelivery(value)}
-                        className={cn(
-                          "flex items-center justify-center gap-2 p-3 rounded-xl text-[14px] font-semibold transition-all",
-                          wantsDelivery === value ? "text-navy" : "text-stone"
-                        )}
-                        style={{
-                          border: `1.5px solid ${wantsDelivery === value ? "#C8851A" : "rgba(14,35,60,.16)"}`,
-                          background: wantsDelivery === value ? "rgba(200,133,26,.08)" : "#fff",
-                        }}
-                      >
-                        {icon} {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {[
                 { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },
                 { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
@@ -610,22 +559,6 @@ export default function OrderModal({ items, slotId, deliveryMode, slotLabel, slo
                   />
                 </div>
               ))}
-
-              {isDelivery && (
-                <div>
-                  <label className="block font-bold text-[14.5px] text-navy mb-[5px]">
-                    Dirección de delivery <span style={{ color: "#C8851A" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Av. Corrientes 1234, CABA"
-                    required
-                    className="brot-input"
-                  />
-                </div>
-              )}
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">

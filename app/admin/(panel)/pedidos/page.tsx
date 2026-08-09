@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Loader2, Phone, MapPin, Package, Truck, Home, ChevronDown } from "lucide-react";
+import { Loader2, Phone, MapPin, Package, Home, ChevronDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface Order {
@@ -13,7 +13,6 @@ interface Order {
   status: string;
   total: number;
   notes: string;
-  deliveryMode: string;
   slotLabel: string;
   slotDate: string;
   createdAt: string;
@@ -84,11 +83,10 @@ function PedidosContent() {
       ) : (
         Object.entries(grouped).map(([key, slotOrders]) => {
           const [, label] = key.split("|");
-          const slotDeliveryMode = slotOrders[0]?.deliveryMode;
           return (
             <div key={key}>
               <div className="flex items-center gap-2 mb-3">
-                {slotDeliveryMode === "delivery" ? <Truck className="w-4 h-4 text-amber" /> : slotDeliveryMode === "both" ? <div className="flex gap-0.5"><Home className="w-3.5 h-3.5 text-amber" /><Truck className="w-3.5 h-3.5 text-amber" /></div> : <Home className="w-4 h-4 text-amber" />}
+                <Home className="w-4 h-4 text-amber" />
                 <h2 className="font-serif text-lg font-bold text-brown">{label}</h2>
                 <span className="text-xs text-muted ml-auto">{slotOrders.length} pedidos</span>
               </div>

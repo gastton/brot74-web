@@ -48,7 +48,6 @@ export async function GET() {
       id: slot.id,
       date: slot.date.toISOString(),
       dayLabel: slot.dayLabel,
-      deliveryMode: slot.deliveryMode,
       pickupTime: slot.pickupTime,
       location: slot.location,
       imageUrl: slot.imageUrl,

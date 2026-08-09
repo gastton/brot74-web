@@ -23,7 +23,6 @@ export async function createDeliverySlot(overrides: Partial<Prisma.DeliverySlotU
     data: {
       date: inTwoDays,
       dayLabel: `Slot ${slotCounter}`,
-      deliveryMode: "both",
       active: true,
       ...overrides,
     },

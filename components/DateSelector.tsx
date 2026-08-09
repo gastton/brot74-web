@@ -7,7 +7,6 @@ interface Slot {
   id: number | null;
   date: string;
   dayLabel: string;
-  deliveryMode: "pickup" | "delivery" | "both";
   pickupTime: string;
   location: string;
   imageUrl: string;

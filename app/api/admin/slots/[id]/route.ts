@@ -13,7 +13,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id: parseInt(id) },
     data: {
       dayLabel: data.dayLabel,
-      deliveryMode: data.deliveryMode ?? "pickup",
+      deliveryMode: "pickup",
       pickupTime: data.pickupTime ?? "",
       location: data.location ?? "",
       imageUrl: data.imageUrl ?? "",

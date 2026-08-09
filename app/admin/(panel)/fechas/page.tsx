@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp, ImageIcon, ZoomIn } from "lucide-react";
+import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, CalendarDays, ChevronDown, ChevronUp, ImageIcon, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import FocalPicker from "@/components/FocalPicker";
@@ -12,7 +12,6 @@ interface Slot {
   id: number;
   date: string;
   dayLabel: string;
-  deliveryMode: "pickup" | "delivery" | "both";
   pickupTime: string;
   location: string;
   imageUrl: string;
@@ -42,7 +41,7 @@ export default function FechasPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
-  const [form, setForm] = useState({ date: "", dayLabel: "", deliveryMode: "pickup" as "pickup"|"delivery"|"both", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
+  const [form, setForm] = useState({ date: "", dayLabel: "", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
 
   // Default generate month: next month
@@ -101,12 +100,12 @@ export default function FechasPage() {
     await fetch("/api/admin/slots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff || null, active: form.active }),
+      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff || null, active: form.active }),
     });
     await fetchAll();
     setShowForm(false);
     setSaving(false);
-    setForm({ date: "", dayLabel: "", deliveryMode: "pickup", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
+    setForm({ date: "", dayLabel: "", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
   }
 
   async function handleGenerate() {
@@ -127,16 +126,7 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, active: !slot.active }),
-    });
-    fetchAll();
-  }
-
-  async function changeDeliveryMode(slot: Slot, mode: "pickup" | "delivery" | "both") {
-    await fetch(`/api/admin/slots/${slot.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: mode, pickupTime: slot.pickupTime, location: slot.location, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, active: !slot.active }),
     });
     fetchAll();
   }
@@ -145,7 +135,7 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime, location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, imageScale: slot.imageScale, orderCutoff: slot.orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, pickupTime, location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, imageScale: slot.imageScale, orderCutoff: slot.orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
@@ -154,7 +144,7 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl, imageFocalX: focalX ?? slot.imageFocalX, imageFocalY: focalY ?? slot.imageFocalY, imageScale: imageScale ?? slot.imageScale, orderCutoff: slot.orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, pickupTime: slot.pickupTime, location: slot.location, imageUrl, imageFocalX: focalX ?? slot.imageFocalX, imageFocalY: focalY ?? slot.imageFocalY, imageScale: imageScale ?? slot.imageScale, orderCutoff: slot.orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
@@ -163,7 +153,7 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, deliveryMode: slot.deliveryMode, pickupTime: slot.pickupTime, location: slot.location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, orderCutoff, active: slot.active }),
+      body: JSON.stringify({ dayLabel: slot.dayLabel, pickupTime: slot.pickupTime, location: slot.location, imageUrl: slot.imageUrl, imageFocalX: slot.imageFocalX, imageFocalY: slot.imageFocalY, orderCutoff, active: slot.active }),
     });
     fetchAll();
   }
@@ -225,7 +215,6 @@ export default function FechasPage() {
             onToggle={toggleActive}
             onDelete={handleDelete}
             onSaveStock={saveStock}
-            onChangeMode={changeDeliveryMode}
             onUpdateDetails={updateDetails}
             onUpdateImage={updateImage}
             onUpdateCutoff={updateCutoff}
@@ -251,7 +240,6 @@ export default function FechasPage() {
                     onToggle={toggleActive}
                     onDelete={handleDelete}
                     onSaveStock={saveStock}
-                    onChangeMode={changeDeliveryMode}
                     onUpdateDetails={updateDetails}
                     onUpdateImage={updateImage}
                     onUpdateCutoff={updateCutoff}
@@ -288,18 +276,6 @@ export default function FechasPage() {
                 <input type="text" value={form.dayLabel} onChange={(e) => setForm({ ...form, dayLabel: e.target.value })}
                   placeholder="Ej: Lunes 26 de mayo"
                   className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-charcoal mb-1">Tipo de entrega</label>
-                <select
-                  value={form.deliveryMode}
-                  onChange={(e) => setForm({ ...form, deliveryMode: e.target.value as "pickup"|"delivery"|"both" })}
-                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white"
-                >
-                  <option value="pickup">🏠 Retiro en casa</option>
-                  <option value="delivery">🚚 Delivery</option>
-                  <option value="both">🏠🚚 Ambos (cliente elige)</option>
-                </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-1">Horario de retiro</label>
@@ -423,12 +399,11 @@ export default function FechasPage() {
   );
 }
 
-function SlotList({ title, slots, products, images, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onChangeMode, onUpdateDetails, onUpdateImage, onUpdateCutoff, muted }: {
+function SlotList({ title, slots, products, images, stockEdits, setStockEdits, onToggle, onDelete, onSaveStock, onUpdateDetails, onUpdateImage, onUpdateCutoff, muted }: {
   title: string; slots: Slot[]; products: Product[]; images: string[];
   stockEdits: Record<string, string>; setStockEdits: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
   onToggle: (s: Slot) => void; onDelete: (id: number) => void;
   onSaveStock: (productId: number, deliverySlotId: number, key: string) => void;
-  onChangeMode: (s: Slot, mode: "pickup"|"delivery"|"both") => void;
   onUpdateDetails: (s: Slot, pickupTime: string, location: string) => void;
   onUpdateImage: (s: Slot, imageUrl: string, focalX?: number, focalY?: number, imageScale?: number) => void;
   onUpdateCutoff: (s: Slot, orderCutoff: string | null) => void;
@@ -443,11 +418,11 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
           <div key={slot.id} className={`bg-white rounded-2xl border-2 p-5 ${muted ? "border-border opacity-70" : "border-border"}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                {slot.deliveryMode === "delivery" ? <Truck className="w-5 h-5 text-amber" /> : slot.deliveryMode === "both" ? <div className="flex gap-0.5"><Home className="w-4 h-4 text-amber" /><Truck className="w-4 h-4 text-amber" /></div> : <Home className="w-5 h-5 text-amber" />}
+                <Home className="w-5 h-5 text-amber" />
                 <div>
                   <p className="font-semibold text-charcoal">{slot.dayLabel}</p>
                   <p className="text-xs text-muted">
-                    {slot.deliveryMode === "pickup" ? "Retiro" : slot.deliveryMode === "delivery" ? "Delivery" : "Retiro o delivery"}
+                    Retiro
                     {!slot.active && " · Inactivo"}
                   </p>
                 </div>
@@ -475,18 +450,6 @@ function SlotList({ title, slots, products, images, stockEdits, setStockEdits, o
 
             <div className={!slot.active ? "opacity-40 pointer-events-none" : ""}>
             <div className="border-t border-border pt-4 mb-4 space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-2">Tipo de entrega</p>
-                <select
-                  value={slot.deliveryMode}
-                  onChange={(e) => onChangeMode(slot, e.target.value as "pickup"|"delivery"|"both")}
-                  className="w-full border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
-                >
-                  <option value="pickup">🏠 Retiro en casa</option>
-                  <option value="delivery">🚚 Delivery</option>
-                  <option value="both">🏠🚚 Ambos (cliente elige)</option>
-                </select>
-              </div>
               <SlotDetailField label="Horario de retiro" placeholder="Ej: 10:00 - 13:00" initial={slot.pickupTime}
                 onSave={(v) => onUpdateDetails(slot, v, slot.location)} />
               <SlotDetailField label="Lugar de retiro" placeholder="Ej: Av. Corrientes 1234, CABA" initial={slot.location}

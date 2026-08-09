@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
     data: {
       date: new Date(data.date + "T12:00:00Z"),
       dayLabel: data.dayLabel,
-      deliveryMode: data.deliveryMode ?? "pickup",
       pickupTime: data.pickupTime ?? "",
       location: data.location ?? "",
       imageUrl: data.imageUrl ?? "",

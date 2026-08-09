@@ -11,7 +11,6 @@ interface Slot {
   id: number | null;
   date: string;
   dayLabel: string;
-  deliveryMode: "pickup" | "delivery" | "both";
   pickupTime: string;
   location: string;
   imageUrl: string;
@@ -360,7 +359,6 @@ export default function Home() {
           <OrderModal
             items={cartItems}
             slotId={selectedSlotId}
-            deliveryMode={selectedSlot.deliveryMode}
             slotLabel={selectedSlot.dayLabel}
             slotLocation={selectedSlot.location}
             sessionToken={sessionToken}

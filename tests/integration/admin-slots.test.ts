@@ -58,7 +58,7 @@ describe("POST /api/admin/slots", () => {
     await createProduct({ active: false });
 
     const res = await POST(
-      postRequest({ date: "2026-08-10", dayLabel: "Lunes", deliveryMode: "pickup" }, await adminCookieHeader())
+      postRequest({ date: "2026-08-10", dayLabel: "Lunes" }, await adminCookieHeader())
     );
     const json = await res.json();
 
@@ -81,7 +81,7 @@ describe("PUT /api/admin/slots/[id]", () => {
     const slot = await createDeliverySlot({ dayLabel: "Viejo", active: true });
 
     const res = await PUT(
-      putRequest({ dayLabel: "Actualizado", deliveryMode: "delivery", active: false }, await adminCookieHeader()),
+      putRequest({ dayLabel: "Actualizado", active: false }, await adminCookieHeader()),
       { params: Promise.resolve({ id: String(slot.id) }) }
     );
     const json = await res.json();
@@ -89,6 +89,18 @@ describe("PUT /api/admin/slots/[id]", () => {
     expect(res.status).toBe(200);
     expect(json.dayLabel).toBe("Actualizado");
     expect(json.active).toBe(false);
+  });
+
+  it("siempre deja el slot en modalidad pickup, sin importar qué se mande", async () => {
+    const slot = await createDeliverySlot({ dayLabel: "Viejo", active: true });
+
+    const res = await PUT(
+      putRequest({ dayLabel: "Actualizado", deliveryMode: "delivery", active: true }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(slot.id) }) }
+    );
+    const json = await res.json();
+
+    expect(json.deliveryMode).toBe("pickup");
   });
 });
 

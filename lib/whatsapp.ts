@@ -19,11 +19,8 @@ export function buildOrderMessage(order: {
   id: number;
   customerName: string;
   customerPhone: string;
-  customerAddress?: string;
   total: number;
-  isDelivery: boolean;
   slotLabel: string;
-  notes?: string;
   items: { name: string; quantity: number; unitPrice: number }[];
 }): string {
   const lines = [
