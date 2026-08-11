@@ -80,7 +80,8 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
     Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
   );
   const [expired, setExpired] = useState(false);
-  const [aliasCopied, setAliasCopied] = useState(false);
+  const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
+  const [hasCopiedAlias, setHasCopiedAlias] = useState(false); // se mantiene: habilita "Ya pagué"
   const [toastVisible, setToastVisible] = useState(false);
 
   const orderDoneRef = useRef(false);
@@ -191,6 +192,7 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
   function handleCopyAlias() {
     navigator.clipboard?.writeText(ALIAS).catch(() => {});
     setAliasCopied(true);
+    setHasCopiedAlias(true);
     setTimeout(() => setAliasCopied(false), 1400);
     setToastVisible(true);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -399,7 +401,7 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
               <button
                 type="button"
                 onClick={handleYaPague}
-                disabled={loading}
+                disabled={loading || !hasCopiedAlias}
                 className="w-full font-bold text-[16.5px] tracking-[.01em]"
                 style={{
                   marginTop: "22px",
@@ -408,15 +410,15 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
                   color: "#F4EEE2",
                   borderRadius: "14px",
                   padding: "17px",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  opacity: loading ? 0.7 : 1,
+                  cursor: (loading || !hasCopiedAlias) ? "not-allowed" : "pointer",
+                  opacity: (loading || !hasCopiedAlias) ? 0.4 : 1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "11px",
                   transition: ctaTransition,
                 }}
-                onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
+                onMouseEnter={(e) => { if (!loading && hasCopiedAlias) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
