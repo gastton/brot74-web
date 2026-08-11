@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface CartItem {
@@ -35,34 +35,6 @@ const HAIR = { height: "1px", background: "rgba(14,35,60,.10)" } as const;
 
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
-// Deep links para abrir cada billetera desde el botón de pago.
-// NX y MD son la mejor estimación disponible (no documentados oficialmente
-// por el proveedor) — actualizar acá si se confirma el esquema real.
-const WALLET_APPS: Record<string, { scheme: string; androidPackage: string }> = {
-  mp: { scheme: "mercadopago", androidPackage: "com.mercadopago.wallet" },
-  nx: { scheme: "naranjax", androidPackage: "com.tarjetanaranja.ncuenta" },
-  md: { scheme: "modo", androidPackage: "com.playdigital.modo" },
-};
-
-function isAndroid() {
-  return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
-}
-
-// Android: intent:// con fallback a Play Store. No abre la app directo (el
-// esquema no matchea el intent-filter real de estas apps), pero al menos
-// deja al usuario en la ficha correcta desde donde "Abrir" sí funciona —
-// mejor que las otras variantes probadas (nada, o Play Store duplicado).
-// iOS/desktop: esquema simple; si la app no está instalada no pasa nada visible.
-function openWalletApp(id: string) {
-  const app = WALLET_APPS[id];
-  if (!app) return;
-  if (isAndroid()) {
-    const fallback = encodeURIComponent(`https://play.google.com/store/apps/details?id=${app.androidPackage}`);
-    window.location.href = `intent://#Intent;scheme=${app.scheme};package=${app.androidPackage};S.browser_fallback_url=${fallback};end`;
-  } else {
-    window.location.href = `${app.scheme}://`;
-  }
-}
 
 function CloseIcon() {
   return (
@@ -108,16 +80,11 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
     Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
   );
   const [expired, setExpired] = useState(false);
-  const [copiedWallet, setCopiedWallet] = useState<string | null>(null);
+  const [aliasCopied, setAliasCopied] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
 
   const orderDoneRef = useRef(false);
   const successScheduledRef = useRef(false);
-  // Se marca apenas el usuario toca una opción de pago — antes de intentar
-  // abrir la app. En Android, navegar a un esquema/intent:// puede disparar
-  // beforeunload; sin este guard, el handler de abajo alcanza a liberar la
-  // reserva antes de que el pedido termine de crearse.
-  const walletChosenRef = useRef(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const CVU     = process.env.NEXT_PUBLIC_CVU     ?? "";
@@ -148,7 +115,7 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
   // Release reservation if user closes the tab/navigates away mid-checkout
   useEffect(() => {
     function handleBeforeUnload() {
-      if (!orderDoneRef.current && !walletChosenRef.current && sessionToken) {
+      if (!orderDoneRef.current && sessionToken) {
         const blob = new Blob([JSON.stringify({ sessionToken })], { type: "application/json" });
         navigator.sendBeacon("/api/cart/release", blob);
       }
@@ -158,8 +125,8 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
   }, [sessionToken]);
 
   // "Pagar": solo valida y pasa a la pantalla de transferencia — el pedido
-  // todavía no existe en la DB, se crea recién cuando el usuario elige una
-  // opción de pago (ver handleWalletClick).
+  // todavía no existe en la DB, se crea recién cuando el usuario confirma
+  // que ya pagó (ver handleYaPague).
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -170,9 +137,8 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
     setStep("payment");
   }
 
-  // Crea el pedido recién cuando el usuario elige una opción de pago.
-  // Si ya se creó (o se está creando) por un click anterior, no repite el
-  // POST — solo copia el alias / reintenta abrir la app.
+  // Crea el pedido recién cuando el usuario confirma que ya pagó.
+  // Si ya se creó (o se está creando) por un click anterior, no repite el POST.
   async function createOrder(): Promise<number | null> {
     if (orderId) return orderId;
     if (orderDoneRef.current) return null; // ya hay un POST en curso
@@ -195,7 +161,6 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
       const data = await res.json();
       if (!res.ok) {
         orderDoneRef.current = false;
-        walletChosenRef.current = false;
         setError(data.error ?? "Error al procesar el pedido");
         return null;
       }
@@ -203,7 +168,6 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
       return data.orderId;
     } catch {
       orderDoneRef.current = false;
-      walletChosenRef.current = false;
       setError("Error de conexión. Intentá de nuevo.");
       return null;
     } finally {
@@ -222,16 +186,20 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
     onClose();
   }
 
-  async function handleWalletClick(id: string) {
-    walletChosenRef.current = true;
+  // Copia el alias — acción pasiva, no crea el pedido. El usuario se va
+  // a pagar por su cuenta (app, home banking, lo que use) y vuelve.
+  function handleCopyAlias() {
     navigator.clipboard?.writeText(ALIAS).catch(() => {});
-    openWalletApp(id);
-    setCopiedWallet(id);
-    setTimeout(() => setCopiedWallet((w) => (w === id ? null : w)), 1400);
+    setAliasCopied(true);
+    setTimeout(() => setAliasCopied(false), 1400);
     setToastVisible(true);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 1600);
+  }
 
+  // "Ya pagué": único gesto real de que el usuario transfirió — recién acá
+  // se crea el pedido y se avisa por WhatsApp.
+  async function handleYaPague() {
     const newOrderId = await createOrder();
     if (newOrderId != null && !successScheduledRef.current) {
       successScheduledRef.current = true;
@@ -398,52 +366,62 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
               )}
             </div>
 
-            {/* Billeteras: copian el alias y, cuando corresponde, intentan abrir la app */}
-            <div>
-              <div className="flex gap-[10px] justify-center">
-                {([
-                  { id: "mp", label: "Mercado Pago", logo: "/billeteras/mp-cream.png" },
-                  { id: "nx", label: "NaranjaX", logo: "/billeteras/nx-cream.png" },
-                  { id: "md", label: "Modo", logo: "/billeteras/md-cream.png" },
-                  { id: "ot", label: "Otro banco", logo: "/billeteras/banco-cream.png" },
-                ] as const).map((w) => {
-                  const isCopied = copiedWallet === w.id;
-                  return (
-                    <button
-                      key={w.id}
-                      type="button"
-                      aria-label={w.label}
-                      onClick={() => handleWalletClick(w.id)}
-                      className="relative overflow-hidden flex-none"
-                      style={{
-                        width: "56px",
-                        height: "56px",
-                        border: "none",
-                        borderRadius: "50%",
-                        padding: 0,
-                        background: "#F4EEE2",
-                        cursor: "pointer",
-                        boxShadow: isCopied ? "0 0 0 3px #3F8F5B" : "none",
-                        transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                    >
-                      <Image
-                        src={w.logo}
-                        alt={w.label}
-                        fill
-                        className="object-cover"
-                        style={{ borderRadius: "50%", transform: "scale(1.5)" }}
-                        sizes="56px"
-                      />
-                    </button>
-                  );
-                })}
+            {/* Copiar alias + Ya pagué: agrupados para compartir el grid-area "cta" en desktop */}
+            <div className="brot-cf-cta">
+              <div>
+                <button
+                  type="button"
+                  onClick={handleCopyAlias}
+                  className="w-full font-bold text-[15px]"
+                  style={{
+                    border: "1.5px solid rgba(14,35,60,.16)",
+                    background: aliasCopied ? "rgba(63,143,91,.08)" : "#fff",
+                    color: aliasCopied ? "#3F8F5B" : "#0E233C",
+                    borderRadius: "14px",
+                    padding: "15px 6px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .2s, color .2s, border-color .2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                >
+                  {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
+                </button>
+                <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
+                  Pagá desde tu app o home banking con el alias
+                </div>
               </div>
-              <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
-                {loading ? "Confirmando tu pedido…" : "Abrí tu app con el alias ya copiado"}
-              </div>
+
+              <button
+                type="button"
+                onClick={handleYaPague}
+                disabled={loading}
+                className="w-full font-bold text-[16.5px] tracking-[.01em]"
+                style={{
+                  marginTop: "22px",
+                  border: "none",
+                  background: "#0E233C",
+                  color: "#F4EEE2",
+                  borderRadius: "14px",
+                  padding: "17px",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.7 : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "11px",
+                  transition: ctaTransition,
+                }}
+                onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
+              </button>
+
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center" style={{ marginTop: "14px" }}>
                   {error}
