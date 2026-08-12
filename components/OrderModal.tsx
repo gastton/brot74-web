@@ -20,7 +20,7 @@ interface OrderModalProps {
   expiresAt: string;
   onRemoveItem: (productId: number) => void;
   onChangeQuantity: (productId: number, newQuantity: number) => void;
-  onClose: (reason?: "expired") => void;
+  onClose: (clearCart?: boolean) => void;
   onSuccess: (orderId: number) => void;
 }
 
@@ -60,7 +60,106 @@ function TrashIcon() {
   );
 }
 
-
+// Diálogo de aviso/confirmación propio (BRT-88): reemplaza a window.confirm/
+// alert nativos, que no permiten personalizar el texto de los botones.
+// Con un solo botón (sin cancelLabel) funciona como alerta ("OK"); con dos,
+// como confirmación (cancelar / confirmar).
+function ConfirmDialog({
+  icon,
+  message,
+  confirmLabel,
+  cancelLabel,
+  onConfirm,
+  onCancel,
+}: {
+  icon: "clock" | "warning";
+  message: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  onConfirm: () => void;
+  onCancel?: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center" style={{ padding: "19px" }}>
+      <div
+        className="absolute inset-0"
+        style={{ background: "rgba(14,35,60,.58)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }}
+      />
+      <div
+        className="relative w-full text-center"
+        style={{ ...MODAL_STYLE, maxWidth: "336px", padding: "26px 24px 22px" }}
+      >
+        <div
+          className="mx-auto"
+          style={{
+            width: "42px",
+            height: "42px",
+            borderRadius: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(166,68,46,.12)",
+            color: "#A6442E",
+            marginBottom: "14px",
+          }}
+        >
+          {icon === "clock" ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 8v4.5"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="9.2"/>
+            </svg>
+          )}
+        </div>
+        <p className="font-bold text-[15.5px] text-navy" style={{ lineHeight: 1.4, margin: 0 }}>
+          {message}
+        </p>
+        <div className="flex" style={{ gap: "10px", marginTop: "20px" }}>
+          {cancelLabel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 font-bold text-[14.5px]"
+              style={{
+                border: "1.5px solid rgba(14,35,60,.16)",
+                background: "#fff",
+                color: "#0E233C",
+                borderRadius: "14px",
+                padding: "13px 6px",
+                cursor: "pointer",
+                transition: ctaTransition,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+            >
+              {cancelLabel}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 font-bold text-[14.5px]"
+            style={{
+              border: "none",
+              background: "#0E233C",
+              color: "#F4EEE2",
+              borderRadius: "14px",
+              padding: "13px 6px",
+              cursor: "pointer",
+              transition: ctaTransition,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function formatCountdown(seconds: number): string {
   const m = Math.floor(seconds / 60).toString().padStart(2, "0");
@@ -79,6 +178,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
     Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
   );
   const [expired, setExpired] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
   const [hasCopiedAlias, setHasCopiedAlias] = useState(false); // se mantiene: habilita "Ya pagué"
   const [toastVisible, setToastVisible] = useState(false);
@@ -96,7 +196,9 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
 
   // Countdown timer — sigue corriendo en la pantalla de pago (no solo en el
   // form) para detectar la expiración en vivo y no depender de que el POST
-  // a /api/orders falle recién cuando el usuario toca "Ya pagué".
+  // a /api/orders falle recién cuando el usuario toca "Ya pagué". Al llegar
+  // a 0 se muestra el diálogo de expiración (BRT-88) y se espera a que el
+  // usuario toque "OK" — no se cierra solo.
   useEffect(() => {
     const interval = setInterval(() => {
       const left = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
@@ -104,14 +206,11 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
       if (left === 0) {
         clearInterval(interval);
         setExpired(true);
-        // En el form cerramos solo: en pago dejamos el mensaje fijo hasta
-        // que el usuario elija cerrar (ver panel "Tu pedido expiró").
-        if (step === "form") setTimeout(() => onClose("expired"), 4000);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [expiresAt, step, onClose]);
+  }, [expiresAt]);
 
   // Release reservation if user closes the tab/navigates away mid-checkout
   useEffect(() => {
@@ -131,7 +230,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (expired) { setError("Tu reserva expiró. Cerrá y volvé a intentar."); return; }
+    if (expired) return; // el diálogo de expiración ya está cubriendo la pantalla
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
@@ -187,10 +286,12 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
   const isUrgent = secondsLeft <= 120;
   const fillPct = ((secondsLeft / TOTAL_SECONDS) * 100).toFixed(2);
 
+  // Botón X (BRT-88): si hay productos en el carrito, confirma antes de
+  // cerrar — en cualquiera de los dos pasos. Si el diálogo de expiración ya
+  // está cubriendo la pantalla, no hace falta preguntar dos veces.
   function handleCloseClick() {
-    if (step === "form" && (name.trim() || phone.trim())) {
-      if (!window.confirm("Vas a perder los datos que escribiste. ¿Cerrar igual?")) return;
-    }
+    if (expired) { onClose(true); return; }
+    if (items.length > 0) { setShowCloseConfirm(true); return; }
     onClose();
   }
 
@@ -322,124 +423,68 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
               )}
             </div>
 
-            {/* Copiar alias + Ya pagué: agrupados para compartir el grid-area "cta" en desktop */}
+            {/* Copiar alias + Ya pagué: agrupados para compartir el grid-area "cta" en desktop.
+               Si la reserva expira quedan cubiertos por el diálogo de expiración (BRT-88). */}
             <div className="brot-cf-cta">
-              {expired ? (
-                <>
-                  <div
-                    className="text-center"
-                    style={{
-                      background: "rgba(166,68,46,.12)",
-                      border: "1px solid rgba(166,68,46,.28)",
-                      borderRadius: "14px",
-                      padding: "18px 16px",
-                    }}
-                  >
-                    <div
-                      className="mx-auto"
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "11px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "#A6442E",
-                        color: "#fff",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-                      </svg>
-                    </div>
-                    <div className="font-bold text-[16px] text-navy">Tu pedido expiró</div>
-                    <div className="text-[13.5px] text-stone mt-[6px]" style={{ lineHeight: 1.4 }}>
-                      Pasaron los 15 minutos de la reserva y el alias/total ya no son válidos para este pedido. Cerrá esta ventana y volvé a elegir tus productos.
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onClose("expired")}
-                    className="w-full font-bold text-[16.5px] tracking-[.01em]"
-                    style={{
-                      marginTop: "16px",
-                      border: "none",
-                      background: "#0E233C",
-                      color: "#F4EEE2",
-                      borderRadius: "14px",
-                      padding: "17px",
-                      cursor: "pointer",
-                      transition: ctaTransition,
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-                  >
-                    Cerrar y volver a elegir
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handleCopyAlias}
-                      className="w-full font-bold text-[15px]"
-                      style={{
-                        border: "1.5px solid rgba(14,35,60,.16)",
-                        background: aliasCopied ? "rgba(63,143,91,.08)" : "#fff",
-                        color: aliasCopied ? "#3F8F5B" : "#0E233C",
-                        borderRadius: "14px",
-                        padding: "10px 6px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .2s, color .2s, border-color .2s",
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                    >
-                      {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
-                    </button>
-                    <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
-                      Pagá desde tu app o home banking con el alias
-                    </div>
-                  </div>
+              <div>
+                <button
+                  type="button"
+                  onClick={handleCopyAlias}
+                  disabled={expired}
+                  className="w-full font-bold text-[15px]"
+                  style={{
+                    border: "1.5px solid rgba(14,35,60,.16)",
+                    background: aliasCopied ? "rgba(63,143,91,.08)" : "#fff",
+                    color: aliasCopied ? "#3F8F5B" : "#0E233C",
+                    borderRadius: "14px",
+                    padding: "10px 6px",
+                    cursor: expired ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .2s, color .2s, border-color .2s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                >
+                  {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
+                </button>
+                <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
+                  Pagá desde tu app o home banking con el alias
+                </div>
+              </div>
 
-                  <button
-                    type="button"
-                    onClick={handleYaPague}
-                    disabled={loading || !hasCopiedAlias}
-                    className="w-full font-bold text-[16.5px] tracking-[.01em]"
-                    style={{
-                      marginTop: "22px",
-                      border: "none",
-                      background: "#0E233C",
-                      color: "#F4EEE2",
-                      borderRadius: "14px",
-                      padding: "10px",
-                      cursor: (loading || !hasCopiedAlias) ? "not-allowed" : "pointer",
-                      opacity: (loading || !hasCopiedAlias) ? 0.4 : 1,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "11px",
-                      transition: ctaTransition,
-                    }}
-                    onMouseEnter={(e) => { if (!loading && hasCopiedAlias) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-                  >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
-                  </button>
+              <button
+                type="button"
+                onClick={handleYaPague}
+                disabled={loading || !hasCopiedAlias || expired}
+                className="w-full font-bold text-[16.5px] tracking-[.01em]"
+                style={{
+                  marginTop: "22px",
+                  border: "none",
+                  background: "#0E233C",
+                  color: "#F4EEE2",
+                  borderRadius: "14px",
+                  padding: "10px",
+                  cursor: (loading || !hasCopiedAlias || expired) ? "not-allowed" : "pointer",
+                  opacity: (loading || !hasCopiedAlias || expired) ? 0.4 : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "11px",
+                  transition: ctaTransition,
+                }}
+                onMouseEnter={(e) => { if (!loading && hasCopiedAlias && !expired) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
+              </button>
 
-                  {error && (
-                    <div className="text-center text-[13px]" style={{ color: "#C0392B", marginTop: "10px" }}>
-                      {error}
-                    </div>
-                  )}
-                </>
+              {error && (
+                <div className="text-center text-[13px]" style={{ color: "#C0392B", marginTop: "10px" }}>
+                  {error}
+                </div>
               )}
             </div>
           </div>
@@ -688,6 +733,28 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
         >
           Alias copiado
         </div>
+      )}
+
+      {/* Diálogo de expiración (BRT-88) — unificado para los dos pasos */}
+      {expired && (
+        <ConfirmDialog
+          icon="clock"
+          message="Se ha terminado el tiempo para completar el pago del carrito."
+          confirmLabel="OK"
+          onConfirm={() => onClose(true)}
+        />
+      )}
+
+      {/* Diálogo de confirmación al cerrar con la X (BRT-88) */}
+      {showCloseConfirm && (
+        <ConfirmDialog
+          icon="warning"
+          message="Al cerrar esta pantalla se perderán los productos seleccionados. ¿Cerrar de todos modos?"
+          confirmLabel="SÍ"
+          cancelLabel="NO"
+          onConfirm={() => { setShowCloseConfirm(false); onClose(true); }}
+          onCancel={() => setShowCloseConfirm(false)}
+        />
       )}
     </div>
   );

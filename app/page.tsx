@@ -183,7 +183,7 @@ export default function Home() {
     }
   }
 
-  function handleModalClose(reason?: "expired") {
+  function handleModalClose(clearCart?: boolean) {
     if (sessionToken) {
       fetch("/api/cart/release", {
         method: "POST",
@@ -194,9 +194,10 @@ export default function Home() {
     setShowModal(false);
     setSessionToken("");
     setReservationExpiresAt("");
-    if (reason === "expired") {
-      // La reserva venció: no dejamos el carrito con productos "elegidos"
-      // sobre una reserva que ya no existe — se vuelve a armar de cero.
+    if (clearCart) {
+      // Reserva vencida o cierre confirmado por el usuario (BRT-88): no
+      // dejamos el carrito con productos "elegidos" sobre una reserva que
+      // ya no existe — se vuelve a armar de cero.
       setCart({});
       localStorage.removeItem("brot74-cart");
     }
