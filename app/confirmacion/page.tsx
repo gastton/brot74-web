@@ -35,14 +35,56 @@ function ConfirmacionContent() {
           padding: "44px 36px 36px",
         }}
       >
-        {/* Sello / logo */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/sello-brot-navy.png"
-          alt="BROT 74"
-          className="mx-auto"
-          style={{ width: "116px", height: "116px", display: "block", filter: "drop-shadow(0 14px 26px rgba(14,35,60,.28))" }}
-        />
+        {/* Sello — armado en vivo (disco navy + aro + ramillete monolínea + wordmark),
+            mismo patrón que el sello del hero en home */}
+        <div
+          className="brot-ok-seal mx-auto"
+          style={{
+            position: "relative",
+            boxSizing: "border-box",
+            width: "116px",
+            height: "116px",
+            fontSize: "116px",
+            borderRadius: "50%",
+            background: "#0E233C",
+            filter: "drop-shadow(0 14px 26px rgba(14,35,60,.28))",
+          }}
+        >
+          <svg
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#F4EEE2" strokeWidth="0.7" opacity="0.85" />
+            <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F4EEE2" strokeWidth="0.32" opacity="0.45" />
+          </svg>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingBottom: ".05em",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/ramillete-mono-cream.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "baseline",
+                lineHeight: 1,
+                marginTop: ".01em",
+                fontFamily: "var(--font-jost, 'Jost', sans-serif)",
+              }}
+            >
+              <span style={{ fontWeight: 500, fontSize: ".115em", color: "#F4EEE2" }}>BROT</span>
+              <span style={{ fontWeight: 700, fontSize: ".115em", letterSpacing: "-.2em", marginLeft: ".18em", color: "#C8851A" }}>74</span>
+            </div>
+          </div>
+        </div>
 
         {/* Título */}
         <h1 className="font-bold text-[33px] tracking-[-0.01em] text-navy mt-[26px] mb-0">

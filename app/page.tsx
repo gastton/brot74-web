@@ -422,7 +422,7 @@ export default function Home() {
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/ramillete-cream-ink.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
+              <img src="/ramillete-mono-cream.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
               <div
                 style={{
                   display: "inline-flex",

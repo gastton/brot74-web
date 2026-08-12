@@ -329,4 +329,9 @@ textarea.brot-input {
     max-width: 480px !important;
     padding: 54px 48px 44px !important;
   }
+  .brot-ok-seal {
+    width: 130px !important;
+    height: 130px !important;
+    font-size: 130px !important;
+  }
 }
