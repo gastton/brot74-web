@@ -117,13 +117,6 @@ export default function Home() {
     setCart({});
   }
 
-  function goHome() {
-    setView("home");
-    setSelectedSlotId(null);
-    setCart({});
-    localStorage.removeItem("brot74-cart");
-  }
-
   function addToCart(productId: number) {
     setCart((prev) => ({ ...prev, [productId]: (prev[productId] ?? 0) + 1 }));
   }

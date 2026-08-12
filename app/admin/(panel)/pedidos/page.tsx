@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, Phone, MapPin, Package, Home, ChevronDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -36,15 +36,15 @@ function PedidosContent() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<number | null>(null);
 
-  async function fetchOrders() {
+  const fetchOrders = useCallback(async () => {
     const url = slotFilter ? `/api/admin/orders?slotId=${slotFilter}` : "/api/admin/orders";
     const res = await fetch(url);
     const data = await res.json();
     setOrders(data);
     setLoading(false);
-  }
+  }, [slotFilter]);
 
-  useEffect(() => { fetchOrders(); }, [slotFilter]);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   async function updateStatus(orderId: number, status: string) {
     setUpdating(orderId);
