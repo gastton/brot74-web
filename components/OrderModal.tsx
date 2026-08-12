@@ -69,7 +69,7 @@ function formatCountdown(seconds: number): string {
   return `${m}:${s}`;
 }
 
-export default function OrderModal({ items, slotId, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onChangeQuantity, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
   const [loading, setLoading] = useState(false);
