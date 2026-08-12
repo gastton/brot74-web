@@ -496,26 +496,40 @@ export default function Home() {
             <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>{"→"}</span>
           </button>
 
-          {/* Tagline */}
-          <div
-            className="brot-hero-foot"
+        </section>
+
+        {/* Footer: crédito de desarrollo */}
+        <footer
+          style={{
+            background: "#0E233C",
+            borderTop: "1px solid rgba(244,238,226,.08)",
+            padding: "14px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
+          }}
+        >
+          <span
             style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              bottom: "30px",
-              textAlign: "center",
-              fontWeight: 500,
-              fontSize: "12px",
-              letterSpacing: ".28em",
+              fontWeight: 600,
+              fontSize: "10.5px",
+              letterSpacing: ".08em",
               textTransform: "uppercase",
-              textIndent: ".28em",
               color: "rgba(244,238,226,.42)",
             }}
           >
-            Pan hecho con tiempo
-          </div>
-        </section>
+            Powered by
+          </span>
+          <a href="https://luontek.com/" target="_blank" rel="noopener noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/luontek-horizontal-oscuro.svg"
+              alt="Luontek"
+              style={{ height: "18px", width: "auto", display: "block" }}
+            />
+          </a>
+        </footer>
 
     </div>
   );
