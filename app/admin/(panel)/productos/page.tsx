@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Pencil, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, ImagePlus } from "lucide-react";
 import Image from "next/image";
 import ImageZoomModal from "@/components/ImageZoomModal";
