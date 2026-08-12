@@ -353,7 +353,6 @@ export default function Home() {
             items={cartItems}
             slotId={selectedSlotId}
             slotLabel={selectedSlot.dayLabel}
-            slotLocation={selectedSlot.location}
             sessionToken={sessionToken}
             expiresAt={reservationExpiresAt}
             onRemoveItem={removeItemFromCart}

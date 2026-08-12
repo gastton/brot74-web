@@ -48,16 +48,12 @@ body {
   .brot-pulse { animation: none; }
 }
 
-/* ── Contador de reserva (v12) ── */
-@keyframes brotRsvPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: .5; }
+/* ── OrderModal: tacho de la lista de productos, atenuado — se resalta con el hover de la fila ── */
+.brot-co-line .brot-co-del {
+  opacity: .4;
 }
-.brot-rsv-pulse {
-  animation: brotRsvPulse 1.1s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .brot-rsv-pulse { animation: none; }
+.brot-co-line:hover .brot-co-del {
+  opacity: 1;
 }
 
 /* ── Botón principal ── */
@@ -246,13 +242,14 @@ textarea.brot-input {
   align-items: safe center;
 }
 
-/* ── OrderModal checkout (form step) v25: lista de productos con scroll a partir del 5º ítem ── */
+/* ── OrderModal checkout (form step) v29: lista de productos con scroll ── */
 .brot-co-lines {
-  max-height: 170px;
+  max-height: 220px;
   overflow-y: auto;
 }
 
-/* ── OrderModal checkout (form step): two columns at 900px+ ── */
+/* ── OrderModal checkout (form step) v29: two columns at 900px+, Productos a la
+   izquierda y el formulario a la derecha (invertido respecto de v25/v26) ── */
 @media (min-width: 900px) {
   .brot-co-modal {
     max-width: 720px !important;
@@ -267,31 +264,20 @@ textarea.brot-input {
     margin-top: 0 !important;
   }
   .brot-co-form {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    order: 1;
+    order: 2;
   }
   .brot-co-order-col {
-    order: 2;
+    order: 1;
     position: sticky;
     top: 0;
   }
   .brot-co-summary {
     margin-top: 0;
   }
-  .brot-co-form > * {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-  }
   .brot-co-actions {
-    grid-column: 1 / -1;
+    grid-column: 2;
     order: 3;
-    justify-content: flex-end;
     margin-top: 6px !important;
-  }
-  .brot-co-actions > * {
-    flex: 0 0 160px !important;
   }
 }
 

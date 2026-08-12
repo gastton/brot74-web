@@ -16,7 +16,6 @@ interface OrderModalProps {
   items: CartItem[];
   slotId: number;
   slotLabel: string;
-  slotLocation: string;
   sessionToken: string;
   expiresAt: string;
   onRemoveItem: (productId: number) => void;
@@ -69,7 +68,7 @@ function formatCountdown(seconds: number): string {
   return `${m}:${s}`;
 }
 
-export default function OrderModal({ items, slotId, slotLabel, slotLocation, sessionToken, expiresAt, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotLabel, sessionToken, expiresAt, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
   const [loading, setLoading] = useState(false);
@@ -232,17 +231,30 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
         style={{ ...MODAL_STYLE, maxWidth: "392px", maxHeight: "90vh" }}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-[14px] px-[18px] pt-[24px] pb-[18px]">
+        <div
+          className="flex items-start justify-between gap-[14px]"
+          style={step === "payment" ? { padding: "24px 26px 18px" } : { padding: "26px 22px 12px" }}
+        >
           <div>
-            <h3 className="font-bold text-[27px] tracking-[-0.01em] text-navy m-0">
+            <h3
+              className="text-navy m-0"
+              style={
+                step === "payment"
+                  ? { fontWeight: 700, fontSize: "27px", letterSpacing: "-.01em" }
+                  : { fontWeight: 800, fontSize: "28px", letterSpacing: "-.015em", lineHeight: 1.05 }
+              }
+            >
               {step === "payment" ? "Pagá por transferencia" : "Tu pedido"}
             </h3>
             {(step === "payment" || items.length > 0) && (
               <div
-                className="text-[14.5px] text-stone mt-[5px]"
-                style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
+                className="text-[14.5px] text-stone flex items-center gap-[7px]"
+                style={{ fontStyle: "italic", marginTop: "6px", whiteSpace: "nowrap" }}
               >
-                {slotLabel}{slotLocation ? ` · ${slotLocation}` : ` · Retiro en casa`}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", opacity: 0.75 }}>
+                  <rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>
+                </svg>
+                {slotLabel}
               </div>
             )}
           </div>
@@ -250,79 +262,13 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
             onClick={handleCloseClick}
             aria-label="Cerrar"
             className="flex-none mt-0.5 flex items-center justify-center border-none bg-transparent p-0"
-            style={{ cursor: "pointer", transition: "transform .15s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+            style={{ cursor: "pointer", transition: "transform .15s, opacity .15s", opacity: step === "payment" ? 1 : 0.6 }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.opacity = step === "payment" ? "1" : "0.6"; }}
           >
             <CloseIcon />
           </button>
         </div>
-
-        {/* Banda de reserva (v12) — solo durante el formulario con ítems */}
-        {step === "form" && items.length > 0 && (
-          <div
-            className="mx-[26px] mb-[14px] rounded-[14px] overflow-hidden"
-            style={{
-              background: (expired || isUrgent) ? "rgba(166,68,46,.12)" : "rgba(200,133,26,.12)",
-              border: `1px solid ${(expired || isUrgent) ? "rgba(166,68,46,.28)" : "rgba(200,133,26,.22)"}`,
-              padding: "14px 16px 16px",
-              transition: "background .4s, border-color .4s",
-            }}
-          >
-            <div className="flex items-center gap-3">
-              {/* Ícono */}
-              <span
-                className={(expired || isUrgent) ? "brot-rsv-pulse" : ""}
-                style={{
-                  flexShrink: 0,
-                  width: "30px",
-                  height: "30px",
-                  borderRadius: "9px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: (expired || isUrgent) ? "#A6442E" : "#C8851A",
-                  color: "#fff",
-                  transition: "background .4s",
-                }}
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-                </svg>
-              </span>
-              {/* Texto */}
-              <span className="flex-1 min-w-0">
-                <span className="block font-bold text-[13.5px] text-navy leading-[1.2]">
-                  {expired ? "Tu reserva expiró" : "Te guardamos tu pedido"}
-                </span>
-                <span className="block text-[12px] text-stone mt-[2px]">
-                  {expired ? "Podés volver a intentar." : "Confirmá antes de que termine el tiempo."}
-                </span>
-              </span>
-              {/* MM:SS */}
-              <span
-                className="font-extrabold text-[23px] text-navy whitespace-nowrap"
-                style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".01em" }}
-              >
-                {formatCountdown(secondsLeft)}
-              </span>
-            </div>
-            {/* Barra de progreso */}
-            <div
-              className="relative h-[4px] rounded-full mt-[13px] overflow-hidden"
-              style={{ background: "rgba(14,35,60,.10)" }}
-            >
-              <span
-                className="absolute inset-y-0 left-0 rounded-full"
-                style={{
-                  width: `${fillPct}%`,
-                  background: (expired || isUrgent) ? "#A6442E" : "#C8851A",
-                  transition: "width .25s linear, background .4s",
-                }}
-              />
-            </div>
-          </div>
-        )}
 
         <div style={HAIR} />
 
@@ -444,7 +390,7 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
                         background: aliasCopied ? "rgba(63,143,91,.08)" : "#fff",
                         color: aliasCopied ? "#3F8F5B" : "#0E233C",
                         borderRadius: "14px",
-                        padding: "15px 6px",
+                        padding: "10px 6px",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
@@ -473,7 +419,7 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
                       background: "#0E233C",
                       color: "#F4EEE2",
                       borderRadius: "14px",
-                      padding: "17px",
+                      padding: "10px",
                       cursor: (loading || !hasCopiedAlias) ? "not-allowed" : "pointer",
                       opacity: (loading || !hasCopiedAlias) ? 0.4 : 1,
                       display: "flex",
@@ -489,7 +435,7 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
                   </button>
 
                   {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center" style={{ marginTop: "14px" }}>
+                    <div className="text-center text-[13px]" style={{ color: "#C0392B", marginTop: "10px" }}>
                       {error}
                     </div>
                   )}
@@ -500,7 +446,50 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
         ) : (
 
         /* ── Formulario (step = form) ── */
-        <form onSubmit={handleSubmit} className="pt-[22px] pb-[26px] px-[18px]">
+        <form onSubmit={handleSubmit} style={{ padding: "14px 22px 24px" }}>
+          {/* Banda de reserva */}
+          {items.length > 0 && (
+            <div
+              style={{
+                position: "relative",
+                background: (expired || isUrgent) ? "rgba(166,68,46,.10)" : "rgba(200,133,26,.10)",
+                border: `1px solid ${(expired || isUrgent) ? "rgba(166,68,46,.28)" : "rgba(200,133,26,.22)"}`,
+                borderRadius: "14px",
+                padding: "11px 14px 12px",
+                marginBottom: "18px",
+                transition: "background .4s, border-color .4s",
+              }}
+            >
+              <div className="flex items-baseline justify-between gap-[10px]" style={{ flexWrap: "nowrap" }}>
+                <span
+                  className="font-bold text-[13px] whitespace-nowrap"
+                  style={{ color: (expired || isUrgent) ? "#A6442E" : "#0E233C" }}
+                >
+                  {expired ? "Tu reserva expiró" : "Te guardamos tu pedido por"}
+                </span>
+                <span
+                  className="font-extrabold text-[15.5px] flex-none"
+                  style={{ fontVariantNumeric: "tabular-nums", color: (expired || isUrgent) ? "#A6442E" : "#0E233C" }}
+                >
+                  {formatCountdown(secondsLeft)}
+                </span>
+              </div>
+              <div
+                className="relative rounded-full overflow-hidden"
+                style={{ height: "3px", background: "rgba(14,35,60,.09)", marginTop: "8px" }}
+              >
+                <span
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    width: `${fillPct}%`,
+                    background: (expired || isUrgent) ? "#A6442E" : "#C8851A",
+                    transition: "width .25s linear, background .4s",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* ── Estado vacío ── */}
           {items.length === 0 ? (
             <div className="flex flex-col items-center text-center py-4 gap-0">
@@ -540,32 +529,37 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
           <div className="brot-co-body space-y-[18px]">
             {/* Resumen */}
             <div className="brot-co-order-col">
-              <div className="font-bold text-[14.5px] text-navy mb-[5px]">Productos</div>
+              <div
+                className="font-extrabold text-[11px] text-stone uppercase"
+                style={{ letterSpacing: ".09em", marginBottom: "8px" }}
+              >
+                Productos
+              </div>
               <div
                 className="brot-co-summary overflow-hidden"
-                style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "16px", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)", padding: "18px 16px" }}
+                style={{ background: "#fff", borderRadius: "14px", boxShadow: "0 8px 18px -14px rgba(14,35,60,.3)", padding: "10px 14px 6px" }}
               >
                 <div className="brot-co-lines">
                   {items.map((item, i) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between gap-3 pb-[8px]"
-                      style={{ paddingTop: i > 0 ? "8px" : "0" }}
+                      className="brot-co-line flex items-center justify-between gap-3"
+                      style={{ padding: "11px 0", borderBottom: i < items.length - 1 ? "1px solid rgba(14,35,60,.10)" : "none" }}
                     >
-                      <span className="font-semibold text-[16px] text-navy leading-snug">
-                        {item.name}{" "}
-                        <span className="font-medium text-[14px] text-stone">×{item.quantity}</span>
+                      <span className="font-bold text-[15px] text-navy whitespace-nowrap">
+                        {item.name}
+                        <i className="text-stone" style={{ fontStyle: "normal", fontWeight: 500, fontSize: "12.5px", marginLeft: "9px" }}>×{item.quantity}</i>
                       </span>
-                      <span className="flex items-center gap-3 flex-none">
-                        <span className="font-bold text-[16px] text-navy whitespace-nowrap">
+                      <span className="flex items-center gap-[10px] flex-none">
+                        <span className="font-bold text-[15px] text-navy whitespace-nowrap">
                           {formatCurrency(item.price * item.quantity)}
                         </span>
                         <button
                           type="button"
                           aria-label={`Quitar ${item.name}`}
                           onClick={() => onRemoveItem(item.id)}
-                          className="w-7 h-7 inline-flex items-center justify-center rounded-[8px] border-none bg-transparent cursor-pointer text-stone"
-                          style={{ transition: "background .15s, color .15s" }}
+                          className="brot-co-del w-[26px] h-[26px] inline-flex items-center justify-center rounded-[7px] border-none bg-transparent cursor-pointer text-stone"
+                          style={{ transition: "background .15s, color .15s, opacity .15s" }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(166,68,46,.10)"; e.currentTarget.style.color = "#A6442E"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = ""; }}
                         >
@@ -575,10 +569,12 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
                     </div>
                   ))}
                 </div>
-                <div style={HAIR} />
-                <div className="flex items-baseline justify-between gap-3 pt-[14px]">
-                  <span className="font-bold text-[19px] text-navy">Total</span>
-                  <span className="font-bold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
+                <div
+                  className="flex items-baseline justify-between gap-3"
+                  style={{ padding: "12px 2px 4px", marginTop: "2px", borderTop: "1.5px solid #0E233C" }}
+                >
+                  <span className="font-bold text-[16px] text-navy">Total</span>
+                  <span className="font-extrabold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
                     {formatCurrency(total)}
                   </span>
                 </div>
@@ -586,13 +582,16 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
             </div>
 
             {/* Campos */}
-            <div className="brot-co-form space-y-[18px]">
+            <div className="brot-co-form space-y-[16px]">
               {[
                 { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },
                 { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
               ].map((field) => (
                 <div key={field.id}>
-                  <label className="block font-bold text-[14.5px] text-navy mb-[5px]">
+                  <label
+                    className="block font-extrabold text-[11px] text-stone uppercase"
+                    style={{ letterSpacing: ".06em", marginBottom: "6px" }}
+                  >
                     {field.label} <span style={{ color: "#C8851A" }}>*</span>
                   </label>
                   <input
@@ -601,30 +600,39 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
                     onChange={(e) => field.onChange(e.target.value)}
                     placeholder={field.placeholder}
                     required={field.required}
-                    className="brot-input"
+                    className="w-full text-navy bg-white outline-none"
+                    style={{
+                      fontSize: "15px",
+                      border: "1.5px solid rgba(14,35,60,.13)",
+                      borderRadius: "12px",
+                      padding: "11px 15px",
+                      transition: "border-color .15s, box-shadow .15s",
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "#C8851A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(200,133,26,.16)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(14,35,60,.13)"; e.currentTarget.style.boxShadow = "none"; }}
                   />
                 </div>
               ))}
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+                <div className="text-center text-[13px]" style={{ color: "#C0392B" }}>
                   {error}
                 </div>
               )}
             </div>
 
             {/* Acciones */}
-            <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "8px", marginTop: "22px" }}>
+            <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "8px", marginTop: "20px" }}>
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 min-w-0 font-bold text-[13.5px] tracking-[.01em] whitespace-nowrap overflow-hidden text-ellipsis"
+                className="flex-1 min-w-0 font-bold text-[14px] tracking-[.01em] whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{
-                  border: "1.5px solid rgba(14,35,60,.16)",
+                  border: "1.5px solid rgba(14,35,60,.14)",
                   background: "#fff",
                   color: "#0E233C",
-                  borderRadius: "14px",
-                  padding: "14px 6px",
+                  borderRadius: "16px",
+                  padding: "10px 8px",
                   cursor: "pointer",
                   transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .15s",
                 }}
@@ -636,13 +644,13 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
               <button
                 type="submit"
                 disabled={expired}
-                className="flex-1 min-w-0 font-bold text-[13.5px] tracking-[.01em] whitespace-nowrap overflow-hidden text-ellipsis"
+                className="flex-1 min-w-0 font-bold text-[14px] tracking-[.01em] whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{
                   border: "none",
                   background: "#0E233C",
                   color: "#F4EEE2",
-                  borderRadius: "14px",
-                  padding: "14px 6px",
+                  borderRadius: "16px",
+                  padding: "10px 8px",
                   cursor: expired ? "not-allowed" : "pointer",
                   opacity: expired ? 0.4 : 1,
                   transition: ctaTransition,
