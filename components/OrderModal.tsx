@@ -95,18 +95,19 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // Countdown timer
+  // Countdown timer — sigue corriendo en la pantalla de pago (no solo en el
+  // form) para detectar la expiración en vivo y no depender de que el POST
+  // a /api/orders falle recién cuando el usuario toca "Ya pagué".
   useEffect(() => {
-    if (step === "payment") return;
-
     const interval = setInterval(() => {
       const left = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
       setSecondsLeft(left);
       if (left === 0) {
         clearInterval(interval);
         setExpired(true);
-        // Close modal after 4 seconds so user sees the message
-        setTimeout(onClose, 4000);
+        // En el form cerramos solo: en pago dejamos el mensaje fijo hasta
+        // que el usuario elija cerrar (ver panel "Tu pedido expiró").
+        if (step === "form") setTimeout(onClose, 4000);
       }
     }, 1000);
 
@@ -141,6 +142,7 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
   // Crea el pedido recién cuando el usuario confirma que ya pagó.
   // Si ya se creó (o se está creando) por un click anterior, no repite el POST.
   async function createOrder(): Promise<number | null> {
+    if (expired) return null; // ya se detectó el vencimiento del lado del cliente
     if (orderId) return orderId;
     if (orderDoneRef.current) return null; // ya hay un POST en curso
     orderDoneRef.current = true;
@@ -162,7 +164,13 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
       const data = await res.json();
       if (!res.ok) {
         orderDoneRef.current = false;
-        setError(data.error ?? "Error al procesar el pedido");
+        if (res.status === 409) {
+          // Reserva vencida: mostramos el panel dedicado, no el cartel
+          // genérico de error (que da a entender que falló el pago/alias).
+          setExpired(true);
+        } else {
+          setError(data.error ?? "Error al procesar el pedido");
+        }
         return null;
       }
       setOrderId(data.orderId);
@@ -370,64 +378,122 @@ export default function OrderModal({ items, slotId, slotLabel, slotLocation, ses
 
             {/* Copiar alias + Ya pagué: agrupados para compartir el grid-area "cta" en desktop */}
             <div className="brot-cf-cta">
-              <div>
-                <button
-                  type="button"
-                  onClick={handleCopyAlias}
-                  className="w-full font-bold text-[15px]"
-                  style={{
-                    border: "1.5px solid rgba(14,35,60,.16)",
-                    background: aliasCopied ? "rgba(63,143,91,.08)" : "#fff",
-                    color: aliasCopied ? "#3F8F5B" : "#0E233C",
-                    borderRadius: "14px",
-                    padding: "15px 6px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .2s, color .2s, border-color .2s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                >
-                  {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
-                </button>
-                <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
-                  Pagá desde tu app o home banking con el alias
-                </div>
-              </div>
+              {expired ? (
+                <>
+                  <div
+                    className="text-center"
+                    style={{
+                      background: "rgba(166,68,46,.12)",
+                      border: "1px solid rgba(166,68,46,.28)",
+                      borderRadius: "14px",
+                      padding: "18px 16px",
+                    }}
+                  >
+                    <div
+                      className="mx-auto"
+                      style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "11px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "#A6442E",
+                        color: "#fff",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+                      </svg>
+                    </div>
+                    <div className="font-bold text-[16px] text-navy">Tu pedido expiró</div>
+                    <div className="text-[13.5px] text-stone mt-[6px]" style={{ lineHeight: 1.4 }}>
+                      Pasaron los 15 minutos de la reserva y el alias/total ya no son válidos para este pedido. Cerrá esta ventana y volvé a elegir tus productos.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full font-bold text-[16.5px] tracking-[.01em]"
+                    style={{
+                      marginTop: "16px",
+                      border: "none",
+                      background: "#0E233C",
+                      color: "#F4EEE2",
+                      borderRadius: "14px",
+                      padding: "17px",
+                      cursor: "pointer",
+                      transition: ctaTransition,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                  >
+                    Cerrar y volver a elegir
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleCopyAlias}
+                      className="w-full font-bold text-[15px]"
+                      style={{
+                        border: "1.5px solid rgba(14,35,60,.16)",
+                        background: aliasCopied ? "rgba(63,143,91,.08)" : "#fff",
+                        color: aliasCopied ? "#3F8F5B" : "#0E233C",
+                        borderRadius: "14px",
+                        padding: "15px 6px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .2s, color .2s, border-color .2s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                    >
+                      {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
+                    </button>
+                    <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
+                      Pagá desde tu app o home banking con el alias
+                    </div>
+                  </div>
 
-              <button
-                type="button"
-                onClick={handleYaPague}
-                disabled={loading || !hasCopiedAlias}
-                className="w-full font-bold text-[16.5px] tracking-[.01em]"
-                style={{
-                  marginTop: "22px",
-                  border: "none",
-                  background: "#0E233C",
-                  color: "#F4EEE2",
-                  borderRadius: "14px",
-                  padding: "17px",
-                  cursor: (loading || !hasCopiedAlias) ? "not-allowed" : "pointer",
-                  opacity: (loading || !hasCopiedAlias) ? 0.4 : 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "11px",
-                  transition: ctaTransition,
-                }}
-                onMouseEnter={(e) => { if (!loading && hasCopiedAlias) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
-              </button>
+                  <button
+                    type="button"
+                    onClick={handleYaPague}
+                    disabled={loading || !hasCopiedAlias}
+                    className="w-full font-bold text-[16.5px] tracking-[.01em]"
+                    style={{
+                      marginTop: "22px",
+                      border: "none",
+                      background: "#0E233C",
+                      color: "#F4EEE2",
+                      borderRadius: "14px",
+                      padding: "17px",
+                      cursor: (loading || !hasCopiedAlias) ? "not-allowed" : "pointer",
+                      opacity: (loading || !hasCopiedAlias) ? 0.4 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "11px",
+                      transition: ctaTransition,
+                    }}
+                    onMouseEnter={(e) => { if (!loading && hasCopiedAlias) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                  >
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
+                  </button>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center" style={{ marginTop: "14px" }}>
-                  {error}
-                </div>
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center" style={{ marginTop: "14px" }}>
+                      {error}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
