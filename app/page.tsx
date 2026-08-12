@@ -183,7 +183,7 @@ export default function Home() {
     }
   }
 
-  function handleModalClose() {
+  function handleModalClose(reason?: "expired") {
     if (sessionToken) {
       fetch("/api/cart/release", {
         method: "POST",
@@ -194,6 +194,12 @@ export default function Home() {
     setShowModal(false);
     setSessionToken("");
     setReservationExpiresAt("");
+    if (reason === "expired") {
+      // La reserva venció: no dejamos el carrito con productos "elegidos"
+      // sobre una reserva que ya no existe — se vuelve a armar de cero.
+      setCart({});
+      localStorage.removeItem("brot74-cart");
+    }
     if (selectedSlotId) fetchProducts(selectedSlotId);
   }
 

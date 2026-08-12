@@ -20,7 +20,7 @@ interface OrderModalProps {
   expiresAt: string;
   onRemoveItem: (productId: number) => void;
   onChangeQuantity: (productId: number, newQuantity: number) => void;
-  onClose: () => void;
+  onClose: (reason?: "expired") => void;
   onSuccess: (orderId: number) => void;
 }
 
@@ -106,7 +106,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
         setExpired(true);
         // En el form cerramos solo: en pago dejamos el mensaje fijo hasta
         // que el usuario elija cerrar (ver panel "Tu pedido expiró").
-        if (step === "form") setTimeout(onClose, 4000);
+        if (step === "form") setTimeout(() => onClose("expired"), 4000);
       }
     }, 1000);
 
@@ -222,7 +222,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
       <div
         className="absolute inset-0"
         style={{ background: "rgba(14,35,60,.58)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }}
-        onClick={onClose}
+        onClick={() => onClose()}
       />
 
       {/* Modal */}
@@ -360,7 +360,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
                   </div>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={() => onClose("expired")}
                     className="w-full font-bold text-[16.5px] tracking-[.01em]"
                     style={{
                       marginTop: "16px",
@@ -509,7 +509,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
               </p>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => onClose()}
                 className="btn-primary mb-3"
                 style={{ maxWidth: "300px" }}
               >
@@ -518,7 +518,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
               </button>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => onClose()}
                 className="w-full font-semibold text-[15px] text-stone border-none bg-transparent cursor-pointer py-2"
                 style={{ maxWidth: "300px" }}
               >
@@ -625,7 +625,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
             <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "8px", marginTop: "20px" }}>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => onClose()}
                 className="flex-1 min-w-0 font-bold text-[14px] tracking-[.01em] whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{
                   border: "1.5px solid rgba(14,35,60,.14)",
