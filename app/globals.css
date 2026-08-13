@@ -215,15 +215,30 @@ textarea.brot-input {
 .brot-modal-desktop-bar {
   display: none;
 }
-/* El botón "Volver" flotando sobre la foto solo se ve en desktop — en
-   mobile su contraste dependía de cada foto de producto. En su lugar,
-   en mobile hay un link "‹ Volver" abajo (.brot-modal-back-mobile),
-   sobre fondo sólido. */
+/* El botón "Volver" flotando sobre la foto tenía contraste variable según
+   la foto de cada producto. En mobile queda en el mismo lugar pero con
+   fondo sólido (sin blur/transparencia) — contraste garantizado siempre.
+   Desktop sigue con el original (translúcido, sin cambios). */
 .brot-modal-back-desktop {
   display: none;
 }
 .brot-modal-back-mobile {
   display: inline-flex;
+}
+
+/* Stock y controles: mobile elige la cantidad con un stepper siempre
+   visible y confirma con un solo botón que suma y cierra (BRT-89, ver
+   ProductModal.tsx). Desktop sigue con "Sumar este BROT" → stepper que
+   deja el modal abierto, sin cambios. */
+.brot-modal-stock-desktop,
+.brot-modal-controls-desktop {
+  display: none;
+}
+.brot-modal-stock-mobile {
+  display: flex;
+}
+.brot-modal-controls-mobile {
+  display: flex;
 }
 
 /* ── ProductModal: horizontal at 900px+ ── */
@@ -251,6 +266,16 @@ textarea.brot-input {
     display: flex;
   }
   .brot-modal-back-mobile {
+    display: none;
+  }
+  .brot-modal-stock-desktop {
+    display: flex;
+  }
+  .brot-modal-controls-desktop {
+    display: block;
+  }
+  .brot-modal-stock-mobile,
+  .brot-modal-controls-mobile {
     display: none;
   }
   .brot-modal-body {

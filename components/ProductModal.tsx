@@ -26,6 +26,7 @@ interface ProductModalProps {
   cartTotal: number;
   onAdd: () => void;
   onRemove: () => void;
+  onConfirmQuantity: (quantity: number) => void;
   onClose: () => void;
   onCheckout: () => void;
 }
@@ -51,10 +52,19 @@ export default function ProductModal({
   cartTotal,
   onAdd,
   onRemove,
+  onConfirmQuantity,
   onClose,
   onCheckout,
 }: ProductModalProps) {
   const [descCollapsed, setDescCollapsed] = useState(true);
+
+  // Cantidad elegida en mobile (BRT-89): se define ANTES de confirmar, no
+  // después — arranca en lo que ya haya en el carrito (o 1 si es la primera
+  // vez). El componente se remonta por producto (key en page.tsx), así que
+  // este estado siempre arranca limpio al abrir un producto distinto.
+  const [mobileQty, setMobileQty] = useState(() => Math.max(quantity, 1));
+
+  // ── Desktop: stock/controles sin cambios (BRT-89 es mobile-only) ──
   const remaining = product.stock !== null ? product.stock - quantity : null;
   const isOutOfStock = !product.hasStock || (remaining !== null && remaining <= 0 && quantity === 0);
   const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0);
@@ -72,6 +82,28 @@ export default function ProductModal({
     ? "Sin stock"
     : remaining !== null
     ? `${remaining} disponible${remaining !== 1 ? "s" : ""}`
+    : null;
+
+  // ── Mobile: nada se descontó todavía (se elige antes de confirmar), así
+  // que el stock se muestra contra el total disponible, no contra lo que
+  // ya había en el carrito. ──
+  const mobileOutOfStock = !product.hasStock || (product.stock !== null && product.stock <= 0);
+  const mobileMaxReached = product.stock !== null && mobileQty >= product.stock;
+  const mobileCanConfirm = slotSelected && !mobileOutOfStock;
+
+  const mobileStockColor =
+    mobileOutOfStock        ? "#7C766A"
+    : product.stock === null ? "#3F8F5B"
+    : product.stock >= 3     ? "#3F8F5B"
+    : product.stock > 0      ? "#C8851A"
+    :                          "#D94F4F";
+
+  const mobileStockText = !slotSelected
+    ? null
+    : mobileOutOfStock
+    ? "Sin stock"
+    : product.stock !== null
+    ? `${product.stock} disponible${product.stock !== 1 ? "s" : ""}`
     : null;
 
   return (
@@ -94,10 +126,11 @@ export default function ProductModal({
           overflowY: "auto",
         }}
       >
-        {/* Volver — flotando sobre la foto. Solo desktop (BRT-89): en mobile
-           el contraste dependía de cada foto (se veía mal en fotos claras);
-           ahí ahora está el link "‹ Volver" abajo, sobre el fondo crema del
-           modal, con contraste garantizado siempre. */}
+        {/* Volver — desktop: flotando sobre la foto, sin cambios. Mobile:
+           mismo lugar pero sólido/opaco (sin blur) — contraste garantizado
+           sin importar la foto del producto (BRT-89). Las dos versiones
+           están montadas siempre; CSS decide cuál se ve según el ancho,
+           así no hay ningún parpadeo al abrir el modal. */}
         <button
           onClick={onClose}
           aria-label="Volver"
@@ -112,6 +145,25 @@ export default function ProductModal({
             transition: "transform .15s",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="brot-modal-back-mobile absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full items-center justify-center"
+          style={{
+            background: "#FBF7EF",
+            border: "none",
+            boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
+            cursor: "pointer",
+            transition: "transform .15s",
+          }}
+          onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.92)"; }}
+          onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -213,46 +265,43 @@ export default function ProductModal({
           {/* Pie: stock + controles */}
           <div className="brot-modal-foot flex flex-col gap-[14px] mt-[18px]">
 
-          {/* Volver — solo mobile (BRT-89): mismo lenguaje visual que
-             "Seguir leyendo", sobre fondo sólido (contraste garantizado,
-             a diferencia del botón flotando sobre la foto). */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="brot-modal-back-mobile items-center gap-[6px] border-none bg-transparent p-0 cursor-pointer font-bold text-[13.5px]"
-            style={{ color: "#C8851A", letterSpacing: ".01em", alignSelf: "flex-start" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
-            <span>Volver</span>
-          </button>
-
-          {/* Stock */}
+          {/* Stock — desktop (sin cambios) */}
           {stockText && (
-            <div className="flex items-center gap-2">
+            <div className="brot-modal-stock-desktop items-center gap-2">
               {!isOutOfStock && (
                 <span className="w-2 h-2 rounded-full flex-none" style={{ background: stockColor, boxShadow: "0 0 0 4px rgba(22,198,90,.16)" }} />
               )}
-              <span
-                className="font-semibold text-[13.5px] whitespace-nowrap"
-                style={{ color: stockColor }}
-              >
+              <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: stockColor }}>
                 {stockText}
               </span>
             </div>
           )}
 
-          {/* Controles */}
+          {/* Stock — mobile (contra el total disponible, nada se descontó
+             todavía porque acá se elige la cantidad antes de confirmar) */}
+          {mobileStockText && (
+            <div className="brot-modal-stock-mobile items-center gap-2">
+              {!mobileOutOfStock && (
+                <span className="w-2 h-2 rounded-full flex-none" style={{ background: mobileStockColor, boxShadow: "0 0 0 4px rgba(22,198,90,.16)" }} />
+              )}
+              <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: mobileStockColor }}>
+                {mobileStockText}
+              </span>
+            </div>
+          )}
+
+          {/* Controles — desktop (sin cambios): "Sumar este BROT" y, una
+             vez agregado, stepper + subtotal, con el modal quedándose
+             abierto. */}
           {slotSelected && (
-            <>
+            <div className="brot-modal-controls-desktop">
               {quantity === 0 ? (
                 <button
                   onClick={onAdd}
                   disabled={!canAdd}
                   className="brot-modal-cta w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
                   style={{
-                    background: canAdd ? "#0E233C" : "#0E233C",
+                    background: "#0E233C",
                     color: "#F4EEE2",
                     opacity: canAdd ? 1 : 0.4,
                     cursor: canAdd ? "pointer" : "not-allowed",
@@ -308,7 +357,7 @@ export default function ProductModal({
                       style={{
                         width: "44px",
                         height: "44px",
-                        background: canAdd ? "#0E233C" : "#0E233C",
+                        background: "#0E233C",
                         color: "#F4EEE2",
                         cursor: canAdd ? "pointer" : "not-allowed",
                         opacity: canAdd ? 1 : 0.35,
@@ -331,15 +380,93 @@ export default function ProductModal({
                   </div>
                 </div>
               )}
-            </>
+            </div>
+          )}
+
+          {/* Controles — mobile (BRT-89): la cantidad se elige ANTES de
+             confirmar con un stepper siempre visible, y un solo botón
+             suma esa cantidad Y cierra el modal — inspirado en el flujo
+             de "elegir cantidad → confirmar → volver al listado" de la
+             referencia (sin copiar su estilo). */}
+          {slotSelected && (
+            <div className="brot-modal-controls-mobile flex-col gap-[14px]">
+              <div
+                className="w-full flex items-center justify-between"
+                style={{ background: "#F4EEE2", border: "1.5px solid rgba(14,35,60,.16)", borderRadius: "14px", padding: "5px" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setMobileQty((q) => Math.max(1, q - 1))}
+                  disabled={mobileQty <= 1}
+                  aria-label="Restar cantidad"
+                  className="flex items-center justify-center rounded-full border-none"
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    background: "#FBF7EF",
+                    color: "#0E233C",
+                    cursor: mobileQty <= 1 ? "not-allowed" : "pointer",
+                    opacity: mobileQty <= 1 ? 0.4 : 1,
+                    transition: "transform .12s, opacity .15s",
+                  }}
+                  onMouseDown={(e) => { if (mobileQty > 1) e.currentTarget.style.transform = "scale(.9)"; }}
+                  onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
+                </button>
+                <span className="font-bold text-[20px] text-navy text-center" style={{ minWidth: "40px" }}>
+                  {mobileQty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
+                  disabled={mobileOutOfStock || mobileMaxReached}
+                  aria-label="Sumar cantidad"
+                  className="flex items-center justify-center rounded-full border-none"
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    background: "#0E233C",
+                    color: "#F4EEE2",
+                    cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
+                    opacity: (mobileOutOfStock || mobileMaxReached) ? 0.35 : 1,
+                    transition: "transform .12s, opacity .15s",
+                  }}
+                  onMouseDown={(e) => { if (!mobileOutOfStock && !mobileMaxReached) e.currentTarget.style.transform = "scale(.9)"; }}
+                  onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M12 5v14"/></svg>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => { onConfirmQuantity(mobileQty); onClose(); }}
+                disabled={!mobileCanConfirm}
+                className="w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
+                style={{
+                  background: "#0E233C",
+                  color: "#F4EEE2",
+                  opacity: mobileCanConfirm ? 1 : 0.4,
+                  cursor: mobileCanConfirm ? "pointer" : "not-allowed",
+                  transition: ctaTransition,
+                }}
+                onMouseEnter={(e) => { if (mobileCanConfirm) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
+                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+              >
+                {mobileCanConfirm ? `Sumar ${mobileQty} · ${formatCurrency(product.price * mobileQty)}` : "No disponible"}
+              </button>
+            </div>
           )}
 
           </div>{/* /brot-modal-foot */}
 
-          {/* Barra de carrito — solo desktop (BRT-89: en mobile esto lo
-             cubre el <CartBar> fijo montado en page.tsx, que en mobile
-             permanece visible por encima de este modal; el layout de
-             desktop no cambia, sigue mostrando su propia barra acá). */}
+          {/* Barra de carrito — solo desktop (BRT-89: en mobile ya no
+             aplica — el nuevo flujo mobile confirma y cierra en un solo
+             paso, sin quedarse navegando con el carrito a la vista, igual
+             que en la referencia. El layout de desktop no cambia). */}
           {cartCount > 0 && (
             <button
               onClick={onCheckout}

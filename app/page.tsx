@@ -57,19 +57,7 @@ export default function Home() {
   const [reserveError, setReserveError]       = useState("");
   const [sessionToken, setSessionToken]       = useState("");
   const [reservationExpiresAt, setReservationExpiresAt] = useState("");
-  const [isDesktop, setIsDesktop] = useState(false);
   const cartRestoredRef = useRef(false);
-
-  // BRT-89 es mobile-only: en desktop (900px+, el breakpoint que ya usan
-  // ProductModal/OrderModal) la barra de carrito debe seguir ocultándose
-  // mientras ProductModal está abierto, tal cual se comportaba antes.
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 900px)");
-    const update = () => setIsDesktop(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
 
   useEffect(() => {
     fetch("/api/delivery-slots")
@@ -315,12 +303,11 @@ export default function Home() {
           )}
         </main>
 
-        {/* Cart bar — única, persistente en mobile (BRT-89): visible en la
-           grilla y con ProductModal abierto. Se oculta durante el checkout
-           (showModal) y, en desktop, mientras ProductModal está abierto —
-           ahí el propio modal sigue mostrando su barra (layout de desktop
-           sin cambios, tal como se decidió). */}
-        {cartItems.length > 0 && selectedSlotId && !showModal && (!isDesktop || !selectedProduct) && (
+        {/* Cart bar — única (BRT-89): visible en la grilla. Se oculta con
+           ProductModal abierto (mobile y desktop por igual — ahí la
+           referencia tampoco la muestra, es una pantalla acotada de elegir
+           cantidad y confirmar) y durante el checkout (showModal). */}
+        {cartItems.length > 0 && selectedSlotId && !showModal && !selectedProduct && (
           <CartBar
             count={cartItems.reduce((s, i) => s + i.quantity, 0)}
             total={cartTotal}
@@ -332,6 +319,7 @@ export default function Home() {
 
         {selectedProduct && (
           <ProductModal
+            key={selectedProduct.id}
             product={selectedProduct}
             quantity={cart[selectedProduct.id] ?? 0}
             slotSelected={!!selectedSlotId}
@@ -339,6 +327,7 @@ export default function Home() {
             cartTotal={cartTotal}
             onAdd={() => addToCart(selectedProduct.id)}
             onRemove={() => removeFromCart(selectedProduct.id)}
+            onConfirmQuantity={(qty) => changeCartQuantity(selectedProduct.id, qty)}
             onClose={() => setSelectedProduct(null)}
             onCheckout={() => { setSelectedProduct(null); openCheckout(); }}
           />
