@@ -75,7 +75,7 @@ export default function ProductModal({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-[28px]">
+    <div className="brot-modal-backdrop fixed inset-0 z-50 flex justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0"
@@ -83,15 +83,14 @@ export default function ProductModal({
         onClick={onClose}
       />
 
-      {/* Modal */}
+      {/* Modal — hoja de pantalla completa en mobile (un solo scroll, sin
+         recorte flotante); en 900px+ vuelve a ser la tarjeta centrada de
+         siempre (ver globals.css) (BRT-89) */}
       <div
         className="brot-modal-inner relative w-full overflow-hidden"
         style={{
-          maxWidth: "374px",
           background: "#FBF7EF",
-          borderRadius: "22px",
           boxShadow: "0 40px 80px -24px rgba(14,35,60,.6)",
-          maxHeight: "90vh",
           overflowY: "auto",
         }}
       >
@@ -319,11 +318,14 @@ export default function ProductModal({
 
           </div>{/* /brot-modal-foot */}
 
-          {/* Barra de carrito */}
+          {/* Barra de carrito — solo desktop (BRT-89: en mobile esto lo
+             cubre el <CartBar> fijo montado en page.tsx, que en mobile
+             permanece visible por encima de este modal; el layout de
+             desktop no cambia, sigue mostrando su propia barra acá). */}
           {cartCount > 0 && (
             <button
               onClick={onCheckout}
-              className="flex items-center gap-3 w-full mt-5 rounded-[16px] border-none"
+              className="brot-modal-desktop-bar flex items-center gap-3 w-full mt-5 rounded-[16px] border-none"
               style={{
                 background: "#0E233C",
                 color: "#F4EEE2",
