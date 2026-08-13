@@ -318,7 +318,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
   }
 
   return (
-    <div className="brot-co-backdrop fixed inset-0 z-50 flex justify-center overflow-y-auto" style={{ padding: "19px" }}>
+    <div className="brot-co-backdrop fixed inset-0 z-50 flex justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0"
@@ -326,10 +326,12 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
         onClick={() => onClose()}
       />
 
-      {/* Modal */}
+      {/* Modal — hoja de pantalla completa en mobile, un solo scroll natural
+         (BRT-89: antes había scroll anidado triple acá). En 900px+ vuelve a
+         ser la tarjeta centrada de siempre (ver globals.css). */}
       <div
         className="brot-co-modal relative w-full overflow-y-auto"
-        style={{ ...MODAL_STYLE, maxWidth: "392px", maxHeight: "90vh" }}
+        style={MODAL_STYLE}
       >
         {/* Header */}
         <div

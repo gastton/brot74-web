@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import OrderModal from "@/components/OrderModal";
+import CartBar from "@/components/CartBar";
 import DateSelector from "@/components/DateSelector";
-import { formatCurrency } from "@/lib/utils";
 
 interface Slot {
   id: number | null;
@@ -205,8 +205,12 @@ export default function Home() {
   }
 
   function handleOrderSuccess(orderId: number) {
+    // No hacemos setShowModal(false) acá (BRT-89): es una navegación dura
+    // vía window.location.href, no instantánea — cerrar el modal antes de
+    // que el navegador termine de irse dejaba ver un flash de la grilla de
+    // productos de atrás. Dejamos el modal montado hasta que la página
+    // completa se reemplace sola.
     localStorage.removeItem("brot74-cart");
-    setShowModal(false);
     window.location.href = `/confirmacion?order=${orderId}&status=pending`;
   }
 
@@ -292,57 +296,30 @@ export default function Home() {
                   quantity={cart[product.id] ?? 0}
                   slotSelected={!!selectedSlotId}
                   onClick={() => setSelectedProduct(product)}
+                  onQuickAdd={() => addToCart(product.id)}
                 />
               ))}
             </div>
           )}
         </main>
 
-        {/* Cart bar */}
-        {cartItems.length > 0 && selectedSlotId && !selectedProduct && (
-          <div className="fixed bottom-0 left-0 right-0 z-40 p-4" style={{ background: "linear-gradient(to top, #F4EEE2 60%, transparent)" }}>
-            {reserveError && (
-              <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto mb-2">
-                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm text-center">
-                  {reserveError}
-                </div>
-              </div>
-            )}
-            <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto">
-              <button
-                onClick={openCheckout}
-                disabled={reserving}
-                className="w-full flex items-center gap-3 rounded-[16px] border-none"
-                style={{
-                  background: "#0E233C",
-                  color: "#F4EEE2",
-                  padding: "14px 18px",
-                  cursor: "pointer",
-                  boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
-                  transition: ctaTransition,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-              >
-                <span className="w-9 h-9 flex-none rounded-full flex items-center justify-center" style={{ border: "1px solid rgba(244,238,226,.38)" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
-                  </svg>
-                </span>
-                <span className="font-semibold text-[16px] whitespace-nowrap">
-                  {reserving ? "Reservando…" : `${cartItems.reduce((s, i) => s + i.quantity, 0)} producto${cartItems.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}`}
-                </span>
-                <span className="font-bold text-[18px] ml-auto whitespace-nowrap">{formatCurrency(cartTotal)}</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 6l6 6-6 6"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+        {/* Cart bar — única (BRT-89): visible en la grilla. Se oculta con
+           ProductModal abierto (mobile y desktop por igual — ahí la
+           referencia tampoco la muestra, es una pantalla acotada de elegir
+           cantidad y confirmar) y durante el checkout (showModal). */}
+        {cartItems.length > 0 && selectedSlotId && !showModal && !selectedProduct && (
+          <CartBar
+            count={cartItems.reduce((s, i) => s + i.quantity, 0)}
+            total={cartTotal}
+            reserving={reserving}
+            error={reserveError}
+            onCheckout={() => { setSelectedProduct(null); openCheckout(); }}
+          />
         )}
 
         {selectedProduct && (
           <ProductModal
+            key={selectedProduct.id}
             product={selectedProduct}
             quantity={cart[selectedProduct.id] ?? 0}
             slotSelected={!!selectedSlotId}
@@ -350,6 +327,7 @@ export default function Home() {
             cartTotal={cartTotal}
             onAdd={() => addToCart(selectedProduct.id)}
             onRemove={() => removeFromCart(selectedProduct.id)}
+            onConfirmQuantity={(qty) => changeCartQuantity(selectedProduct.id, qty)}
             onClose={() => setSelectedProduct(null)}
             onCheckout={() => { setSelectedProduct(null); openCheckout(); }}
           />

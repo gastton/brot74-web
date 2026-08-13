@@ -18,6 +18,7 @@ interface ProductCardProps {
   quantity: number;
   slotSelected: boolean;
   onClick: () => void;
+  onQuickAdd: () => void;
 }
 
 export default function ProductCard({
@@ -33,6 +34,7 @@ export default function ProductCard({
   quantity,
   slotSelected,
   onClick,
+  onQuickAdd,
 }: ProductCardProps) {
   const remaining = stock !== null ? stock - quantity : null;
   const outOfStock = slotSelected && !hasStock && stock !== null && stock <= 0;
@@ -125,6 +127,32 @@ export default function ProductCard({
           >
             Últimos {remaining}
           </div>
+        )}
+
+        {/* Quick-add (BRT-89): suma 1 unidad sin abrir el modal de producto.
+           Mismo lenguaje visual que el botón "Volver" de ProductModal. */}
+        {!isDisabled && (
+          <button
+            type="button"
+            aria-label={`Agregar ${name}`}
+            onClick={(e) => { e.stopPropagation(); onQuickAdd(); }}
+            className="absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center border-none"
+            style={{
+              background: "rgba(248,243,234,.9)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+              boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
+              cursor: "pointer",
+              transition: "transform .15s",
+            }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.9)"; }}
+            onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M5 12h14M12 5v14"/>
+            </svg>
+          </button>
         )}
       </div>
 

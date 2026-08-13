@@ -192,13 +192,68 @@ textarea.brot-input {
   }
 }
 
+/* ── ProductModal: hoja de pantalla completa en mobile, sin scroll
+   anidado (BRT-89). Mobile-first: por debajo de 900px el modal ocupa
+   toda la pantalla y se ancla abajo (backdrop con align-items: flex-end).
+   A partir de 900px vuelve a ser la tarjeta flotante centrada de siempre. ── */
+.brot-modal-backdrop {
+  align-items: flex-end;
+  padding: 0;
+}
+.brot-modal-inner {
+  border-radius: 20px 20px 0 0;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+}
+.brot-modal-body {
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+/* En mobile la barra de carrito del modal no se muestra — la cubre el
+   <CartBar> fijo (BRT-89). En desktop (900px+) sigue igual que siempre. */
+.brot-modal-desktop-bar {
+  display: none;
+}
+/* El botón "Volver" flotando sobre la foto tenía contraste variable según
+   la foto de cada producto. En mobile queda en el mismo lugar pero con
+   fondo sólido (sin blur/transparencia) — contraste garantizado siempre.
+   Desktop sigue con el original (translúcido, sin cambios). */
+.brot-modal-back-desktop {
+  display: none;
+}
+.brot-modal-back-mobile {
+  display: inline-flex;
+}
+
+/* Stock y controles: mobile elige la cantidad con un stepper siempre
+   visible y confirma con un solo botón que suma y cierra (BRT-89, ver
+   ProductModal.tsx). Desktop sigue con "Sumar este BROT" → stepper que
+   deja el modal abierto, sin cambios. */
+.brot-modal-stock-desktop,
+.brot-modal-controls-desktop {
+  display: none;
+}
+.brot-modal-stock-mobile {
+  display: flex;
+}
+.brot-modal-controls-mobile {
+  display: flex;
+}
+
 /* ── ProductModal: horizontal at 900px+ ── */
 @media (min-width: 900px) {
+  .brot-modal-backdrop {
+    align-items: center;
+    padding: 28px;
+  }
   .brot-modal-inner {
     display: flex !important;
     flex-direction: row !important;
     max-width: 760px !important;
+    height: auto !important;
     max-height: 88vh !important;
+    border-radius: 22px !important;
     overflow: hidden !important;
   }
   .brot-modal-photo {
@@ -206,6 +261,22 @@ textarea.brot-input {
     height: auto !important;
     min-height: 420px;
     align-self: stretch;
+  }
+  .brot-modal-back-desktop {
+    display: flex;
+  }
+  .brot-modal-back-mobile {
+    display: none;
+  }
+  .brot-modal-stock-desktop {
+    display: flex;
+  }
+  .brot-modal-controls-desktop {
+    display: block;
+  }
+  .brot-modal-stock-mobile,
+  .brot-modal-controls-mobile {
+    display: none;
   }
   .brot-modal-body {
     flex: 1;
@@ -234,25 +305,48 @@ textarea.brot-input {
     padding: 17px !important;
     width: auto !important;
   }
+  .brot-modal-desktop-bar {
+    display: flex;
+  }
 }
 
-/* ── OrderModal backdrop (v25): scroll cuando el contenido no entra en el viewport ── */
+/* ── OrderModal: hoja de pantalla completa en mobile, un solo scroll
+   natural (BRT-89). Antes había scroll anidado triple: backdrop +
+   .brot-co-modal + .brot-co-lines, cada uno con su propio overflow-y.
+   Mobile-first: por debajo de 900px el modal ocupa toda la pantalla y
+   .brot-co-lines fluye sin scroll propio. A los 900px+ vuelve todo a la
+   tarjeta centrada de siempre, .brot-co-lines incluido. ── */
 .brot-co-backdrop {
-  align-items: center;
-  align-items: safe center;
+  align-items: flex-end;
+  padding: 0;
 }
-
-/* ── OrderModal checkout (form step) v29: lista de productos con scroll ── */
-.brot-co-lines {
-  max-height: 220px;
-  overflow-y: auto;
+.brot-co-modal {
+  border-radius: 20px 20px 0 0 !important;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ── OrderModal checkout (form step) v29: two columns at 900px+, Productos a la
    izquierda y el formulario a la derecha (invertido respecto de v25/v26) ── */
 @media (min-width: 900px) {
+  .brot-co-backdrop {
+    align-items: center;
+    align-items: safe center;
+    padding: 19px;
+  }
   .brot-co-modal {
     max-width: 720px !important;
+    height: auto !important;
+    max-height: 90vh !important;
+    border-radius: 22px !important;
+    padding-bottom: 0;
+  }
+  .brot-co-lines {
+    max-height: 220px;
+    overflow-y: auto;
   }
   .brot-co-body {
     display: grid !important;
