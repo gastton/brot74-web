@@ -367,6 +367,22 @@ export default function Home() {
             justifyContent: "center",
           }}
         >
+          {/* Grano sutil — le da algo de textura "hecho a mano" al fondo
+             crema, que si no queda un poco plano/corporativo. Puramente
+             CSS (SVG inline), no suma ningún asset nuevo. */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+              opacity: 0.035,
+              mixBlendMode: "multiply",
+              pointerEvents: "none",
+            }}
+          />
+
           {/* Sello — v30: ramillete navy sobre crema (antes crema sobre navy) */}
           <div
             className="brot-hero-seal-wrap"
@@ -468,6 +484,10 @@ export default function Home() {
               const arrow = e.currentTarget.querySelector(".arrow") as HTMLElement | null;
               if (arrow) arrow.style.transform = "";
             }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = "translateY(-2px) scale(.97)"; }}
+            onMouseUp={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+            onTouchStart={(e) => { e.currentTarget.style.transform = "scale(.97)"; }}
+            onTouchEnd={(e) => { e.currentTarget.style.transform = ""; }}
           >
             Pedí tu BROT{" "}
             <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>{"→"}</span>
