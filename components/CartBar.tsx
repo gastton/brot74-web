@@ -23,7 +23,7 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
     <div
       className="fixed bottom-0 left-0 right-0 z-[60] p-4"
       style={{
-        background: "linear-gradient(to top, #F4EEE2 60%, transparent)",
+        background: "linear-gradient(to top, #F9F5EC 60%, transparent)",
         paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
       }}
     >
@@ -41,7 +41,7 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           className="w-full flex items-center gap-3 rounded-[16px] border-none"
           style={{
             background: "#0E233C",
-            color: "#F4EEE2",
+            color: "#F9F5EC",
             padding: "14px 18px",
             cursor: "pointer",
             boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
@@ -50,8 +50,8 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
         >
-          <span className="w-9 h-9 flex-none rounded-full flex items-center justify-center" style={{ border: "1px solid rgba(244,238,226,.38)" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+          <span className="w-9 h-9 flex-none rounded-full flex items-center justify-center" style={{ border: "1px solid rgba(249,245,236,.38)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F9F5EC" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
             </svg>
           </span>
@@ -59,7 +59,7 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
             {reserving ? "Reservando…" : `${count} producto${count !== 1 ? "s" : ""}`}
           </span>
           <span className="font-bold text-[18px] ml-auto whitespace-nowrap">{formatCurrency(total)}</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F9F5EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 6l6 6-6 6"/>
           </svg>
         </button>

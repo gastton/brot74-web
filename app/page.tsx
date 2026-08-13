@@ -217,7 +217,7 @@ export default function Home() {
   /* ─── SLOTS VIEW ────────────────────────────────────────── */
   if (view === "slots") {
     return (
-      <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
+      <div className="min-h-screen" style={{ background: "#F9F5EC" }}>
         <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 py-10">
           {/* Título */}
           <header className="mb-5 text-center">
@@ -356,18 +356,18 @@ export default function Home() {
   return (
     <div className="min-h-screen" style={{ background: "#0E233C" }}>
 
-        {/* ── Hero (banda navy) ── */}
+        {/* ── Hero (v30: banda crema, antes navy) ── */}
         <section
           className="brot-hero-section flex flex-col items-center text-center"
           style={{
-            background: "radial-gradient(120% 60% at 50% 22%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #0E233C",
+            background: "radial-gradient(120% 60% at 50% 22%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #F9F5EC",
             minHeight: "100svh",
             padding: "64px 40px 40px",
             position: "relative",
             justifyContent: "center",
           }}
         >
-          {/* Sello invertido — ramillete crema sobre navy */}
+          {/* Sello — v30: ramillete navy sobre crema (antes crema sobre navy) */}
           <div
             className="brot-hero-seal-wrap"
             style={{
@@ -384,8 +384,8 @@ export default function Home() {
               viewBox="0 0 100 100"
               aria-hidden="true"
             >
-              <circle cx="50" cy="50" r="48" fill="none" stroke="#F4EEE2" strokeWidth="0.7" opacity="0.85" />
-              <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F4EEE2" strokeWidth="0.32" opacity="0.45" />
+              <circle cx="50" cy="50" r="48" fill="none" stroke="#0E233C" strokeWidth="0.7" opacity="0.85" />
+              <circle cx="50" cy="50" r="43.6" fill="none" stroke="#0E233C" strokeWidth="0.32" opacity="0.45" />
             </svg>
             <div
               style={{
@@ -399,7 +399,7 @@ export default function Home() {
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/ramillete-mono-cream.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
+              <img src="/ramillete-mono-navy.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
               <div
                 style={{
                   display: "inline-flex",
@@ -409,7 +409,7 @@ export default function Home() {
                   fontFamily: "var(--font-jost, 'Jost', sans-serif)",
                 }}
               >
-                <span style={{ fontWeight: 500, fontSize: ".115em", color: "#F4EEE2" }}>BROT</span>
+                <span style={{ fontWeight: 500, fontSize: ".115em", color: "#0E233C" }}>BROT</span>
                 <span style={{ fontWeight: 700, fontSize: ".115em", letterSpacing: "-.2em", marginLeft: ".18em", color: "#C8851A" }}>74</span>
               </div>
             </div>
@@ -429,7 +429,7 @@ export default function Home() {
               fontSize: "clamp(40px, 7.5vw, 60px)",
               lineHeight: 1.08,
               letterSpacing: "-.015em",
-              color: "#F4EEE2",
+              color: "#0E233C",
               margin: "26px 0 0",
               maxWidth: "13ch",
               textWrap: "balance" as React.CSSProperties["textWrap"],
@@ -479,7 +479,7 @@ export default function Home() {
         <footer
           style={{
             background: "#0E233C",
-            borderTop: "1px solid rgba(244,238,226,.08)",
+            borderTop: "1px solid rgba(249,245,236,.08)",
             padding: "14px 24px",
             display: "flex",
             alignItems: "center",
@@ -493,7 +493,7 @@ export default function Home() {
               fontSize: "10.5px",
               letterSpacing: ".08em",
               textTransform: "uppercase",
-              color: "rgba(244,238,226,.42)",
+              color: "rgba(249,245,236,.42)",
             }}
           >
             Powered by

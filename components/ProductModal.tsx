@@ -254,7 +254,7 @@ export default function ProductModal({
           )}
 
           {!slotSelected && (
-            <p className="mt-4 text-[13px] font-medium text-stone bg-[#F4EEE2] rounded-xl px-4 py-3">
+            <p className="mt-4 text-[13px] font-medium text-stone bg-[#F9F5EC] rounded-xl px-4 py-3">
               Elegí una fecha de entrega para agregar al pedido
             </p>
           )}
@@ -302,7 +302,7 @@ export default function ProductModal({
                   className="brot-modal-cta w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
                   style={{
                     background: "#0E233C",
-                    color: "#F4EEE2",
+                    color: "#F9F5EC",
                     opacity: canAdd ? 1 : 0.4,
                     cursor: canAdd ? "pointer" : "not-allowed",
                     transition: ctaTransition,
@@ -319,7 +319,7 @@ export default function ProductModal({
                   <div
                     className="inline-flex items-center gap-1"
                     style={{
-                      background: "#F4EEE2",
+                      background: "#F9F5EC",
                       border: "1.5px solid rgba(14,35,60,.16)",
                       borderRadius: "14px",
                       padding: "5px",
@@ -358,7 +358,7 @@ export default function ProductModal({
                         width: "44px",
                         height: "44px",
                         background: "#0E233C",
-                        color: "#F4EEE2",
+                        color: "#F9F5EC",
                         cursor: canAdd ? "pointer" : "not-allowed",
                         opacity: canAdd ? 1 : 0.35,
                         transition: "transform .12s, opacity .15s",
@@ -392,7 +392,7 @@ export default function ProductModal({
             <div className="brot-modal-controls-mobile flex-col gap-[14px]">
               <div
                 className="w-full flex items-center justify-between"
-                style={{ background: "#F4EEE2", border: "1.5px solid rgba(14,35,60,.16)", borderRadius: "14px", padding: "5px" }}
+                style={{ background: "#F9F5EC", border: "1.5px solid rgba(14,35,60,.16)", borderRadius: "14px", padding: "5px" }}
               >
                 <button
                   type="button"
@@ -428,7 +428,7 @@ export default function ProductModal({
                     width: "44px",
                     height: "44px",
                     background: "#0E233C",
-                    color: "#F4EEE2",
+                    color: "#F9F5EC",
                     cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
                     opacity: (mobileOutOfStock || mobileMaxReached) ? 0.35 : 1,
                     transition: "transform .12s, opacity .15s",
@@ -448,7 +448,7 @@ export default function ProductModal({
                 className="w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
                 style={{
                   background: "#0E233C",
-                  color: "#F4EEE2",
+                  color: "#F9F5EC",
                   opacity: mobileCanConfirm ? 1 : 0.4,
                   cursor: mobileCanConfirm ? "pointer" : "not-allowed",
                   transition: ctaTransition,
@@ -473,7 +473,7 @@ export default function ProductModal({
               className="brot-modal-desktop-bar flex items-center gap-3 w-full mt-5 rounded-[16px] border-none"
               style={{
                 background: "#0E233C",
-                color: "#F4EEE2",
+                color: "#F9F5EC",
                 padding: "14px 18px",
                 cursor: "pointer",
                 transition: ctaTransition,
@@ -483,9 +483,9 @@ export default function ProductModal({
             >
               <span
                 className="w-9 h-9 flex-none rounded-full flex items-center justify-center"
-                style={{ border: "1px solid rgba(244,238,226,.38)" }}
+                style={{ border: "1px solid rgba(249,245,236,.38)" }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F9F5EC" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
                 </svg>
               </span>
@@ -495,7 +495,7 @@ export default function ProductModal({
               <span className="font-bold text-[18px] ml-auto whitespace-nowrap">
                 {formatCurrency(cartTotal)}
               </span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F9F5EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </button>
           )}
         </div>
