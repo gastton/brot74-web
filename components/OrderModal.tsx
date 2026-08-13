@@ -435,9 +435,9 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
                   disabled={expired}
                   className="w-full font-bold text-[15px]"
                   style={{
-                    border: "1.5px solid rgba(14,35,60,.16)",
-                    background: aliasCopied ? "rgba(63,143,91,.08)" : "#fff",
-                    color: aliasCopied ? "#3F8F5B" : "#0E233C",
+                    border: aliasCopied ? "1.5px solid rgba(14,35,60,.16)" : "none",
+                    background: aliasCopied ? "rgba(63,143,91,.08)" : "#0E233C",
+                    color: aliasCopied ? "#3F8F5B" : "#F9F5EC",
                     borderRadius: "14px",
                     padding: "10px 6px",
                     cursor: expired ? "not-allowed" : "pointer",
@@ -445,10 +445,10 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
                     alignItems: "center",
                     justifyContent: "center",
                     gap: "8px",
-                    transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .2s, color .2s, border-color .2s",
+                    transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, background .2s, color .2s, border-color .2s",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; if (!aliasCopied) e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
                 >
                   {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
                 </button>
