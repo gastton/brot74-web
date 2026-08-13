@@ -43,7 +43,7 @@ function CloseIcon() {
   );
 }
 
-function BagIcon({ stroke = "#F4EEE2" }: { stroke?: string }) {
+function BagIcon({ stroke = "#F9F5EC" }: { stroke?: string }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
@@ -144,7 +144,7 @@ function ConfirmDialog({
             style={{
               border: "none",
               background: "#0E233C",
-              color: "#F4EEE2",
+              color: "#F9F5EC",
               borderRadius: "14px",
               padding: "13px 6px",
               cursor: "pointer",
@@ -466,7 +466,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
                   marginTop: "22px",
                   border: "none",
                   background: "#0E233C",
-                  color: "#F4EEE2",
+                  color: "#F9F5EC",
                   borderRadius: "14px",
                   padding: "10px",
                   cursor: (loading || !hasCopiedAlias || expired) ? "not-allowed" : "pointer",
@@ -683,7 +683,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
                   cursor: "pointer",
                   transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .15s",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#F4EEE2"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#F9F5EC"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = ""; }}
               >
                 Seguir comprando
@@ -695,7 +695,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
                 style={{
                   border: "none",
                   background: "#0E233C",
-                  color: "#F4EEE2",
+                  color: "#F9F5EC",
                   borderRadius: "16px",
                   padding: "10px 8px",
                   cursor: expired ? "not-allowed" : "pointer",
@@ -722,7 +722,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
             top: "28px",
             transform: toastVisible ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(-12px)",
             background: "#0E233C",
-            color: "#F4EEE2",
+            color: "#F9F5EC",
             fontWeight: 600,
             fontSize: "14px",
             padding: "11px 20px",

@@ -55,8 +55,8 @@ function ConfirmacionContent() {
             viewBox="0 0 100 100"
             aria-hidden="true"
           >
-            <circle cx="50" cy="50" r="48" fill="none" stroke="#F4EEE2" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F4EEE2" strokeWidth="0.32" opacity="0.45" />
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#F9F5EC" strokeWidth="0.7" opacity="0.85" />
+            <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F9F5EC" strokeWidth="0.32" opacity="0.45" />
           </svg>
           <div
             style={{
@@ -80,7 +80,7 @@ function ConfirmacionContent() {
                 fontFamily: "var(--font-jost, 'Jost', sans-serif)",
               }}
             >
-              <span style={{ fontWeight: 500, fontSize: ".115em", color: "#F4EEE2" }}>BROT</span>
+              <span style={{ fontWeight: 500, fontSize: ".115em", color: "#F9F5EC" }}>BROT</span>
               <span style={{ fontWeight: 700, fontSize: ".115em", letterSpacing: "-.2em", marginLeft: ".18em", color: "#C8851A" }}>74</span>
             </div>
           </div>
@@ -122,7 +122,7 @@ function ConfirmacionContent() {
           className="mt-6 block w-full font-bold text-[16.5px] tracking-[.01em] py-[17px] rounded-[14px] no-underline flex items-center justify-center"
           style={{
             background: "#0E233C",
-            color: "#F4EEE2",
+            color: "#F9F5EC",
             transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
           }}
           onMouseEnter={(e) => {

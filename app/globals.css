@@ -4,7 +4,7 @@
   /* BROT 74 — Paleta de marca */
   --color-navy:     #0E233C;
   --color-amber:    #C8851A;
-  --color-cream:    #F4EEE2;
+  --color-cream:    #F9F5EC;
   --color-paper:    #FBF7EF;
   --color-stone:    #7C766A;
   --color-open:     #16C65A;
@@ -25,7 +25,7 @@
 }
 
 :root {
-  --background: #F4EEE2;
+  --background: #F9F5EC;
   --foreground: #0E233C;
 }
 
@@ -59,7 +59,7 @@ body {
 /* ── Botón principal ── */
 .btn-primary {
   background-color: #0E233C;
-  color: #F4EEE2;
+  color: #F9F5EC;
   padding: 17px 24px;
   border-radius: 14px;
   font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
@@ -109,13 +109,14 @@ textarea.brot-input {
   line-height: 1.5;
 }
 
-/* ── Hero v13 — kicker con filetes laterales ── */
+/* ── Hero v13 — kicker con filetes laterales (v30: color más oscuro,
+   legible sobre el fondo crema del hero) ── */
 .brot-hero-kicker {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  color: #E0A33A;
+  color: #C8851A;
   font-weight: 600;
   font-size: 13px;
   letter-spacing: .34em;

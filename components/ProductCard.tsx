@@ -90,7 +90,7 @@ export default function ProductCard({
 
         {/* Velo sin stock */}
         {outOfStock && (
-          <div className="absolute inset-0" style={{ background: "rgba(244,238,226,.5)" }} />
+          <div className="absolute inset-0" style={{ background: "rgba(249,245,236,.5)" }} />
         )}
 
         {/* Badge sin stock */}
@@ -113,7 +113,7 @@ export default function ProductCard({
         {quantity > 0 && !outOfStock && (
           <div
             className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-            style={{ background: "#0E233C", color: "#F4EEE2", boxShadow: "0 2px 8px rgba(14,35,60,.4)" }}
+            style={{ background: "#0E233C", color: "#F9F5EC", boxShadow: "0 2px 8px rgba(14,35,60,.4)" }}
           >
             {quantity}
           </div>
@@ -123,7 +123,7 @@ export default function ProductCard({
         {slotSelected && remaining !== null && remaining <= 2 && remaining > 0 && (
           <div
             className="absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full"
-            style={{ background: "#C8851A", color: "#F4EEE2" }}
+            style={{ background: "#C8851A", color: "#F9F5EC" }}
           >
             Últimos {remaining}
           </div>
