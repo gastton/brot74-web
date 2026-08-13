@@ -217,8 +217,12 @@ export default function Home() {
   }
 
   function handleOrderSuccess(orderId: number) {
+    // No hacemos setShowModal(false) acá (BRT-89): es una navegación dura
+    // vía window.location.href, no instantánea — cerrar el modal antes de
+    // que el navegador termine de irse dejaba ver un flash de la grilla de
+    // productos de atrás. Dejamos el modal montado hasta que la página
+    // completa se reemplace sola.
     localStorage.removeItem("brot74-cart");
-    setShowModal(false);
     window.location.href = `/confirmacion?order=${orderId}&status=pending`;
   }
 
