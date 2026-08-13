@@ -215,6 +215,16 @@ textarea.brot-input {
 .brot-modal-desktop-bar {
   display: none;
 }
+/* El botón "Volver" flotando sobre la foto solo se ve en desktop — en
+   mobile su contraste dependía de cada foto de producto. En su lugar,
+   en mobile hay un link "‹ Volver" abajo (.brot-modal-back-mobile),
+   sobre fondo sólido. */
+.brot-modal-back-desktop {
+  display: none;
+}
+.brot-modal-back-mobile {
+  display: inline-flex;
+}
 
 /* ── ProductModal: horizontal at 900px+ ── */
 @media (min-width: 900px) {
@@ -236,6 +246,12 @@ textarea.brot-input {
     height: auto !important;
     min-height: 420px;
     align-self: stretch;
+  }
+  .brot-modal-back-desktop {
+    display: flex;
+  }
+  .brot-modal-back-mobile {
+    display: none;
   }
   .brot-modal-body {
     flex: 1;

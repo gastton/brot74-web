@@ -94,11 +94,14 @@ export default function ProductModal({
           overflowY: "auto",
         }}
       >
-        {/* Volver */}
+        {/* Volver — flotando sobre la foto. Solo desktop (BRT-89): en mobile
+           el contraste dependía de cada foto (se veía mal en fotos claras);
+           ahí ahora está el link "‹ Volver" abajo, sobre el fondo crema del
+           modal, con contraste garantizado siempre. */}
         <button
           onClick={onClose}
           aria-label="Volver"
-          className="absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full flex items-center justify-center"
+          className="brot-modal-back-desktop absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full items-center justify-center"
           style={{
             background: "rgba(248,243,234,.85)",
             backdropFilter: "blur(6px)",
@@ -209,6 +212,21 @@ export default function ProductModal({
 
           {/* Pie: stock + controles */}
           <div className="brot-modal-foot flex flex-col gap-[14px] mt-[18px]">
+
+          {/* Volver — solo mobile (BRT-89): mismo lenguaje visual que
+             "Seguir leyendo", sobre fondo sólido (contraste garantizado,
+             a diferencia del botón flotando sobre la foto). */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="brot-modal-back-mobile items-center gap-[6px] border-none bg-transparent p-0 cursor-pointer font-bold text-[13.5px]"
+            style={{ color: "#C8851A", letterSpacing: ".01em", alignSelf: "flex-start" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            <span>Volver</span>
+          </button>
 
           {/* Stock */}
           {stockText && (
