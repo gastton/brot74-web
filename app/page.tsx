@@ -388,9 +388,9 @@ export default function Home() {
             className="brot-hero-seal-wrap"
             style={{
               position: "relative",
-              width: "188px",
-              height: "188px",
-              fontSize: "188px",
+              width: "230px",
+              height: "230px",
+              fontSize: "230px",
               flexShrink: 0,
               filter: "drop-shadow(0 20px 36px rgba(0,0,0,.35))",
             }}
@@ -400,8 +400,8 @@ export default function Home() {
               viewBox="0 0 100 100"
               aria-hidden="true"
             >
-              <circle cx="50" cy="50" r="48" fill="none" stroke="#0E233C" strokeWidth="0.7" opacity="0.85" />
-              <circle cx="50" cy="50" r="43.6" fill="none" stroke="#0E233C" strokeWidth="0.32" opacity="0.45" />
+              <circle cx="50" cy="50" r="48" fill="none" stroke="#0E233C" strokeWidth="1" opacity="0.95" />
+              <circle cx="50" cy="50" r="43.6" fill="none" stroke="#0E233C" strokeWidth="0.5" opacity="0.6" />
             </svg>
             <div
               style={{
