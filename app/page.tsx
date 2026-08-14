@@ -224,17 +224,6 @@ export default function Home() {
             <h2 className="font-bold text-[37px] leading-[1.05] tracking-[-0.01em] text-navy m-0">
               Tu próximo <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
             </h2>
-            <div
-              className="text-left mx-auto mt-4 rounded-2xl px-5 py-4"
-              style={{ background: "#FBF7EF", maxWidth: "420px" }}
-            >
-              <p className="font-bold text-[14.5px] text-navy m-0" style={{ letterSpacing: ".01em" }}>
-                ¿Por qué trabajamos con reservas?
-              </p>
-              <p className="text-[13.5px] text-stone mt-2 mb-0" style={{ lineHeight: 1.55 }}>
-                Elaboramos nuestro pan con fermentaciones lentas de 24 horas, bajo stock de materia prima y un compromiso de cero desperdicio. Producir a pedido nos permite calcular con precisión cada hornada, garantizando un producto recién horneado, fresco y exclusivo.
-              </p>
-            </div>
           </header>
 
           {loadingSlots ? (
