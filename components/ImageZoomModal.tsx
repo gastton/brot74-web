@@ -69,15 +69,21 @@ export default function ImageZoomModal({ src, alt = "", onClose }: ImageZoomModa
         </button>
       </div>
 
-      {/* Image */}
+      {/* Image — click en el fondo (fuera de la imagen) cierra el modal
+         (BRT-93); click en la imagen misma sigue alternando el zoom, sin
+         cambios. stopPropagation en la imagen para que no dispare las dos
+         cosas a la vez. */}
       <div
         ref={containerRef}
         className="flex-1 overflow-hidden flex items-center justify-center cursor-zoom-in"
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        onClick={() => setScale(s => s > MIN ? MIN : 2)}
+        onClick={onClose}
       >
-        <div style={{ transform: `scale(${scale})`, transition: "transform 0.1s ease", transformOrigin: "center" }}>
+        <div
+          style={{ transform: `scale(${scale})`, transition: "transform 0.1s ease", transformOrigin: "center" }}
+          onClick={(e) => { e.stopPropagation(); setScale(s => s > MIN ? MIN : 2); }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={src} alt={alt} className="max-w-[90vw] max-h-[80vh] object-contain rounded-lg" />
         </div>
