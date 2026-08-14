@@ -59,7 +59,7 @@ export default function ProductCard({
       {/* Foto — mobile: miniatura fija a la derecha (BRT-92). Desktop: sin
          cambios, cuadrada a todo el ancho de la card. */}
       <div
-        className="relative overflow-hidden flex-none w-[104px] h-[104px] md:w-full md:h-auto md:aspect-square"
+        className="relative overflow-hidden flex-none w-[104px] h-[200px] md:w-full md:h-auto md:aspect-square"
         style={{
           borderRadius: "16px",
           background: "#ddd6c8",
