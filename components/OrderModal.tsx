@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface CartItem {
@@ -44,11 +44,7 @@ function CloseIcon() {
 }
 
 function BagIcon({ stroke = "#F9F5EC" }: { stroke?: string }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
-    </svg>
-  );
+  return <ShoppingCart size={20} color={stroke} strokeWidth={1.8} />;
 }
 
 function TrashIcon() {
@@ -544,9 +540,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
                 className="w-16 h-16 rounded-full flex items-center justify-center mb-[18px]"
                 style={{ background: "rgba(14,35,60,.05)", color: "#7C766A" }}
               >
-                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>
-                </svg>
+                <ShoppingCart size={30} color="currentColor" strokeWidth={1.6} />
               </div>
               <h4 className="font-bold text-[21px] leading-[1.25] tracking-[-0.01em] text-navy m-0 mb-2" style={{ maxWidth: "18ch" }}>
                 Todavía no elegiste tu BROT
