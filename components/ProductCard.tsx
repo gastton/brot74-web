@@ -23,6 +23,7 @@ interface ProductCardProps {
 
 export default function ProductCard({
   name,
+  description,
   price,
   weight,
   imageUrl,
@@ -43,7 +44,7 @@ export default function ProductCard({
   return (
     <div
       onClick={() => { if (!isDisabled) onClick(); }}
-      className="flex flex-col"
+      className="flex flex-row-reverse gap-3 pb-4 mb-3 border-b border-[rgba(14,35,60,.10)] md:flex-col md:gap-0 md:pb-0 md:mb-0 md:border-none"
       style={{
         cursor: isDisabled ? "default" : "pointer",
         transition: "transform .18s cubic-bezier(.2,.7,.3,1)",
@@ -55,11 +56,11 @@ export default function ProductCard({
         e.currentTarget.style.transform = "";
       }}
     >
-      {/* Foto */}
+      {/* Foto — mobile: miniatura fija a la derecha (BRT-92). Desktop: sin
+         cambios, cuadrada a todo el ancho de la card. */}
       <div
-        className="relative overflow-hidden"
+        className="relative overflow-hidden flex-none w-[104px] h-[104px] md:w-full md:h-auto md:aspect-square"
         style={{
-          aspectRatio: "1/1",
           borderRadius: "16px",
           background: "#ddd6c8",
           border: "1px solid rgba(14,35,60,.08)",
@@ -158,16 +159,41 @@ export default function ProductCard({
 
       {/* Texto */}
       <div
-        className="pt-3 px-0.5"
+        className="pt-3 px-0.5 flex-1 min-w-0 md:pt-3"
         style={{ opacity: outOfStock ? 0.5 : 1 }}
       >
         <div className="font-semibold text-[16.5px] text-navy leading-snug">{name}</div>
+
+        {/* Peso — solo desktop, como siempre (BRT-92: mobile no lo muestra,
+           en su lugar va la descripción). */}
         {weight && (
-          <div className="font-medium text-[12.5px] text-stone mt-0.5">{weight}</div>
+          <div className="hidden md:block font-medium text-[12.5px] text-stone mt-0.5">{weight}</div>
         )}
+
         <div className="font-bold text-[15.5px] mt-2" style={{ color: "#C8851A" }}>
           {formatCurrency(price)}
         </div>
+
+        {/* Descripción — solo mobile, recortada a 3 líneas (BRT-92). El
+           contenedor controla mostrar/ocultar por breakpoint; el <p> de
+           adentro tiene su propio "display" fijo (line-clamp), así que no
+           puede ser el mismo elemento el que se oculta con una clase —
+           un style inline siempre le gana a una clase de Tailwind. */}
+        {description && (
+          <div className="md:hidden">
+            <p
+              className="text-[13px] text-stone mt-1.5 leading-snug"
+              style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 3,
+                WebkitBoxOrient: "vertical" as const,
+                overflow: "hidden",
+              }}
+            >
+              {description}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
