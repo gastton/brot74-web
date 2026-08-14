@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import ImageZoomModal from "./ImageZoomModal";
 
 interface Product {
   id: number;
@@ -58,6 +59,7 @@ export default function ProductModal({
   onCheckout,
 }: ProductModalProps) {
   const [descCollapsed, setDescCollapsed] = useState(true);
+  const [showZoom, setShowZoom] = useState(false); // BRT-93
 
   // Cantidad elegida en mobile (BRT-89): se define ANTES de confirmar, no
   // después — arranca en lo que ya haya en el carrito (o 1 si es la primera
@@ -108,6 +110,7 @@ export default function ProductModal({
     : null;
 
   return (
+    <>
     <div className="brot-modal-backdrop fixed inset-0 z-50 flex justify-center">
       {/* Backdrop */}
       <div
@@ -172,9 +175,14 @@ export default function ProductModal({
           </svg>
         </button>
 
-        {/* Foto */}
+        {/* Foto — click en cualquier parte abre la imagen a pantalla
+           completa (BRT-93), con una lupa en la esquina como pista visual */}
         {product.imageUrl && (
-          <div className="brot-modal-photo relative w-full overflow-hidden" style={{ height: "234px" }}>
+          <div
+            className="brot-modal-photo relative w-full overflow-hidden"
+            style={{ height: "234px", cursor: "pointer" }}
+            onClick={() => setShowZoom(true)}
+          >
             <Image
               src={product.imageUrl}
               alt={product.name}
@@ -183,6 +191,17 @@ export default function ProductModal({
               style={{ objectPosition: `${product.focalX}% ${product.focalY}%` }}
               sizes="(min-width: 900px) 350px, 374px"
             />
+            <span
+              className="absolute bottom-[10px] right-[10px] z-10 w-[34px] h-[34px] rounded-full flex items-center justify-center"
+              style={{
+                background: "rgba(248,243,234,.85)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
+              }}
+            >
+              <Search size={16} color="#0E233C" strokeWidth={2.2} />
+            </span>
           </div>
         )}
 
@@ -500,5 +519,16 @@ export default function ProductModal({
         </div>
       </div>
     </div>
+
+    {/* Zoom de la foto a pantalla completa (BRT-93) — reutiliza el mismo
+       componente que ya usa el admin, sin cambiarle su función de zoom. */}
+    {showZoom && product.imageUrl && (
+      <ImageZoomModal
+        src={product.imageUrl}
+        alt={product.name}
+        onClose={() => setShowZoom(false)}
+      />
+    )}
+    </>
   );
 }
