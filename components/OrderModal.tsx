@@ -16,10 +16,15 @@ interface OrderModalProps {
   items: CartItem[];
   slotId: number;
   slotLabel: string;
+  // BRT-95: el paso ahora lo controla la URL (page.tsx) en vez de un
+  // useState interno — así "atrás" desde el paso de pago vuelve al form
+  // en vez de cerrar todo el checkout.
+  step: "form" | "payment";
   sessionToken: string;
   expiresAt: string;
   onRemoveItem: (productId: number) => void;
   onChangeQuantity: (productId: number, newQuantity: number) => void;
+  onAdvanceToPayment: () => void;
   onClose: (clearCart?: boolean) => void;
   onSuccess: (orderId: number) => void;
 }
@@ -163,12 +168,11 @@ function formatCountdown(seconds: number): string {
   return `${m}:${s}`;
 }
 
-export default function OrderModal({ items, slotId, slotLabel, sessionToken, expiresAt, onRemoveItem, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotLabel, step, sessionToken, expiresAt, onRemoveItem, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState("");
   const [phone, setPhone]     = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
-  const [step, setStep]       = useState<"form" | "payment">("form");
   const [orderId, setOrderId] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(() =>
     Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
@@ -230,7 +234,7 @@ export default function OrderModal({ items, slotId, slotLabel, sessionToken, exp
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
-    setStep("payment");
+    onAdvanceToPayment();
   }
 
   // Crea el pedido recién cuando el usuario confirma que ya pagó.
