@@ -113,7 +113,7 @@ function ConfirmacionContent() {
           <span className="mt-[3px] flex-none">
             <WheatIcon />
           </span>
-          <span>Una vez acreditado tu pago, recibirás un mensaje de WhatsApp avisándote que tu pedido está confirmado.</span>
+          <span>Una vez acreditado tu pago, recibirás un mensaje de WhatsApp de confirmación.</span>
         </div>
 
         {/* CTA Volver */}
