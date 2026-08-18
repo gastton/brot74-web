@@ -417,19 +417,21 @@ export default function ProductModal({
                 <button
                   type="button"
                   onClick={() => {
-                    // BRT-96: en cantidad 1, "−" ya no se limita a clampear el
-                    // stepper local — si el producto YA está en el carrito
-                    // (quantity > 0), lo saca del carrito de una, igual que
-                    // hace el "−" de desktop con onRemove. Si nunca se agregó
-                    // (quantity === 0, mobileQty arranca en 1 igual) no hay
-                    // nada que sacar, así que ahí el botón sigue deshabilitado.
+                    // BRT-96: "−" en cantidad 1 siempre te saca del modal —
+                    // nunca queda como un botón inerte/disabled. Si el
+                    // producto ya estaba en el carrito (quantity > 0) lo saca
+                    // a él también, igual que el "−" de desktop con onRemove.
+                    // Si nunca se había agregado, el "1" que se ve acá es
+                    // solo el punto de partida para elegir cantidad, no una
+                    // confirmación — no hay nada que sacar, así que solo
+                    // cierra (mismo efecto que tocar la X).
                     if (mobileQty <= 1) {
-                      if (quantity > 0) { onRemove(); onClose(); }
+                      if (quantity > 0) onRemove();
+                      onClose();
                       return;
                     }
                     setMobileQty((q) => q - 1);
                   }}
-                  disabled={mobileQty <= 1 && quantity === 0}
                   aria-label="Restar cantidad"
                   className="flex items-center justify-center rounded-full border-none"
                   style={{
@@ -437,11 +439,10 @@ export default function ProductModal({
                     height: "44px",
                     background: "#FBF7EF",
                     color: "#0E233C",
-                    cursor: mobileQty <= 1 && quantity === 0 ? "not-allowed" : "pointer",
-                    opacity: mobileQty <= 1 && quantity === 0 ? 0.4 : 1,
+                    cursor: "pointer",
                     transition: "transform .12s, opacity .15s",
                   }}
-                  onMouseDown={(e) => { if (mobileQty > 1 || quantity > 0) e.currentTarget.style.transform = "scale(.9)"; }}
+                  onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.9)"; }}
                   onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
                   onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
                 >
