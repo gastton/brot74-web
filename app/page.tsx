@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import OrderModal from "@/components/OrderModal";
@@ -42,15 +43,38 @@ const serif = "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)";
 
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
+// BRT-95: cada paso navegable del flujo se refleja en la URL vía query
+// params — la URL manda, el estado de "en qué paso estoy" se deriva de ella
+// (no vive en un useState propio) para que "atrás" del navegador retroceda
+// un paso real en vez de tirar al home. Lo que NO viaja en la URL es estado
+// de sesión (carrito, reserva de stock/timer) — eso sigue siendo local,
+// ver el spike en BRT-94.
+function buildFlowUrl(params: { step?: "slots"; slot?: number | null; product?: number | null; checkout?: "form" | "payment" }): string {
+  const sp = new URLSearchParams();
+  if (params.slot) sp.set("slot", String(params.slot));
+  if (params.step) sp.set("step", params.step);
+  if (params.product) sp.set("product", String(params.product));
+  if (params.checkout) sp.set("checkout", params.checkout);
+  const qs = sp.toString();
+  return qs ? `/?${qs}` : "/";
+}
 
-export default function Home() {
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const slotParam     = searchParams.get("slot");
+  const stepParam     = searchParams.get("step");
+  const productParam  = searchParams.get("product");
+  const checkoutParam = searchParams.get("checkout"); // "form" | "payment" | null
+
+  const selectedSlotId = slotParam ? Number(slotParam) : null;
+  const view: "home" | "slots" | "menu" = selectedSlotId ? "menu" : stepParam === "slots" ? "slots" : "home";
+  const isCheckoutOpen = checkoutParam === "form" || checkoutParam === "payment";
+
   const [slots, setSlots]                     = useState<Slot[]>([]);
-  const [selectedSlotId, setSelectedSlotId]   = useState<number | null>(null);
-  const [view, setView]                       = useState<"home" | "slots" | "menu">("home");
   const [products, setProducts]               = useState<Product[]>([]);
   const [cart, setCart]                       = useState<CartMap>({});
-  const [showModal, setShowModal]             = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loadingSlots, setLoadingSlots]       = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [reserving, setReserving]             = useState(false);
@@ -58,6 +82,16 @@ export default function Home() {
   const [sessionToken, setSessionToken]       = useState("");
   const [reservationExpiresAt, setReservationExpiresAt] = useState("");
   const cartRestoredRef = useRef(false);
+  // Marca si el modal de producto abierto ACTUALMENTE fue empujado por
+  // nosotros en esta sesión (vs. llegado por link directo/refresh) — decide
+  // si el botón de cerrar puede hacer router.back() o necesita replace.
+  const productPushedRef = useRef(false);
+  const wasCheckoutOpenRef = useRef(false);
+
+  const selectedProductId = productParam ? Number(productParam) : null;
+  const selectedProduct = selectedProductId != null
+    ? products.find((p) => p.id === selectedProductId) ?? null
+    : null;
 
   useEffect(() => {
     fetch("/api/delivery-slots")
@@ -80,10 +114,15 @@ export default function Home() {
     }
   }, [selectedSlotId, fetchProducts]);
 
-  // Restore cart from localStorage once slots finish loading
+  // Restore cart from localStorage once slots finish loading — solo si la
+  // URL no trae ya un slot propio (BRT-95: la URL manda, un link directo/
+  // refresh a un paso puntual no debe ser pisado por el carrito guardado).
+  // Sigue siendo "una sola vez" (cartRestoredRef), aunque la URL cambie
+  // después por otras navegaciones.
   useEffect(() => {
     if (loadingSlots || cartRestoredRef.current) return;
     cartRestoredRef.current = true;
+    if (slotParam) return;
     const saved = localStorage.getItem("brot74-cart");
     if (!saved) return;
     try {
@@ -91,16 +130,48 @@ export default function Home() {
       if (!slotId || !savedCart || Object.keys(savedCart).length === 0) return;
       const slot = slots.find((s) => s.id === slotId && !s.disabled);
       if (slot) {
-        setSelectedSlotId(slotId);
         setCart(savedCart);
-        setView("menu");
+        router.replace(buildFlowUrl({ slot: slotId }));
       } else {
         localStorage.removeItem("brot74-cart");
       }
     } catch {
       localStorage.removeItem("brot74-cart");
     }
-  }, [loadingSlots, slots]);
+  }, [loadingSlots, slots, slotParam, router]);
+
+  // Red de seguridad (BRT-95): si la URL apunta a un paso de checkout pero
+  // no hay sessionToken local (recarga de página, o "atrás" reabriendo una
+  // entrada de historial de un checkout ya cerrado/liberado), no existe
+  // ninguna reserva viva que mostrar — se vuelve al menú en silencio, igual
+  // que el caso ya existente de reserva vencida (no se puede "reconstruir"
+  // un pago sin una reserva de stock real detrás).
+  useEffect(() => {
+    if (isCheckoutOpen && !sessionToken && selectedSlotId) {
+      router.replace(buildFlowUrl({ slot: selectedSlotId }));
+    }
+  }, [isCheckoutOpen, sessionToken, selectedSlotId, router]);
+
+  // Cuando el checkout deja de estar abierto (por cualquier vía: botón de
+  // cerrar, "atrás" del navegador, o la red de seguridad de arriba) se
+  // libera la reserva de stock y se refresca la grilla — antes vivía todo
+  // junto en handleModalClose, ahora se centraliza acá para cubrir también
+  // el cierre por navegación de historial, que no pasa por ningún handler.
+  useEffect(() => {
+    if (wasCheckoutOpenRef.current && !isCheckoutOpen) {
+      if (sessionToken) {
+        fetch("/api/cart/release", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionToken }),
+        }).catch(() => {});
+      }
+      setSessionToken("");
+      setReservationExpiresAt("");
+      if (selectedSlotId) fetchProducts(selectedSlotId);
+    }
+    wasCheckoutOpenRef.current = isCheckoutOpen;
+  }, [isCheckoutOpen, sessionToken, selectedSlotId, fetchProducts]);
 
   // Persist cart to localStorage on every change
   useEffect(() => {
@@ -112,9 +183,28 @@ export default function Home() {
   }, [cart, selectedSlotId]);
 
   function selectSlot(id: number) {
-    setSelectedSlotId(id);
-    setView("menu");
     setCart({});
+    router.push(buildFlowUrl({ slot: id }));
+  }
+
+  function openProduct(product: Product) {
+    if (!selectedSlotId) return;
+    productPushedRef.current = true;
+    router.push(buildFlowUrl({ slot: selectedSlotId, product: product.id }));
+  }
+
+  // Cierra el modal de producto retrocediendo un paso de historial si fue
+  // este mismo cliente quien lo empujó (deja el historial limpio); si se
+  // llegó por link directo/refresh no hay nada propio que "deshacer", así
+  // que se reemplaza sin agregar entrada.
+  function closeProduct() {
+    if (!selectedSlotId) return;
+    if (productPushedRef.current) {
+      productPushedRef.current = false;
+      router.back();
+    } else {
+      router.replace(buildFlowUrl({ slot: selectedSlotId }));
+    }
   }
 
   function addToCart(productId: number) {
@@ -175,7 +265,7 @@ export default function Home() {
       }
       setSessionToken(data.sessionToken);
       setReservationExpiresAt(data.expiresAt);
-      setShowModal(true);
+      router.push(buildFlowUrl({ slot: selectedSlotId, checkout: "form" }));
     } catch {
       setReserveError("Error de conexión. Intentá de nuevo.");
     } finally {
@@ -183,29 +273,42 @@ export default function Home() {
     }
   }
 
-  function handleModalClose(clearCart?: boolean) {
-    if (sessionToken) {
-      fetch("/api/cart/release", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionToken }),
-      }).catch(() => {});
-    }
-    setShowModal(false);
-    setSessionToken("");
-    setReservationExpiresAt("");
+  // BRT-95: pasar de "Tu pedido" a "Pagá por transferencia" ahora es un paso
+  // propio en la URL (antes era un setState interno de OrderModal) — así
+  // "atrás" desde la pantalla de pago vuelve al form, no cierra todo.
+  function advanceToPaymentStep() {
+    if (!selectedSlotId) return;
+    router.push(buildFlowUrl({ slot: selectedSlotId, checkout: "payment" }));
+  }
+
+  // Cierra el checkout. La liberación de la reserva y el refresco de stock
+  // viven en el efecto de arriba (cubre también el cierre por "atrás" del
+  // navegador); acá solo se decide la navegación y, si corresponde, se
+  // vacía el carrito (BRT-88: reserva vencida o cierre confirmado).
+  //
+  // A diferencia del modal de producto, acá SIEMPRE se retrocede el número
+  // exacto de pasos que nosotros empujamos (1 si solo se abrió "form", 2 si
+  // se llegó a "payment") en vez de un solo back() — el botón de cerrar
+  // representa "salir del checkout entero", no "un paso atrás dentro de
+  // él". Si no hay nada propio que retroceder (link directo/refresh — la
+  // red de seguridad ya nos habría mandado al menú antes de poder cerrar)
+  // se reemplaza directo.
+  function closeCheckout(clearCart?: boolean) {
     if (clearCart) {
-      // Reserva vencida o cierre confirmado por el usuario (BRT-88): no
-      // dejamos el carrito con productos "elegidos" sobre una reserva que
-      // ya no existe — se vuelve a armar de cero.
       setCart({});
       localStorage.removeItem("brot74-cart");
     }
-    if (selectedSlotId) fetchProducts(selectedSlotId);
+    if (!selectedSlotId) return;
+    const depth = checkoutParam === "payment" ? 2 : checkoutParam === "form" ? 1 : 0;
+    if (depth > 0 && sessionToken) {
+      window.history.go(-depth);
+    } else {
+      router.replace(buildFlowUrl({ slot: selectedSlotId }));
+    }
   }
 
   function handleOrderSuccess(orderId: number) {
-    // No hacemos setShowModal(false) acá (BRT-89): es una navegación dura
+    // No navegamos fuera del checkout acá (BRT-89): es una navegación dura
     // vía window.location.href, no instantánea — cerrar el modal antes de
     // que el navegador termine de irse dejaba ver un flash de la grilla de
     // productos de atrás. Dejamos el modal montado hasta que la página
@@ -260,7 +363,7 @@ export default function Home() {
           {/* Cabecera: columna en mobile, fila en tablet+ */}
           <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-3 md:gap-6 mb-[22px] md:mb-[28px]">
             <button
-              onClick={() => setView("slots")}
+              onClick={() => router.push(buildFlowUrl({ step: "slots" }))}
               className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy hover:text-amber transition-colors"
               style={{ opacity: 0.85 }}
             >
@@ -295,7 +398,7 @@ export default function Home() {
                   {...product}
                   quantity={cart[product.id] ?? 0}
                   slotSelected={!!selectedSlotId}
-                  onClick={() => setSelectedProduct(product)}
+                  onClick={() => openProduct(product)}
                   onQuickAdd={() => addToCart(product.id)}
                 />
               ))}
@@ -306,14 +409,14 @@ export default function Home() {
         {/* Cart bar — única (BRT-89): visible en la grilla. Se oculta con
            ProductModal abierto (mobile y desktop por igual — ahí la
            referencia tampoco la muestra, es una pantalla acotada de elegir
-           cantidad y confirmar) y durante el checkout (showModal). */}
-        {cartItems.length > 0 && selectedSlotId && !showModal && !selectedProduct && (
+           cantidad y confirmar) y durante el checkout. */}
+        {cartItems.length > 0 && selectedSlotId && !isCheckoutOpen && !selectedProduct && (
           <CartBar
             count={cartItems.reduce((s, i) => s + i.quantity, 0)}
             total={cartTotal}
             reserving={reserving}
             error={reserveError}
-            onCheckout={() => { setSelectedProduct(null); openCheckout(); }}
+            onCheckout={() => openCheckout()}
           />
         )}
 
@@ -328,21 +431,23 @@ export default function Home() {
             onAdd={() => addToCart(selectedProduct.id)}
             onRemove={() => removeFromCart(selectedProduct.id)}
             onConfirmQuantity={(qty) => changeCartQuantity(selectedProduct.id, qty)}
-            onClose={() => setSelectedProduct(null)}
-            onCheckout={() => { setSelectedProduct(null); openCheckout(); }}
+            onClose={closeProduct}
+            onCheckout={() => openCheckout()}
           />
         )}
 
-        {showModal && selectedSlotId && selectedSlot && sessionToken && reservationExpiresAt && (
+        {isCheckoutOpen && selectedSlotId && selectedSlot && sessionToken && reservationExpiresAt && (
           <OrderModal
             items={cartItems}
             slotId={selectedSlotId}
             slotLabel={selectedSlot.dayLabel}
+            step={checkoutParam === "payment" ? "payment" : "form"}
             sessionToken={sessionToken}
             expiresAt={reservationExpiresAt}
             onRemoveItem={removeItemFromCart}
             onChangeQuantity={changeCartQuantity}
-            onClose={handleModalClose}
+            onAdvanceToPayment={advanceToPaymentStep}
+            onClose={closeCheckout}
             onSuccess={handleOrderSuccess}
           />
         )}
@@ -457,7 +562,7 @@ export default function Home() {
 
           {/* CTA */}
           <button
-            onClick={() => setView("slots")}
+            onClick={() => router.push(buildFlowUrl({ step: "slots" }))}
             className="brot-hero-cta inline-flex items-center gap-[11px] font-bold border-none cursor-pointer"
             style={{
               marginTop: "44px",
@@ -529,5 +634,15 @@ export default function Home() {
         </footer>
 
     </div>
+  );
+}
+
+// useSearchParams() exige un límite Suspense (BRT-95) — mismo patrón que ya
+// usa app/confirmacion/page.tsx.
+export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
   );
 }
