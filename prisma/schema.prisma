@@ -108,7 +108,8 @@ model OrderItem {
 
 model WaitlistEntry {
   id        Int      @id @default(autoincrement())
-  phone     String
+  phone     String   @unique
+  notified  Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@index([createdAt])

@@ -37,4 +37,18 @@ describe("POST /api/waitlist", () => {
     const res = await POST(postRequest({}));
     expect(res.status).toBe(400);
   });
+
+  it("no duplica la fila si el mismo teléfono se envía dos veces (BRT-97)", async () => {
+    await POST(postRequest({ phone: "3513845646" }));
+    const first = await prisma.waitlistEntry.findFirstOrThrow({ where: { phone: "3513845646" } });
+    await prisma.waitlistEntry.update({ where: { id: first.id }, data: { notified: true } });
+
+    const res = await POST(postRequest({ phone: "3513845646" }));
+    expect(res.status).toBe(201);
+
+    const entries = await prisma.waitlistEntry.findMany({ where: { phone: "3513845646" } });
+    expect(entries).toHaveLength(1);
+    expect(entries[0].id).toBe(first.id);
+    expect(entries[0].notified).toBe(false); // vuelve a "no avisado" al reanotarse
+  });
 });
