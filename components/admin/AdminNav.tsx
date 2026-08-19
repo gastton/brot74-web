@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Package, Calendar, ShoppingBag, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, Calendar, ShoppingBag, Bell, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
   { href: "/admin/productos", label: "Productos", icon: Package },
   { href: "/admin/fechas", label: "Fechas", icon: Calendar },
+  { href: "/admin/waitlist", label: "Waitlist", icon: Bell },
 ];
 
 export default function AdminNav() {
