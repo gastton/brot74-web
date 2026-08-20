@@ -24,7 +24,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",
-    "jose": "^6.2.3",
+    "jose": "^6.2.9",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
