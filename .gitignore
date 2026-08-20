@@ -46,3 +46,18 @@ next-env.d.ts
 # SQLite database
 *.db
 *.db-journal
+
+# local Claude Code skills (installed via `npx skills`, kept machine-local)
+/.agents/skills
+/.claude/skills
+/skills-lock.json
+
+# local Claude Code settings (may contain sensitive commands/history, machine-local)
+/.claude/settings.local.json
+
+# design exports and raw screenshots (not source, kept out of the repo)
+/_design/
+/agent/
+/billeteras/
+/footer/
+/pantallas_brot74.pdf
