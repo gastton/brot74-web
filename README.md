@@ -82,3 +82,7 @@ npm run db:seed
 | `npm run lint` | ESLint |
 | `npm test` | Tests de integración (Vitest) |
 | `npm run db:seed` | Carga datos de ejemplo |
+
+## Licencia
+
+Todos los derechos reservados — ver [LICENSE](LICENSE). El código se publica como muestra de portfolio, no está disponible para reutilización.
