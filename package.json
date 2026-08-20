@@ -44,6 +44,7 @@
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "eslint-plugin-security": "^4.0.1",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
     "typescript": "^5",
