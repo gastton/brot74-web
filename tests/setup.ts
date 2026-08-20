@@ -18,6 +18,14 @@ if (!/localhost|127\.0\.0\.1|postgres:5432/.test(process.env.DATABASE_URL)) {
   );
 }
 
+for (const name of ["ADMIN_PASSWORD", "JWT_SECRET"] as const) {
+  if (!process.env[name]) {
+    throw new Error(
+      `${name} no está definida. Copiá .env.test.example a .env.test (o corré \`npm run test:db:up\`) y completá los valores de test.`
+    );
+  }
+}
+
 import { prisma } from "@/lib/db";
 
 beforeAll(() => {
