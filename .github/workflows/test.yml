@@ -45,6 +45,8 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://brot74:brot74@localhost:5432/brot74_test
+      ADMIN_PASSWORD: test-admin-password
+      JWT_SECRET: test-jwt-secret-not-for-production
     steps:
       - uses: actions/checkout@v4
 

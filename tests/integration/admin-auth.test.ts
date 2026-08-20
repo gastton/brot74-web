@@ -4,7 +4,7 @@ import { POST as login } from "@/app/api/admin/login/route";
 import { POST as logout } from "@/app/api/admin/logout/route";
 import { verifyToken } from "@/lib/auth";
 
-const CORRECT_PASSWORD = process.env.ADMIN_PASSWORD ?? "brot74admin";
+const CORRECT_PASSWORD = process.env.ADMIN_PASSWORD as string;
 
 function loginRequest(password: string) {
   return new NextRequest("http://localhost/api/admin/login", {
