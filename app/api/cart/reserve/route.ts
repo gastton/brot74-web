@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { randomUUID } from "crypto";
+import { normalizeCartItems } from "@/lib/cartItems";
 
 const TTL_MS = 15 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
   try {
-    const { slotId, items } = await req.json();
+    const { slotId, items: rawItems } = await req.json();
 
-    if (!slotId || !items?.length) {
+    if (!slotId) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+
+    const items = normalizeCartItems(rawItems);
+    if (!items) {
+      return NextResponse.json(
+        { error: "Cantidades inválidas" },
+        { status: 400 }
+      );
     }
 
     const now = new Date();
@@ -20,7 +29,7 @@ export async function POST(req: NextRequest) {
       where: { deliverySlotId: slotId, expiresAt: { lt: now } },
     });
 
-    for (const item of items as { productId: number; quantity: number }[]) {
+    for (const item of items) {
       const stock = await prisma.productStock.findUnique({
         where: { productId_deliverySlotId: { productId: item.productId, deliverySlotId: slotId } },
       });
@@ -49,7 +58,7 @@ export async function POST(req: NextRequest) {
     const sessionToken = randomUUID();
 
     await prisma.cartReservation.createMany({
-      data: (items as { productId: number; quantity: number }[]).map((item) => ({
+      data: items.map((item) => ({
         productId: item.productId,
         deliverySlotId: slotId,
         quantity: item.quantity,
