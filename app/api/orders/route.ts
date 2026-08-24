@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
+import { normalizeCartItems } from "@/lib/cartItems";
+
+class InsufficientStockError extends Error {
+  constructor(public productId: number, public productName: string) {
+    super(`Stock insuficiente para ${productName}`);
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { customerName, customerPhone, deliverySlotId, items, notes, sessionToken } = body;
+    const { customerName, customerPhone, deliverySlotId, items: rawItems, notes, sessionToken } = body;
 
-    if (!customerName || !customerPhone || !deliverySlotId || !items?.length) {
+    if (!customerName || !customerPhone || !deliverySlotId) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+
+    const items = normalizeCartItems(rawItems);
+    if (!items) {
+      return NextResponse.json({ error: "Cantidades inválidas" }, { status: 400 });
     }
 
     const slot = await prisma.deliverySlot.findUnique({ where: { id: deliverySlotId } });
@@ -25,7 +37,7 @@ export async function POST(req: NextRequest) {
       });
       if (reservations.length > 0) {
         const resMap = new Map(reservations.map((r) => [r.productId, r.quantity]));
-        reservationValid = (items as { productId: number; quantity: number }[]).every(
+        reservationValid = items.every(
           (item) => (resMap.get(item.productId) ?? 0) >= item.quantity
         );
       }
@@ -38,8 +50,12 @@ export async function POST(req: NextRequest) {
     // Verify stock and calculate total
     let total = 0;
     const enrichedItems: { productId: number; quantity: number; unitPrice: number; name: string }[] = [];
+    // Productos con fila de ProductStock — solo a estos se les aplica el
+    // update atómico dentro de la transacción (BRT-109). Si no hay fila,
+    // se preserva el comportamiento existente de no limitar el stock.
+    const productsWithStock = new Set<number>();
 
-    for (const item of items as { productId: number; quantity: number }[]) {
+    for (const item of items) {
       const product = await prisma.product.findUnique({ where: { id: item.productId } });
       if (!product || !product.active) {
         return NextResponse.json({ error: `Producto no disponible: ${item.productId}` }, { status: 400 });
@@ -50,6 +66,8 @@ export async function POST(req: NextRequest) {
       });
 
       if (stock) {
+        productsWithStock.add(item.productId);
+
         let available: number;
         if (reservationValid) {
           // The reservation already holds this stock — only count confirmed orders
@@ -73,38 +91,65 @@ export async function POST(req: NextRequest) {
     }
 
     // Create order, reserve stock, and release cart reservation — all in one transaction
-    const order = await prisma.$transaction(async (tx) => {
-      const newOrder = await tx.order.create({
-        data: {
-          customerName,
-          customerPhone,
-          deliverySlotId,
-          total,
-          notes: notes ?? "",
-          status: "pending",
-          items: {
-            create: enrichedItems.map((i) => ({
-              productId: i.productId,
-              quantity: i.quantity,
-              unitPrice: i.unitPrice,
-            })),
+    let order;
+    try {
+      order = await prisma.$transaction(async (tx) => {
+        const newOrder = await tx.order.create({
+          data: {
+            customerName,
+            customerPhone,
+            deliverySlotId,
+            total,
+            notes: notes ?? "",
+            status: "pending",
+            items: {
+              create: enrichedItems.map((i) => ({
+                productId: i.productId,
+                quantity: i.quantity,
+                unitPrice: i.unitPrice,
+              })),
+            },
           },
-        },
-      });
-
-      for (const item of enrichedItems) {
-        await tx.productStock.updateMany({
-          where: { productId: item.productId, deliverySlotId },
-          data: { reservedStock: { increment: item.quantity } },
         });
-      }
 
-      if (sessionToken) {
-        await tx.cartReservation.deleteMany({ where: { sessionToken } });
-      }
+        // Orden consistente (por productId) al tomar los locks de fila de
+        // ProductStock: si dos pedidos concurrentes comparten productos
+        // pero los mandan en orden distinto, sin esto podrían deadlockear
+        // entre sí en vez de simplemente competir por el stock.
+        const stockUpdates = enrichedItems
+          .filter((item) => productsWithStock.has(item.productId))
+          .sort((a, b) => a.productId - b.productId);
 
-      return newOrder;
-    });
+        for (const item of stockUpdates) {
+          // Update atómico: solo incrementa reservedStock si todavía hay
+          // capacidad en ese momento exacto (BRT-109). Si dos requests
+          // concurrentes compiten por el mismo stock, como mucho una de
+          // las dos consigue afectar la fila.
+          const affected = await tx.$executeRaw`
+            UPDATE "ProductStock"
+            SET "reservedStock" = "reservedStock" + ${item.quantity}
+            WHERE "productId" = ${item.productId}
+              AND "deliverySlotId" = ${deliverySlotId}
+              AND "totalStock" - "reservedStock" >= ${item.quantity}
+          `;
+
+          if (affected === 0) {
+            throw new InsufficientStockError(item.productId, item.name);
+          }
+        }
+
+        if (sessionToken) {
+          await tx.cartReservation.deleteMany({ where: { sessionToken } });
+        }
+
+        return newOrder;
+      });
+    } catch (e) {
+      if (e instanceof InsufficientStockError) {
+        return NextResponse.json({ error: e.message }, { status: 409 });
+      }
+      throw e;
+    }
 
     try {
       const msg = buildOrderMessage({

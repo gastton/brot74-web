@@ -55,4 +55,40 @@ describe("POST /api/cart/reserve", () => {
     const res = await POST(makeRequest({ slotId: null, items: [] }));
     expect(res.status).toBe(400);
   });
+
+  it("devuelve 400 con quantity negativa, cero, o no entera (BRT-108)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    for (const quantity of [-5, 0, 1.5, 2147483648]) {
+      const res = await POST(
+        makeRequest({ slotId: slot.id, items: [{ productId: product.id, quantity }] })
+      );
+      expect(res.status).toBe(400);
+    }
+
+    const reservations = await prisma.cartReservation.findMany({ where: { productId: product.id } });
+    expect(reservations).toHaveLength(0);
+  });
+
+  it("consolida líneas duplicadas del mismo productId antes de validar stock (BRT-108)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    // 3 + 3 = 6, supera el stock total de 5 aunque cada línea individual
+    // (3) esté por debajo.
+    const res = await POST(
+      makeRequest({
+        slotId: slot.id,
+        items: [
+          { productId: product.id, quantity: 3 },
+          { productId: product.id, quantity: 3 },
+        ],
+      })
+    );
+
+    expect(res.status).toBe(409);
+  });
 });
