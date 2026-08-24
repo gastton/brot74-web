@@ -113,4 +113,105 @@ describe("POST /api/orders", () => {
 
     expect(res.status).toBe(200);
   });
+
+  it("devuelve 400 con quantity negativa, cero, o no entera (BRT-108)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    for (const quantity of [-5, 0, 1.5, 2147483648]) {
+      const res = await POST(
+        makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity }] }))
+      );
+      expect(res.status).toBe(400);
+    }
+
+    const orders = await prisma.order.findMany();
+    expect(orders).toHaveLength(0);
+  });
+
+  it("consolida líneas duplicadas del mismo productId antes de validar stock (BRT-108)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({
+          deliverySlotId: slot.id,
+          items: [
+            { productId: product.id, quantity: 3 },
+            { productId: product.id, quantity: 3 },
+          ],
+        })
+      )
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("evita sobreventa con dos pedidos concurrentes por el último stock (BRT-109)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 1, reservedStock: 0 });
+
+    const [resA, resB] = await Promise.all([
+      POST(
+        makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+      ),
+      POST(
+        makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+      ),
+    ]);
+
+    const statuses = [resA.status, resB.status].sort();
+    expect(statuses).toEqual([200, 409]);
+
+    const stock = await prisma.productStock.findUnique({
+      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
+    });
+    expect(stock?.reservedStock).toBe(1);
+
+    const orders = await prisma.order.findMany();
+    expect(orders).toHaveLength(1);
+  });
+
+  it("no deadlockea con pedidos concurrentes que comparten productos en orden inverso (BRT-109)", async () => {
+    const productA = await createProduct();
+    const productB = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(productA.id, slot.id, { totalStock: 5 });
+    await createProductStock(productB.id, slot.id, { totalStock: 5 });
+
+    const [resA, resB] = await Promise.all([
+      POST(
+        makeRequest(
+          baseOrder({
+            deliverySlotId: slot.id,
+            items: [
+              { productId: productA.id, quantity: 1 },
+              { productId: productB.id, quantity: 1 },
+            ],
+          })
+        )
+      ),
+      POST(
+        makeRequest(
+          baseOrder({
+            deliverySlotId: slot.id,
+            items: [
+              { productId: productB.id, quantity: 1 },
+              { productId: productA.id, quantity: 1 },
+            ],
+          })
+        )
+      ),
+    ]);
+
+    // Con stock de sobra para ambos, si hubiera un deadlock por orden de
+    // locks inconsistente, Postgres abortaría una de las dos transacciones
+    // y devolveríamos 500 en vez de 200.
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
+  });
 });
