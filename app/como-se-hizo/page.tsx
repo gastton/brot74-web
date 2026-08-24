@@ -579,6 +579,7 @@ const content = `
           <span class="stat-chip"><b>17</b> <span data-es="suites de integración" data-en="integration suites">suites de integración</span></span>
           <span class="stat-chip"><b>87</b> <span data-es="casos de prueba" data-en="test cases">casos de prueba</span></span>
           <span class="stat-chip"><b>7</b> <span data-es="modelos de dominio" data-en="domain models">modelos de dominio</span></span>
+          <span class="stat-chip"><b>8</b> <span data-es="tickets de seguridad" data-en="security tickets">tickets de seguridad</span></span>
         </div>
       </div>
 
@@ -596,6 +597,7 @@ const content = `
           <div class="docket-row"><span class="k" data-es="Período" data-en="Period">Período</span><span class="v" data-es="Junio 2026" data-en="June 2026">Junio 2026</span></div>
           <div class="docket-row"><span class="k" data-es="Dedicación" data-en="Commitment">Dedicación</span><span class="v" data-es="Part-Time" data-en="Part-Time">Part-Time</span></div>
           <div class="docket-row"><span class="k" data-es="Estado" data-en="Status">Estado</span><span class="v" data-es="en producción" data-en="in production">en producción</span></div>
+          <div class="docket-row"><span class="k" data-es="Licencia" data-en="License">Licencia</span><span class="v" data-es="pública · All Rights Reserved" data-en="public · All Rights Reserved">pública · All Rights Reserved</span></div>
         </div>
       </div>
     </div>
@@ -651,6 +653,14 @@ const content = `
         </div>
         <p class="stage-desc" data-es="Cada PR corre lint y la suite de integración completa antes de poder mergear a <code>main</code>; ESLint es gate obligatorio. El merge dispara build y deploy en Vercel." data-en="Every PR runs lint and the full integration suite before it can merge to <code>main</code>; ESLint is a mandatory gate. Merging triggers build and deploy on Vercel.">Cada PR corre lint y la suite de integración completa antes de poder mergear a <code>main</code>; ESLint es gate obligatorio. El merge dispara build y deploy en Vercel.</p>
       </div>
+
+      <div class="stage reveal">
+        <div class="stage-head">
+          <span class="stage-title" data-es="Seguridad y code review automatizados" data-en="Automated security & code review">Seguridad y code review automatizados</span>
+          <span class="stage-when" data-es="8 tickets · roadmap completo" data-en="8 tickets · roadmap complete">8 tickets · roadmap completo</span>
+        </div>
+        <p class="stage-desc" data-es="Una segunda ronda, ya con el sitio en producción: branch protection en <code>main</code> (lint + integration obligatorios), Dependabot con actualizaciones de seguridad, CodeQL y Secret Scanning con push protection, y CodeRabbit + SonarQube Cloud revisando cada PR junto con <code>eslint-plugin-security</code> en el lint. De paso se sacaron los fallbacks hardcodeados de contraseña y JWT: hoy el build falla si falta la variable de entorno, en vez de caer en un valor por defecto inseguro." data-en="A second pass, once the site was already live: branch protection on <code>main</code> (lint + integration required), Dependabot with security updates, CodeQL and Secret Scanning with push protection, and CodeRabbit + SonarQube Cloud reviewing every PR alongside <code>eslint-plugin-security</code> in the lint. Along the way, the hardcoded password and JWT fallbacks were removed: the build now fails if the env var is missing, instead of falling back to an insecure default.">Una segunda ronda, ya con el sitio en producción: branch protection en <code>main</code> (lint + integration obligatorios), Dependabot con actualizaciones de seguridad, CodeQL y Secret Scanning con push protection, y CodeRabbit + SonarQube Cloud revisando cada PR junto con <code>eslint-plugin-security</code> en el lint. De paso se sacaron los fallbacks hardcodeados de contraseña y JWT: hoy el build falla si falta la variable de entorno, en vez de caer en un valor por defecto inseguro.</p>
+      </div>
     </div>
   </section>
 
@@ -685,6 +695,13 @@ const content = `
           <div class="comanda-line"><span class="name">ESLint 9</span><span class="dots"></span><span class="tag" data-es="gate en CI" data-en="CI gate">gate en CI</span></div>
           <div class="comanda-line"><span class="name">GitHub Actions</span><span class="dots"></span><span class="tag" data-es="CI/CD" data-en="CI/CD">CI/CD</span></div>
 
+          <p class="comanda-cat" data-es="Seguridad" data-en="Security">Seguridad</p>
+          <div class="comanda-line"><span class="name">Dependabot</span><span class="dots"></span><span class="tag" data-es="deps + security updates" data-en="deps + security updates">deps + security updates</span></div>
+          <div class="comanda-line"><span class="name">CodeQL · Secret Scanning</span><span class="dots"></span><span class="tag" data-es="push protection" data-en="push protection">push protection</span></div>
+          <div class="comanda-line"><span class="name">CodeRabbit</span><span class="dots"></span><span class="tag" data-es="code review automático" data-en="automated code review">code review automático</span></div>
+          <div class="comanda-line"><span class="name">SonarQube Cloud</span><span class="dots"></span><span class="tag" data-es="calidad de código" data-en="code quality">calidad de código</span></div>
+          <div class="comanda-line"><span class="name">eslint-plugin-security</span><span class="dots"></span><span class="tag" data-es="lint" data-en="lint">lint</span></div>
+
           <p class="comanda-cat" data-es="Inteligencia artificial" data-en="Artificial intelligence">Inteligencia artificial</p>
           <div class="comanda-line"><span class="name">Claude Code</span><span class="dots"></span><span class="tag" data-es="implementación" data-en="implementation">implementación</span></div>
           <div class="comanda-line"><span class="name">Claude</span><span class="dots"></span><span class="tag" data-es="diseño de pantallas" data-en="screen design">diseño de pantallas</span></div>
@@ -696,7 +713,7 @@ const content = `
 
           <div class="comanda-total">
             <span data-es="Total de herramientas" data-en="Total tools">Total de herramientas</span>
-            <b><span data-es="15, tres asistentes de IA" data-en="15, three AI assistants">15, tres asistentes de IA</span></b>
+            <b><span data-es="19, tres asistentes de IA" data-en="19, three AI assistants">19, tres asistentes de IA</span></b>
           </div>
         </div>
       </div>
@@ -732,6 +749,11 @@ const content = `
         <span class="card-tag" data-es="Operación" data-en="Operations">Operación</span>
         <h3 data-es="Cron ajustado al plan real de hosting" data-en="Cron tuned to the real hosting plan">Cron ajustado al plan real de hosting</h3>
         <p data-es="La limpieza de reservas expiradas corre por cron; la frecuencia se ajustó a diario para funcionar dentro de los límites del plan Vercel Hobby, sin sorpresas de facturación." data-en="Expired-reservation cleanup runs on a cron job; frequency was tuned to daily to stay within Vercel's Hobby plan limits, with no billing surprises.">La limpieza de reservas expiradas corre por cron; la frecuencia se ajustó a diario para funcionar dentro de los límites del plan Vercel Hobby, sin sorpresas de facturación.</p>
+      </div>
+      <div class="card reveal">
+        <span class="card-tag" data-es="Seguridad" data-en="Security">Seguridad</span>
+        <h3 data-es="Sin fallbacks inseguros en la autenticación" data-en="No insecure fallbacks in authentication">Sin fallbacks inseguros en la autenticación</h3>
+        <p data-es="<code>JWT_SECRET</code> y <code>ADMIN_PASSWORD</code> ya no tienen un valor hardcodeado de respaldo: si falta la variable de entorno, la app tira error en vez de arrancar con una contraseña por defecto." data-en="<code>JWT_SECRET</code> and <code>ADMIN_PASSWORD</code> no longer have a hardcoded fallback value: if the env var is missing, the app throws instead of starting up with a default password."><code>JWT_SECRET</code> y <code>ADMIN_PASSWORD</code> ya no tienen un valor hardcodeado de respaldo: si falta la variable de entorno, la app tira error en vez de arrancar con una contraseña por defecto.</p>
       </div>
     </div>
   </section>
