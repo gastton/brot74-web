@@ -40,6 +40,10 @@ export default function ProductCard({
   const remaining = stock !== null ? stock - quantity : null;
   const outOfStock = slotSelected && !hasStock && stock !== null && stock <= 0;
   const isDisabled = !slotSelected || outOfStock;
+  // BRT-117: además del caso "sin stock para nadie" (outOfStock), el "+" de
+  // quick-add tiene que respetar lo que ya hay en el carrito — mismo límite
+  // que ya usa el "+" del modal de detalle (ver ProductModal canAdd).
+  const limitReached = remaining !== null && remaining <= 0;
 
   return (
     <div
@@ -131,22 +135,28 @@ export default function ProductCard({
         )}
 
         {/* Quick-add (BRT-89): suma 1 unidad sin abrir el modal de producto.
-           Mismo lenguaje visual que el botón "Volver" de ProductModal. */}
+           Mismo lenguaje visual que el botón "Volver" de ProductModal. Sigue
+           visible cuando se llega al límite (BRT-117) —igual que el modal—
+           pero deshabilitado, para que quede claro que ya no se puede sumar
+           más sin tener que abrir el modal para verlo. */}
         {!isDisabled && (
           <button
             type="button"
             aria-label={`Agregar ${name}`}
-            onClick={(e) => { e.stopPropagation(); onQuickAdd(); }}
+            aria-disabled={limitReached}
+            disabled={limitReached}
+            onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
             className="absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center border-none"
             style={{
               background: "rgba(248,243,234,.9)",
               backdropFilter: "blur(6px)",
               WebkitBackdropFilter: "blur(6px)",
               boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
-              cursor: "pointer",
-              transition: "transform .15s",
+              cursor: limitReached ? "not-allowed" : "pointer",
+              opacity: limitReached ? 0.45 : 1,
+              transition: "transform .15s, opacity .15s",
             }}
-            onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.9)"; }}
+            onMouseDown={(e) => { if (!limitReached) e.currentTarget.style.transform = "scale(.9)"; }}
             onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
           >

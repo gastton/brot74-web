@@ -208,7 +208,17 @@ function HomeContent() {
   }
 
   function addToCart(productId: number) {
-    setCart((prev) => ({ ...prev, [productId]: (prev[productId] ?? 0) + 1 }));
+    setCart((prev) => {
+      const current = prev[productId] ?? 0;
+      const product = products.find((p) => p.id === productId);
+      // Tope defensivo (BRT-117): el "+" de la card ya se deshabilita al
+      // llegar al stock disponible, pero clicks disparados a mansalva
+      // pueden encolarse antes de que React vuelva a renderizar el botón
+      // deshabilitado. El updater funcional ve siempre el último `prev`,
+      // así que este chequeo alcanza incluso en ese caso.
+      if (product && product.stock !== null && current >= product.stock) return prev;
+      return { ...prev, [productId]: current + 1 };
+    });
   }
 
   function removeFromCart(productId: number) {
