@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "@vercel/blob": "^2.4.1",
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",
