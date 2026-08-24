@@ -17,6 +17,19 @@ type Bucket = {
 
 const buckets = new Map<string, Bucket>();
 
+// Barrido periódico de entradas vencidas para que el Map no crezca sin
+// límite (ej. muchas IPs distintas pegándole al endpoint). No hace falta
+// un timer de background: alcanza con revisar cada tanto en el propio
+// camino de checkRateLimit.
+const SWEEP_INTERVAL_CALLS = 100;
+let callsSinceSweep = 0;
+
+function sweepExpired(now: number): void {
+  for (const [key, bucket] of buckets) {
+    if (bucket.resetAt <= now) buckets.delete(key);
+  }
+}
+
 export type RateLimitResult = {
   allowed: boolean;
   remaining: number;
@@ -28,6 +41,13 @@ export function checkRateLimit(
   { max, windowMs }: { max: number; windowMs: number }
 ): RateLimitResult {
   const now = Date.now();
+
+  callsSinceSweep += 1;
+  if (callsSinceSweep >= SWEEP_INTERVAL_CALLS) {
+    callsSinceSweep = 0;
+    sweepExpired(now);
+  }
+
   const bucket = buckets.get(key);
 
   if (!bucket || bucket.resetAt <= now) {

@@ -54,8 +54,10 @@ describe("POST /api/admin/login", () => {
   it("resetea el contador de intentos tras un login exitoso", async () => {
     const ip = "203.0.113.20";
 
-    await login(loginRequest("contraseña-incorrecta", ip));
-    await login(loginRequest("contraseña-incorrecta", ip));
+    // 4 de los 5 intentos permitidos, para probar el reset justo al límite.
+    for (let i = 0; i < 4; i++) {
+      await login(loginRequest("contraseña-incorrecta", ip));
+    }
 
     const ok = await login(loginRequest(CORRECT_PASSWORD, ip));
     expect(ok.status).toBe(200);
