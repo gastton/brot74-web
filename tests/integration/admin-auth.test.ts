@@ -6,10 +6,11 @@ import { verifyToken } from "@/lib/auth";
 
 const CORRECT_PASSWORD = process.env.ADMIN_PASSWORD as string;
 
-function loginRequest(password: string) {
+function loginRequest(password: string, ip?: string) {
   return new NextRequest("http://localhost/api/admin/login", {
     method: "POST",
     body: JSON.stringify({ password }),
+    headers: ip ? { "x-forwarded-for": ip } : undefined,
   });
 }
 
@@ -35,6 +36,33 @@ describe("POST /api/admin/login", () => {
     const token = res.cookies.get("admin_token")?.value ?? "";
     const payload = await verifyToken(token);
     expect(payload).not.toBeNull();
+  });
+
+  it("bloquea con 429 tras 5 intentos fallidos desde la misma IP", async () => {
+    const ip = "203.0.113.10";
+
+    for (let i = 0; i < 5; i++) {
+      const res = await login(loginRequest("contraseña-incorrecta", ip));
+      expect(res.status).toBe(401);
+    }
+
+    const blocked = await login(loginRequest(CORRECT_PASSWORD, ip));
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get("Retry-After")).toBeTruthy();
+  });
+
+  it("resetea el contador de intentos tras un login exitoso", async () => {
+    const ip = "203.0.113.20";
+
+    await login(loginRequest("contraseña-incorrecta", ip));
+    await login(loginRequest("contraseña-incorrecta", ip));
+
+    const ok = await login(loginRequest(CORRECT_PASSWORD, ip));
+    expect(ok.status).toBe(200);
+
+    // Tras el reset, un intento fallido nuevo no debería estar ya al límite.
+    const afterReset = await login(loginRequest("contraseña-incorrecta", ip));
+    expect(afterReset.status).toBe(401);
   });
 });
 
