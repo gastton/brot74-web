@@ -112,9 +112,15 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        for (const item of enrichedItems) {
-          if (!productsWithStock.has(item.productId)) continue;
+        // Orden consistente (por productId) al tomar los locks de fila de
+        // ProductStock: si dos pedidos concurrentes comparten productos
+        // pero los mandan en orden distinto, sin esto podrían deadlockear
+        // entre sí en vez de simplemente competir por el stock.
+        const stockUpdates = enrichedItems
+          .filter((item) => productsWithStock.has(item.productId))
+          .sort((a, b) => a.productId - b.productId);
 
+        for (const item of stockUpdates) {
           // Update atómico: solo incrementa reservedStock si todavía hay
           // capacidad en ese momento exacto (BRT-109). Si dos requests
           // concurrentes compiten por el mismo stock, como mucho una de

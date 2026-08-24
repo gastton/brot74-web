@@ -61,7 +61,7 @@ describe("POST /api/cart/reserve", () => {
     const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 5 });
 
-    for (const quantity of [-5, 0, 1.5]) {
+    for (const quantity of [-5, 0, 1.5, 2147483648]) {
       const res = await POST(
         makeRequest({ slotId: slot.id, items: [{ productId: product.id, quantity }] })
       );

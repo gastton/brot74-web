@@ -119,7 +119,7 @@ describe("POST /api/orders", () => {
     const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 5 });
 
-    for (const quantity of [-5, 0, 1.5]) {
+    for (const quantity of [-5, 0, 1.5, 2147483648]) {
       const res = await POST(
         makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity }] }))
       );
@@ -174,5 +174,44 @@ describe("POST /api/orders", () => {
 
     const orders = await prisma.order.findMany();
     expect(orders).toHaveLength(1);
+  });
+
+  it("no deadlockea con pedidos concurrentes que comparten productos en orden inverso (BRT-109)", async () => {
+    const productA = await createProduct();
+    const productB = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(productA.id, slot.id, { totalStock: 5 });
+    await createProductStock(productB.id, slot.id, { totalStock: 5 });
+
+    const [resA, resB] = await Promise.all([
+      POST(
+        makeRequest(
+          baseOrder({
+            deliverySlotId: slot.id,
+            items: [
+              { productId: productA.id, quantity: 1 },
+              { productId: productB.id, quantity: 1 },
+            ],
+          })
+        )
+      ),
+      POST(
+        makeRequest(
+          baseOrder({
+            deliverySlotId: slot.id,
+            items: [
+              { productId: productB.id, quantity: 1 },
+              { productId: productA.id, quantity: 1 },
+            ],
+          })
+        )
+      ),
+    ]);
+
+    // Con stock de sobra para ambos, si hubiera un deadlock por orden de
+    // locks inconsistente, Postgres abortaría una de las dos transacciones
+    // y devolveríamos 500 en vez de 200.
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
   });
 });
