@@ -598,6 +598,7 @@ const content = `
           <div class="docket-row"><span class="k" data-es="Dedicación" data-en="Commitment">Dedicación</span><span class="v" data-es="Part-Time" data-en="Part-Time">Part-Time</span></div>
           <div class="docket-row"><span class="k" data-es="Estado" data-en="Status">Estado</span><span class="v" data-es="en producción" data-en="in production">en producción</span></div>
           <div class="docket-row"><span class="k" data-es="Licencia" data-en="License">Licencia</span><span class="v" data-es="pública · All Rights Reserved" data-en="public · All Rights Reserved">pública · All Rights Reserved</span></div>
+          <div class="docket-row"><span class="k" data-es="Repo" data-en="Repo">Repo</span><span class="v"><a href="https://github.com/gastton/brot74-web" target="_blank" rel="noopener noreferrer">github.com/gastton/brot74-web</a></span></div>
         </div>
       </div>
     </div>
