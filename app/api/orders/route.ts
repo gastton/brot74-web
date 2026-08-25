@@ -108,6 +108,17 @@ export async function POST(req: NextRequest) {
       enrichedItems.push({ productId: item.productId, quantity: item.quantity, unitPrice: product.price, name: product.name });
     }
 
+    // Re-chequeo del cutoff justo antes de crear el pedido: entre el chequeo
+    // de arriba y acá pasaron varias consultas async (productos, stock,
+    // reserva) — una ventana chica pero real en la que el cutoff podría
+    // haber pasado mientras se procesaba el request.
+    if (isCutoffPassed(slot, new Date())) {
+      return NextResponse.json(
+        { error: "El horario límite para pedir en esta fecha ya pasó" },
+        { status: 400 }
+      );
+    }
+
     // Create order, reserve stock, and release cart reservation — all in one transaction
     let order;
     try {
