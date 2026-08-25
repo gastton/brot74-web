@@ -17,13 +17,13 @@ afterEach(() => {
 
 describe("GET /api/cron/cleanup", () => {
   it("borra solo las reservas de carrito expiradas", async () => {
-    delete process.env.CRON_SECRET;
+    process.env.CRON_SECRET = "mi-secreto";
     const product = await createProduct();
     const slot = await createDeliverySlot();
     await createCartReservation(product.id, slot.id, { expiresAt: new Date(Date.now() - 60_000) });
     const active = await createCartReservation(product.id, slot.id, { expiresAt: new Date(Date.now() + 60_000) });
 
-    const res = await GET(getRequest());
+    const res = await GET(getRequest({ authorization: "Bearer mi-secreto" }));
     const json = await res.json();
 
     expect(res.status).toBe(200);
@@ -33,11 +33,14 @@ describe("GET /api/cron/cleanup", () => {
     expect(remaining.map((r) => r.id)).toEqual([active.id]);
   });
 
-  it("sin CRON_SECRET configurado, no exige autorización", async () => {
+  it("sin CRON_SECRET configurado, rechaza el request en vez de dejarlo abierto (BRT-115)", async () => {
     delete process.env.CRON_SECRET;
 
     const res = await GET(getRequest());
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(401);
+
+    const resWithHeader = await GET(getRequest({ authorization: "Bearer lo-que-sea" }));
+    expect(resWithHeader.status).toBe(401);
   });
 
   it("con CRON_SECRET configurado, devuelve 401 sin el header correcto", async () => {
