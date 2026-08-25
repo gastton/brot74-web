@@ -169,4 +169,51 @@ describe("PATCH /api/admin/orders/[id]", () => {
     });
     expect(stock?.reservedStock).toBe(3);
   });
+
+  it("no libera stock dos veces con dos cancelaciones concurrentes del mismo pedido (BRT-111)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 10, reservedStock: 3 });
+    const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }]);
+
+    const headers = await adminCookieHeader();
+    const [resA, resB] = await Promise.all([
+      PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
+      PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
+    ]);
+
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
+
+    const stock = await prisma.productStock.findUnique({
+      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
+    });
+    // Si el lock de fila no serializara las dos transacciones, esto
+    // quedaría en -3 (decrementado dos veces).
+    expect(stock?.reservedStock).toBe(0);
+  });
+
+  it("no re-reserva stock dos veces con dos reactivaciones concurrentes del mismo pedido (BRT-111)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 10, reservedStock: 0 });
+    const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }], {
+      status: "cancelled",
+    });
+
+    const headers = await adminCookieHeader();
+    const [resA, resB] = await Promise.all([
+      PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
+      PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
+    ]);
+
+    expect(resA.status).toBe(200);
+    expect(resB.status).toBe(200);
+
+    const stock = await prisma.productStock.findUnique({
+      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
+    });
+    // Si no serializara, quedaría en 6 (reservado dos veces).
+    expect(stock?.reservedStock).toBe(3);
+  });
 });

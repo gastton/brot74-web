@@ -8,6 +8,8 @@ class InsufficientStockError extends Error {
   }
 }
 
+class OrderNotFoundError extends Error {}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin(req);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -31,15 +33,23 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
   }
 
-  // BRT-111: el ajuste de stock solo debe ocurrir en la transición
-  // hacia/desde "cancelled", no cada vez que llega status: "cancelled" en
-  // el PATCH — cancelar dos veces el mismo pedido no debe liberar stock
-  // dos veces.
-  const wasCancelled = current.status === "cancelled";
   const willBeCancelled = status === "cancelled";
 
   try {
     await prisma.$transaction(async (tx) => {
+      // Lock de fila + lectura del estado actual DENTRO de la transacción:
+      // si se leyera antes (como en la versión anterior), dos PATCH
+      // concurrentes sobre el mismo pedido podrían ver el mismo status
+      // "viejo" y decrementar/re-reservar stock cada uno por su cuenta —
+      // el SELECT ... FOR UPDATE serializa esas transiciones (mismo tipo
+      // de race que BRT-109 evitaba en ProductStock).
+      const [row] = await tx.$queryRaw<{ status: string }[]>`
+        SELECT status FROM "Order" WHERE id = ${orderId} FOR UPDATE
+      `;
+      if (!row) throw new OrderNotFoundError();
+
+      const wasCancelled = row.status === "cancelled";
+
       await tx.order.update({ where: { id: orderId }, data: { status } });
 
       if (willBeCancelled && !wasCancelled) {
@@ -76,6 +86,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       // ya cancelado), no se toca el stock: la operación es idempotente.
     });
   } catch (e) {
+    if (e instanceof OrderNotFoundError) {
+      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    }
     if (e instanceof InsufficientStockError) {
       return NextResponse.json(
         { error: "No hay stock suficiente para reactivar este pedido" },
