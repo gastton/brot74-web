@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 import { normalizeCartItems } from "@/lib/cartItems";
+import { isCutoffPassed } from "@/lib/deliverySlots";
 
 class InsufficientStockError extends Error {
   constructor(public productId: number, public productName: string) {
@@ -28,8 +29,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Fecha no disponible" }, { status: 400 });
     }
 
-    // Validate cart reservation if sessionToken provided
     const now = new Date();
+
+    // BRT-114: el cierre de pedidos por horario era solo cosmético en el
+    // front (/api/delivery-slots ocultaba la fecha vencida del listado,
+    // pero nada impedía confirmar el pedido igual pegándole directo al
+    // endpoint). Misma regla que usa /api/delivery-slots.
+    if (isCutoffPassed(slot, now)) {
+      return NextResponse.json(
+        { error: "El horario límite para pedir en esta fecha ya pasó" },
+        { status: 400 }
+      );
+    }
+
+    // Validate cart reservation if sessionToken provided
     let reservationValid = false;
     if (sessionToken) {
       // BRT-110: filtrar también por deliverySlotId — si no, una reserva de
@@ -93,6 +106,17 @@ export async function POST(req: NextRequest) {
 
       total += product.price * item.quantity;
       enrichedItems.push({ productId: item.productId, quantity: item.quantity, unitPrice: product.price, name: product.name });
+    }
+
+    // Re-chequeo del cutoff justo antes de crear el pedido: entre el chequeo
+    // de arriba y acá pasaron varias consultas async (productos, stock,
+    // reserva) — una ventana chica pero real en la que el cutoff podría
+    // haber pasado mientras se procesaba el request.
+    if (isCutoffPassed(slot, new Date())) {
+      return NextResponse.json(
+        { error: "El horario límite para pedir en esta fecha ya pasó" },
+        { status: 400 }
+      );
     }
 
     // Create order, reserve stock, and release cart reservation — all in one transaction
