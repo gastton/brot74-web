@@ -496,7 +496,7 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
   );
 }
 
-const HERO_IMAGE_FALLBACK = "/products/product-1779659787800.jpeg";
+const HERO_IMAGE_FALLBACK = "/products/fecha-default-basket.jpeg";
 
 function SlotImageTrigger({ slot, onSave }: {
   slot: Slot;

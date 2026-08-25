@@ -23,7 +23,7 @@ interface DateSelectorProps {
   onChange: (id: number) => void;
 }
 
-const FALLBACK_IMAGE = "/products/product-1779659787800.jpeg";
+const FALLBACK_IMAGE = "/products/fecha-default-basket.jpeg";
 
 function formatCutoff(dateStr: string): string {
   const d = new Date(dateStr);
