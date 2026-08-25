@@ -214,4 +214,97 @@ describe("POST /api/orders", () => {
     expect(resA.status).toBe(200);
     expect(resB.status).toBe(200);
   });
+
+  it("devuelve 400 si no existe ProductStock para el producto+fecha (BRT-113)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    // A propósito: no se crea ProductStock para este producto+fecha.
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(400);
+
+    const orders = await prisma.order.findMany();
+    expect(orders).toHaveLength(0);
+  });
+
+  it("crea el pedido normalmente cuando sí existe ProductStock (BRT-113)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(200);
+  });
+
+  it("solo consume la reserva de carrito de la fecha del pedido, no las de otras fechas (BRT-110)", async () => {
+    const product = await createProduct();
+    const slotA = await createDeliverySlot();
+    const slotB = await createDeliverySlot();
+    await createProductStock(product.id, slotA.id, { totalStock: 5 });
+    await createProductStock(product.id, slotB.id, { totalStock: 5 });
+
+    const sessionToken = crypto.randomUUID();
+    await createCartReservation(product.id, slotA.id, { sessionToken, quantity: 1 });
+    // Reserva activa para slotB, con el mismo productId — no debería
+    // confundirse con la de slotA ni borrarse al confirmar el pedido de A.
+    await createCartReservation(product.id, slotB.id, { sessionToken, quantity: 2 });
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({
+          deliverySlotId: slotA.id,
+          items: [{ productId: product.id, quantity: 1 }],
+          sessionToken,
+        })
+      )
+    );
+
+    expect(res.status).toBe(200);
+
+    const reservationsA = await prisma.cartReservation.findMany({
+      where: { sessionToken, deliverySlotId: slotA.id },
+    });
+    expect(reservationsA).toHaveLength(0);
+
+    const reservationsB = await prisma.cartReservation.findMany({
+      where: { sessionToken, deliverySlotId: slotB.id },
+    });
+    expect(reservationsB).toHaveLength(1);
+    expect(reservationsB[0].quantity).toBe(2);
+  });
+
+  it("devuelve 409 si el sessionToken no tiene reserva para la fecha del pedido (BRT-110)", async () => {
+    const product = await createProduct();
+    const slotA = await createDeliverySlot();
+    const slotB = await createDeliverySlot();
+    await createProductStock(product.id, slotA.id, { totalStock: 5 });
+    await createProductStock(product.id, slotB.id, { totalStock: 5 });
+
+    const sessionToken = crypto.randomUUID();
+    // Reserva únicamente para slotB — el pedido es para slotA.
+    await createCartReservation(product.id, slotB.id, { sessionToken, quantity: 1 });
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({
+          deliverySlotId: slotA.id,
+          items: [{ productId: product.id, quantity: 1 }],
+          sessionToken,
+        })
+      )
+    );
+
+    expect(res.status).toBe(409);
+
+    const reservationsB = await prisma.cartReservation.findMany({
+      where: { sessionToken, deliverySlotId: slotB.id },
+    });
+    expect(reservationsB).toHaveLength(1);
+  });
 });

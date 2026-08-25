@@ -32,8 +32,11 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     let reservationValid = false;
     if (sessionToken) {
+      // BRT-110: filtrar también por deliverySlotId — si no, una reserva de
+      // carrito activa para otra fecha de entrega se confunde con la de
+      // este pedido (y más abajo se borraría por error).
       const reservations = await prisma.cartReservation.findMany({
-        where: { sessionToken, expiresAt: { gt: now } },
+        where: { sessionToken, deliverySlotId, expiresAt: { gt: now } },
       });
       if (reservations.length > 0) {
         const resMap = new Map(reservations.map((r) => [r.productId, r.quantity]));
@@ -50,10 +53,6 @@ export async function POST(req: NextRequest) {
     // Verify stock and calculate total
     let total = 0;
     const enrichedItems: { productId: number; quantity: number; unitPrice: number; name: string }[] = [];
-    // Productos con fila de ProductStock — solo a estos se les aplica el
-    // update atómico dentro de la transacción (BRT-109). Si no hay fila,
-    // se preserva el comportamiento existente de no limitar el stock.
-    const productsWithStock = new Set<number>();
 
     for (const item of items) {
       const product = await prisma.product.findUnique({ where: { id: item.productId } });
@@ -65,25 +64,31 @@ export async function POST(req: NextRequest) {
         where: { productId_deliverySlotId: { productId: item.productId, deliverySlotId } },
       });
 
-      if (stock) {
-        productsWithStock.add(item.productId);
+      // BRT-113: sin fila de ProductStock para este producto+fecha se trata
+      // como 0 disponible, no como "sin límite" — antes el pedido pasaba
+      // sin ninguna validación de stock para ese ítem.
+      if (!stock) {
+        return NextResponse.json(
+          { error: `Stock no disponible para ${product.name}` },
+          { status: 400 }
+        );
+      }
 
-        let available: number;
-        if (reservationValid) {
-          // The reservation already holds this stock — only count confirmed orders
-          available = stock.totalStock - stock.reservedStock;
-        } else {
-          // No reservation: deduct active cart reservations too
-          const agg = await prisma.cartReservation.aggregate({
-            where: { productId: item.productId, deliverySlotId, expiresAt: { gt: now } },
-            _sum: { quantity: true },
-          });
-          available = stock.totalStock - stock.reservedStock - (agg._sum.quantity ?? 0);
-        }
+      let available: number;
+      if (reservationValid) {
+        // The reservation already holds this stock — only count confirmed orders
+        available = stock.totalStock - stock.reservedStock;
+      } else {
+        // No reservation: deduct active cart reservations too
+        const agg = await prisma.cartReservation.aggregate({
+          where: { productId: item.productId, deliverySlotId, expiresAt: { gt: now } },
+          _sum: { quantity: true },
+        });
+        available = stock.totalStock - stock.reservedStock - (agg._sum.quantity ?? 0);
+      }
 
-        if (available < item.quantity) {
-          return NextResponse.json({ error: `Stock insuficiente para ${product.name}` }, { status: 400 });
-        }
+      if (available < item.quantity) {
+        return NextResponse.json({ error: `Stock insuficiente para ${product.name}` }, { status: 400 });
       }
 
       total += product.price * item.quantity;
@@ -116,9 +121,9 @@ export async function POST(req: NextRequest) {
         // ProductStock: si dos pedidos concurrentes comparten productos
         // pero los mandan en orden distinto, sin esto podrían deadlockear
         // entre sí en vez de simplemente competir por el stock.
-        const stockUpdates = enrichedItems
-          .filter((item) => productsWithStock.has(item.productId))
-          .sort((a, b) => a.productId - b.productId);
+        // Desde BRT-113, todo item en enrichedItems tiene garantizada su
+        // fila de ProductStock (si no existía, ya se rechazó antes).
+        const stockUpdates = [...enrichedItems].sort((a, b) => a.productId - b.productId);
 
         for (const item of stockUpdates) {
           // Update atómico: solo incrementa reservedStock si todavía hay
@@ -139,7 +144,9 @@ export async function POST(req: NextRequest) {
         }
 
         if (sessionToken) {
-          await tx.cartReservation.deleteMany({ where: { sessionToken } });
+          // BRT-110: solo la reserva de esta fecha, no todas las del
+          // sessionToken — una reserva activa de otra fecha no se toca.
+          await tx.cartReservation.deleteMany({ where: { sessionToken, deliverySlotId } });
         }
 
         return newOrder;
