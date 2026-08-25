@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-
-const CUTOFF_HOURS = 20;
-
-function isCutoffPassed(slot: { date: Date; orderCutoff: Date | null }, now: Date): boolean {
-  if (slot.orderCutoff) return now >= slot.orderCutoff;
-  const cutoff = new Date(slot.date.getTime() - CUTOFF_HOURS * 60 * 60 * 1000);
-  return now >= cutoff;
-}
+import { isCutoffPassed } from "@/lib/deliverySlots";
 
 export async function GET() {
   const now = new Date();

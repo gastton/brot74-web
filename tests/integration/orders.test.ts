@@ -72,6 +72,44 @@ describe("POST /api/orders", () => {
     expect(res.status).toBe(400);
   });
 
+  it("devuelve 400 si ya pasó el horario límite calculado por defecto (BRT-114)", async () => {
+    const product = await createProduct();
+    // Entrega en 1 hora => el cutoff por defecto (20hs antes de la fecha)
+    // ya pasó hace 19hs.
+    const slot = await createDeliverySlot({ date: new Date(Date.now() + 60 * 60 * 1000) });
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("devuelve 400 si ya pasó un orderCutoff explícito, aunque la fecha de entrega sea futura (BRT-114)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot({ orderCutoff: new Date(Date.now() - 60_000) });
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("crea el pedido normalmente si todavía no pasó el cutoff (BRT-114)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(200);
+  });
+
   it("devuelve 400 si el stock es insuficiente", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot();
