@@ -261,22 +261,6 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
                 style={{ background: "linear-gradient(180deg,rgba(14,35,60,.36) 0%,rgba(14,35,60,.04) 34%,rgba(14,35,60,.5) 100%)" }}
               />
 
-              {/* Badge estado */}
-              <span
-                className="absolute top-4 right-4 flex items-center gap-[7px] text-navy font-bold text-[12px] tracking-[.02em] px-[14px] py-[7px] rounded-full whitespace-nowrap"
-                style={{
-                  background: "rgba(248,243,234,.88)",
-                  backdropFilter: "blur(8px)",
-                  WebkitBackdropFilter: "blur(8px)",
-                  boxShadow: "0 4px 14px -6px rgba(0,0,0,.4)",
-                }}
-              >
-                {isOpen && (
-                  <span className="w-2 h-2 rounded-full brot-pulse" style={{ background: "#16C65A" }} />
-                )}
-                {isOpen ? "Pedidos abiertos" : "Pedidos cerrados"}
-              </span>
-
               {/* Fecha centrada */}
               <div
                 className="absolute inset-0 flex flex-col items-center justify-center text-center select-none"
