@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Pencil, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, ImagePlus } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, ImagePlus, FileImage } from "lucide-react";
 import Image from "next/image";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import FocalPicker from "@/components/FocalPicker";
+import BreadCardGenerator from "@/components/admin/BreadCardGenerator";
 import { formatCurrency } from "@/lib/utils";
 import { toastError, toastSuccess } from "@/lib/toast";
 
@@ -55,6 +56,7 @@ export default function ProductosPage() {
   const [uploading, setUploading] = useState(false);
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [showCardGenerator, setShowCardGenerator] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchProducts() {
@@ -166,9 +168,11 @@ export default function ProductosPage() {
           <h1 className="font-serif text-3xl font-bold text-brown">Productos</h1>
           <p className="text-muted text-sm mt-1">Gestioná tu catálogo de panes</p>
         </div>
-        <button onClick={openCreate} className="btn-primary flex items-center gap-2 rounded-xl text-sm">
-          <Plus className="w-4 h-4" /> Agregar
-        </button>
+        <div className="shrink-0">
+          <button onClick={openCreate} className="btn-primary flex items-center gap-2 rounded-xl text-sm">
+            <Plus className="w-4 h-4" /> Agregar
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -224,6 +228,15 @@ export default function ProductosPage() {
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
+              </div>
+
+              <div className="flex justify-end mt-3 pt-3 border-t border-border/60">
+                <button
+                  onClick={() => setShowCardGenerator(true)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-brown transition-colors"
+                >
+                  <FileImage className="w-3.5 h-3.5" /> Generar tarjeta
+                </button>
               </div>
             </div>
           ))}
@@ -357,6 +370,12 @@ export default function ProductosPage() {
       )}
 
       {zoomSrc && <ImageZoomModal src={zoomSrc} onClose={() => setZoomSrc(null)} />}
+
+      {showCardGenerator && (
+        <div className="fixed inset-0 z-[60] overflow-y-auto">
+          <BreadCardGenerator onClose={() => setShowCardGenerator(false)} />
+        </div>
+      )}
     </div>
   );
 }
