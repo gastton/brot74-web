@@ -837,7 +837,7 @@ export default function BreadCardGenerator({ onClose }: { onClose?: () => void }
                   <div className="relative shrink-0 overflow-hidden" style={{ width: CANVAS_W, height: PHOTO_H, background: CREAM }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={displayImageUrl}
+                      src={displayImageUrl} // codeql[js/xss-through-dom] opaque blob: URL from URL.createObjectURL(file), or the static DEFAULT_IMAGE constant — never attacker-controlled text, not HTML
                       alt=""
                       draggable={false}
                       className="w-full h-full block"
