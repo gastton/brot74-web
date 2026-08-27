@@ -70,6 +70,46 @@ describe("POST /api/admin/products", () => {
     expect(json.active).toBe(true);
     expect(json.focalX).toBe(50);
   });
+
+  it("persiste availableDays (BRT-119)", async () => {
+    const res = await POST(
+      postRequest({ name: "Con días", price: "1500", availableDays: "lunes,sabado" }, await adminCookieHeader())
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.availableDays).toBe("lunes,sabado");
+  });
+
+  it("al crear con un día disponible, inicializa stock (5) en slots futuros de ese día (BRT-119)", async () => {
+    const mondaySlot = await createDeliverySlot({ date: nextMondayAt(24) });
+
+    const res = await POST(
+      postRequest({ name: "Con stock", price: "1500", availableDays: "lunes" }, await adminCookieHeader())
+    );
+    const json = await res.json();
+
+    const stock = await prisma.productStock.findUnique({
+      where: { productId_deliverySlotId: { productId: json.id, deliverySlotId: mondaySlot.id } },
+    });
+    expect(stock?.totalStock).toBe(5);
+  });
+
+  it("se recupera sola si la secuencia de id quedó desincronizada, en vez de devolver 500 (BRT-119)", async () => {
+    const existing = await createProduct({ name: "Ya existe" });
+    // Simula el drift real: la secuencia autoincremental quedó apuntando a un
+    // id que ya existe (prisma db push recreando la tabla, restore, etc.).
+    await prisma.$executeRawUnsafe(
+      `SELECT setval(pg_get_serial_sequence('"Product"', 'id'), ${existing.id}, false)`
+    );
+
+    const res = await POST(postRequest({ name: "Tras el drift", price: "1500" }, await adminCookieHeader()));
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.name).toBe("Tras el drift");
+    expect(json.id).not.toBe(existing.id);
+  });
 });
 
 describe("PUT /api/admin/products/[id]", () => {
