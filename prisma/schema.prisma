@@ -4,8 +4,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Conexión sin pooler para los comandos de migración (migrate deploy/dev/
+  // resolve, db push). El pooler de Neon (pgbouncer, modo transacción) no
+  // sostiene el advisory lock que usa Prisma Migrate, y esos comandos
+  // fallan con "Error P1002: ... timed out" (ver BRT-112). El Prisma Client
+  // en runtime sigue usando `url` (pooled) como siempre.
+  directUrl = env("DIRECT_URL")
 }
 
 model Product {

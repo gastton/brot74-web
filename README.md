@@ -57,7 +57,8 @@ El build de producción corre `prisma migrate deploy` (ver [Scripts](#scripts)),
 
 | Variable | Para qué |
 |---|---|
-| `DATABASE_URL` | Connection string de PostgreSQL |
+| `DATABASE_URL` | Connection string de PostgreSQL (pooled) |
+| `DIRECT_URL` | Misma base sin pooler — la usan los comandos de Prisma Migrate |
 | `ADMIN_PASSWORD` | Contraseña del panel `/admin` |
 | `JWT_SECRET` | Secreto para firmar la cookie de sesión del admin |
 | `BLOB_READ_WRITE_TOKEN` | Token de Vercel Blob para subir imágenes de producto |
