@@ -18,7 +18,13 @@ if (!/localhost|127\.0\.0\.1|postgres:5432/.test(process.env.DATABASE_URL)) {
   );
 }
 
-for (const name of ["ADMIN_PASSWORD", "JWT_SECRET"] as const) {
+if (process.env.DIRECT_URL && !/localhost|127\.0\.0\.1|postgres:5432/.test(process.env.DIRECT_URL)) {
+  throw new Error(
+    `DIRECT_URL apunta a un host que no parece ser la DB de test local/CI: ${process.env.DIRECT_URL}. Abortando para no correr tests contra una DB real.`
+  );
+}
+
+for (const name of ["ADMIN_PASSWORD", "JWT_SECRET", "DIRECT_URL"] as const) {
   if (!process.env[name]) {
     throw new Error(
       `${name} no está definida. Copiá .env.test.example a .env.test (o corré \`npm run test:db:up\`) y completá los valores de test.`

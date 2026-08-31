@@ -34,17 +34,31 @@ Sitio de e-commerce para [BROT74](https://brot74.com), panadería artesanal: cat
 npm install
 cp .env.example .env   # completar con tus propios valores, ver abajo
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
 npm run dev
 ```
 
 Abrí [http://localhost:3000](http://localhost:3000).
 
+### Cambios de schema
+
+El proyecto usa [Prisma Migrate](https://www.prisma.io/docs/orm/prisma-migrate) con migraciones versionadas (`prisma/migrations/`) — **no** `prisma db push` contra una base real. Para cambiar `schema.prisma`:
+
+```bash
+# 1. Editá prisma/schema.prisma
+# 2. Generá y aplicá la migración contra tu base local:
+npx prisma migrate dev --name descripcion-del-cambio
+# 3. Commiteá la carpeta prisma/migrations/<timestamp>_descripcion-del-cambio/ generada
+```
+
+El build de producción corre `prisma migrate deploy` (ver [Scripts](#scripts)), que aplica cualquier migración pendiente de forma no interactiva en el próximo deploy — sin ejecutar `db push --accept-data-loss` contra la base real.
+
 ### Variables de entorno
 
 | Variable | Para qué |
 |---|---|
-| `DATABASE_URL` | Connection string de PostgreSQL |
+| `DATABASE_URL` | Connection string de PostgreSQL (pooled) |
+| `DIRECT_URL` | Misma base sin pooler — la usan los comandos de Prisma Migrate |
 | `ADMIN_PASSWORD` | Contraseña del panel `/admin` |
 | `JWT_SECRET` | Secreto para firmar la cookie de sesión del admin |
 | `BLOB_READ_WRITE_TOKEN` | Token de Vercel Blob para subir imágenes de producto |
@@ -78,7 +92,7 @@ npm run db:seed
 | Comando | Qué hace |
 |---|---|
 | `npm run dev` | Servidor de desarrollo |
-| `npm run build` | `prisma generate` + `prisma db push` + build de Next |
+| `npm run build` | `prisma generate` + `prisma migrate deploy` + build de Next |
 | `npm run lint` | ESLint |
 | `npm test` | Tests de integración (Vitest) |
 | `npm run db:seed` | Carga datos de ejemplo |
