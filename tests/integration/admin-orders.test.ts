@@ -30,6 +30,17 @@ function patchTwiceConcurrently(orderId: number, status: string, headers: Record
   ]);
 }
 
+/** Producto + slot con stock, y un pedido ya cancelado de 3 unidades — fixture de los tests de reactivación. */
+async function createCancelledOrderWithStock(totalStock: number) {
+  const product = await createProduct();
+  const slot = await createDeliverySlot();
+  await createProductStock(product.id, slot.id, { totalStock, reservedStock: 0 });
+  const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }], {
+    status: "cancelled",
+  });
+  return { product, slot, order };
+}
+
 describe("GET /api/admin/orders", () => {
   it("devuelve 401 sin sesión de admin", async () => {
     const res = await GET(getRequest());
@@ -134,12 +145,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
   });
 
   it("vuelve a reservar el stock al reactivar un pedido cancelado, si hay disponible (BRT-111)", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 10, reservedStock: 0 });
-    const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }], {
-      status: "cancelled",
-    });
+    const { product, slot, order } = await createCancelledOrderWithStock(10);
 
     const headers = await adminCookieHeader();
     const res = await PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) });
@@ -189,12 +195,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
   });
 
   it("no re-reserva stock dos veces con dos reactivaciones concurrentes del mismo pedido (BRT-111)", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 10, reservedStock: 0 });
-    const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }], {
-      status: "cancelled",
-    });
+    const { product, slot, order } = await createCancelledOrderWithStock(10);
 
     const headers = await adminCookieHeader();
     const [resA, resB] = await patchTwiceConcurrently(order.id, "pending", headers);
