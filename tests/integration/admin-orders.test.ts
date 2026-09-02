@@ -22,6 +22,14 @@ function patchRequest(body: unknown, headers: Record<string, string> = {}) {
   });
 }
 
+/** Dispara el mismo PATCH de status dos veces en simultáneo, para tests de concurrencia. */
+function patchTwiceConcurrently(orderId: number, status: string, headers: Record<string, string>) {
+  return Promise.all([
+    PATCH(patchRequest({ status }, headers), { params: Promise.resolve({ id: String(orderId) }) }),
+    PATCH(patchRequest({ status }, headers), { params: Promise.resolve({ id: String(orderId) }) }),
+  ]);
+}
+
 describe("GET /api/admin/orders", () => {
   it("devuelve 401 sin sesión de admin", async () => {
     const res = await GET(getRequest());
@@ -169,10 +177,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }]);
 
     const headers = await adminCookieHeader();
-    const [resA, resB] = await Promise.all([
-      PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-      PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-    ]);
+    const [resA, resB] = await patchTwiceConcurrently(order.id, "cancelled", headers);
 
     expect(resA.status).toBe(200);
     expect(resB.status).toBe(200);
@@ -192,10 +197,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     });
 
     const headers = await adminCookieHeader();
-    const [resA, resB] = await Promise.all([
-      PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-      PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-    ]);
+    const [resA, resB] = await patchTwiceConcurrently(order.id, "pending", headers);
 
     expect(resA.status).toBe(200);
     expect(resB.status).toBe(200);
