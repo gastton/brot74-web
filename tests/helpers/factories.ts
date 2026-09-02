@@ -29,6 +29,12 @@ export async function createDeliverySlot(overrides: Partial<Prisma.DeliverySlotU
   });
 }
 
+export async function getStock(productId: number, deliverySlotId: number) {
+  return prisma.productStock.findUnique({
+    where: { productId_deliverySlotId: { productId, deliverySlotId } },
+  });
+}
+
 export async function createProductStock(
   productId: number,
   deliverySlotId: number,

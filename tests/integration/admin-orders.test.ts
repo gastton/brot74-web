@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { GET } from "@/app/api/admin/orders/route";
 import { PATCH } from "@/app/api/admin/orders/[id]/route";
 import { prisma } from "@/lib/db";
-import { createProduct, createDeliverySlot, createProductStock, createOrder } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock, createOrder, getStock } from "../helpers/factories";
 import { adminCookieHeader } from "../helpers/auth";
 
 function getRequest(query = "") {
@@ -20,6 +20,25 @@ function patchRequest(body: unknown, headers: Record<string, string> = {}) {
     body: JSON.stringify(body),
     headers,
   });
+}
+
+/** Dispara el mismo PATCH de status dos veces en simultáneo, para tests de concurrencia. */
+function patchTwiceConcurrently(orderId: number, status: string, headers: Record<string, string>) {
+  return Promise.all([
+    PATCH(patchRequest({ status }, headers), { params: Promise.resolve({ id: String(orderId) }) }),
+    PATCH(patchRequest({ status }, headers), { params: Promise.resolve({ id: String(orderId) }) }),
+  ]);
+}
+
+/** Producto + slot con stock, y un pedido ya cancelado de 3 unidades — fixture de los tests de reactivación. */
+async function createCancelledOrderWithStock(totalStock: number) {
+  const product = await createProduct();
+  const slot = await createDeliverySlot();
+  await createProductStock(product.id, slot.id, { totalStock, reservedStock: 0 });
+  const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }], {
+    status: "cancelled",
+  });
+  return { product, slot, order };
 }
 
 describe("GET /api/admin/orders", () => {
@@ -91,9 +110,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const res = await PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) });
 
     expect(res.status).toBe(200);
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(0);
   });
 
@@ -122,28 +139,19 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const res = await PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) });
 
     expect(res.status).toBe(200);
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     // Si se hubiera decrementado de nuevo, quedaría en -3.
     expect(stock?.reservedStock).toBe(0);
   });
 
   it("vuelve a reservar el stock al reactivar un pedido cancelado, si hay disponible (BRT-111)", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 10, reservedStock: 0 });
-    const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }], {
-      status: "cancelled",
-    });
+    const { product, slot, order } = await createCancelledOrderWithStock(10);
 
     const headers = await adminCookieHeader();
     const res = await PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) });
 
     expect(res.status).toBe(200);
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(3);
   });
 
@@ -164,9 +172,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const updated = await prisma.order.findUnique({ where: { id: order.id } });
     expect(updated?.status).toBe("cancelled");
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(3);
   });
 
@@ -177,42 +183,27 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }]);
 
     const headers = await adminCookieHeader();
-    const [resA, resB] = await Promise.all([
-      PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-      PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-    ]);
+    const [resA, resB] = await patchTwiceConcurrently(order.id, "cancelled", headers);
 
     expect(resA.status).toBe(200);
     expect(resB.status).toBe(200);
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     // Si el lock de fila no serializara las dos transacciones, esto
     // quedaría en -3 (decrementado dos veces).
     expect(stock?.reservedStock).toBe(0);
   });
 
   it("no re-reserva stock dos veces con dos reactivaciones concurrentes del mismo pedido (BRT-111)", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 10, reservedStock: 0 });
-    const order = await createOrder(slot.id, [{ productId: product.id, quantity: 3, unitPrice: 1000 }], {
-      status: "cancelled",
-    });
+    const { product, slot, order } = await createCancelledOrderWithStock(10);
 
     const headers = await adminCookieHeader();
-    const [resA, resB] = await Promise.all([
-      PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-      PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) }),
-    ]);
+    const [resA, resB] = await patchTwiceConcurrently(order.id, "pending", headers);
 
     expect(resA.status).toBe(200);
     expect(resB.status).toBe(200);
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     // Si no serializara, quedaría en 6 (reservado dos veces).
     expect(stock?.reservedStock).toBe(3);
   });

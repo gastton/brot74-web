@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
 import { GET, PUT } from "@/app/api/admin/stock/route";
-import { prisma } from "@/lib/db";
-import { createProduct, createDeliverySlot, createProductStock } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock, getStock } from "../helpers/factories";
 import { adminCookieHeader } from "../helpers/auth";
 
 function getRequest(query = "", headers: Record<string, string> = {}) {
@@ -77,9 +76,7 @@ describe("PUT /api/admin/stock", () => {
 
     await PUT(putRequest({ productId: product.id, deliverySlotId: slot.id, totalStock: 20 }, await adminCookieHeader()));
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.totalStock).toBe(20);
     expect(stock?.reservedStock).toBe(2);
   });

@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/admin/products/route";
 import { PUT, DELETE } from "@/app/api/admin/products/[id]/route";
 import { prisma } from "@/lib/db";
-import { createProduct, createDeliverySlot, createProductStock } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock, getStock } from "../helpers/factories";
 import { adminCookieHeader } from "../helpers/auth";
 
 function getRequest(headers: Record<string, string> = {}) {
@@ -89,9 +89,7 @@ describe("POST /api/admin/products", () => {
     );
     const json = await res.json();
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: json.id, deliverySlotId: mondaySlot.id } },
-    });
+    const stock = await getStock(json.id, mondaySlot.id);
     expect(stock?.totalStock).toBe(5);
   });
 
@@ -140,9 +138,7 @@ describe("PUT /api/admin/products/[id]", () => {
       params: Promise.resolve({ id: String(product.id) }),
     });
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: mondaySlot.id } },
-    });
+    const stock = await getStock(product.id, mondaySlot.id);
     expect(stock?.totalStock).toBe(5);
   });
 
@@ -155,9 +151,7 @@ describe("PUT /api/admin/products/[id]", () => {
       params: Promise.resolve({ id: String(product.id) }),
     });
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: mondaySlot.id } },
-    });
+    const stock = await getStock(product.id, mondaySlot.id);
     expect(stock?.totalStock).toBe(0);
   });
 
@@ -169,9 +163,7 @@ describe("PUT /api/admin/products/[id]", () => {
       params: Promise.resolve({ id: String(product.id) }),
     });
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: pastMonday.id } },
-    });
+    const stock = await getStock(product.id, pastMonday.id);
     expect(stock).toBeNull();
   });
 
@@ -184,9 +176,7 @@ describe("PUT /api/admin/products/[id]", () => {
       params: Promise.resolve({ id: String(product.id) }),
     });
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: mondaySlot.id } },
-    });
+    const stock = await getStock(product.id, mondaySlot.id);
     expect(stock?.totalStock).toBe(8);
     expect(stock?.reservedStock).toBe(1);
   });
