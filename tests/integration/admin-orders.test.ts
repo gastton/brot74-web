@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { GET } from "@/app/api/admin/orders/route";
 import { PATCH } from "@/app/api/admin/orders/[id]/route";
 import { prisma } from "@/lib/db";
-import { createProduct, createDeliverySlot, createProductStock, createOrder } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock, createOrder, getStock } from "../helpers/factories";
 import { adminCookieHeader } from "../helpers/auth";
 
 function getRequest(query = "") {
@@ -91,9 +91,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const res = await PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) });
 
     expect(res.status).toBe(200);
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(0);
   });
 
@@ -122,9 +120,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const res = await PATCH(patchRequest({ status: "cancelled" }, headers), { params: Promise.resolve({ id: String(order.id) }) });
 
     expect(res.status).toBe(200);
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     // Si se hubiera decrementado de nuevo, quedaría en -3.
     expect(stock?.reservedStock).toBe(0);
   });
@@ -141,9 +137,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const res = await PATCH(patchRequest({ status: "pending" }, headers), { params: Promise.resolve({ id: String(order.id) }) });
 
     expect(res.status).toBe(200);
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(3);
   });
 
@@ -164,9 +158,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const updated = await prisma.order.findUnique({ where: { id: order.id } });
     expect(updated?.status).toBe("cancelled");
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(3);
   });
 
@@ -185,9 +177,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     expect(resA.status).toBe(200);
     expect(resB.status).toBe(200);
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     // Si el lock de fila no serializara las dos transacciones, esto
     // quedaría en -3 (decrementado dos veces).
     expect(stock?.reservedStock).toBe(0);
@@ -210,9 +200,7 @@ describe("PATCH /api/admin/orders/[id]", () => {
     expect(resA.status).toBe(200);
     expect(resB.status).toBe(200);
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     // Si no serializara, quedaría en 6 (reservado dos veces).
     expect(stock?.reservedStock).toBe(3);
   });

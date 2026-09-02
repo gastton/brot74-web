@@ -9,7 +9,7 @@ vi.mock("@/lib/whatsapp", () => ({
 import { POST } from "@/app/api/orders/route";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { prisma } from "@/lib/db";
-import { createProduct, createDeliverySlot, createProductStock, createCartReservation } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock, createCartReservation, getStock } from "../helpers/factories";
 
 function makeRequest(body: unknown) {
   return new NextRequest("http://localhost/api/orders", {
@@ -48,9 +48,7 @@ describe("POST /api/orders", () => {
     expect(res.status).toBe(200);
     expect(json.total).toBe(3000);
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(2);
 
     const cartReservations = await prisma.cartReservation.findMany({ where: { sessionToken } });
@@ -205,9 +203,7 @@ describe("POST /api/orders", () => {
     const statuses = [resA.status, resB.status].sort();
     expect(statuses).toEqual([200, 409]);
 
-    const stock = await prisma.productStock.findUnique({
-      where: { productId_deliverySlotId: { productId: product.id, deliverySlotId: slot.id } },
-    });
+    const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(1);
 
     const orders = await prisma.order.findMany();
