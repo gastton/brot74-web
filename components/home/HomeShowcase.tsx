@@ -48,12 +48,12 @@ export default function HomeShowcase() {
         <p className="brot-hero-kicker">Nuestro pan</p>
       </div>
 
-      <Reveal className="mt-10 md:mt-14">
-        <div className="flex flex-col md:flex-row">
+      <Reveal className="mt-10 md:mt-14 px-4 md:px-8 pb-20 md:pb-28">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4">
           {products.map((p) => (
             <div
               key={p.id}
-              className="relative w-full md:flex-1 aspect-[4/5] md:aspect-auto md:h-[78vh] overflow-hidden"
+              className="relative w-full md:flex-1 aspect-[4/5] md:aspect-auto md:h-[72vh] overflow-hidden"
             >
               <div
                 className="absolute inset-0 bg-cover"
