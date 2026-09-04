@@ -1,6 +1,7 @@
 "use client";
 
 import BrotWordmark from "@/components/BrotWordmark";
+import GrainOverlay from "@/components/GrainOverlay";
 
 interface HomeHeroProps {
   onReservar: () => void;
@@ -28,20 +29,8 @@ export default function HomeHero({ onReservar }: HomeHeroProps) {
       }}
     >
       {/* Grano sutil — le da algo de textura "hecho a mano" al fondo
-         crema, que si no queda un poco plano/corporativo. Puramente
-         CSS (SVG inline), no suma ningún asset nuevo. */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-          opacity: 0.035,
-          mixBlendMode: "multiply",
-          pointerEvents: "none",
-        }}
-      />
+         crema, que si no queda un poco plano/corporativo. */}
+      <GrainOverlay variant="cream" />
 
       {/* Sello — v30: ramillete navy sobre crema (antes crema sobre navy) */}
       <div
