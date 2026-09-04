@@ -17,7 +17,7 @@ const NOT_INCLUDED = ["Sin levadura comercial", "Sin mejoradores", "Sin conserva
 // ver también el comentario dejado en BRT-132.
 export default function HomeIngredients() {
   return (
-    <section className="relative bg-cream border-t border-navy/10 overflow-hidden">
+    <section className="relative bg-white border-t border-navy/10 overflow-hidden">
       <GrainOverlay variant="cream" />
       <div className="relative max-w-[1080px] mx-auto px-6 md:px-10 py-24 md:py-36 grid md:grid-cols-[180px_1fr] gap-8 md:gap-16">
         {/* Rail: índice + eyebrow */}

@@ -13,7 +13,7 @@ import Reveal from "@/components/Reveal";
 // hay detalles factuales reales todavía (cuándo arrancó, quién hornea).
 export default function HomeStory() {
   return (
-    <section className="relative bg-cream overflow-hidden">
+    <section className="relative bg-white overflow-hidden">
       <GrainOverlay variant="cream" />
       <div className="relative max-w-[1080px] mx-auto px-6 md:px-10 py-24 md:py-36 grid md:grid-cols-[180px_1fr] gap-8 md:gap-16">
         {/* Rail: índice + eyebrow */}

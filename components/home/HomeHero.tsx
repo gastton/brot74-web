@@ -20,7 +20,7 @@ export default function HomeHero() {
     <section
       className="brot-hero-section flex flex-col items-center text-center"
       style={{
-        background: "radial-gradient(120% 60% at 50% 22%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #F9F5EC",
+        background: "radial-gradient(120% 60% at 50% 22%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #FFFFFF",
         minHeight: "100svh",
         padding: "64px 40px 40px",
         position: "relative",

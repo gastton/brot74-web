@@ -478,7 +478,7 @@ function HomeContent() {
   // buildFlowUrl de BRT-95), sin cambios de comportamiento.
   const goToSlots = () => router.push(buildFlowUrl({ step: "slots" }));
   return (
-    <div className="min-h-screen" style={{ background: "#F9F5EC" }}>
+    <div className="min-h-screen" style={{ background: "#FFFFFF" }}>
       <HomeHero />
       <HomeStory />
       <HomeIngredients />

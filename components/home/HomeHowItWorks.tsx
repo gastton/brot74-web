@@ -26,7 +26,7 @@ const STEPS = [
 // crema (fondo blanco/crema en todo el home — feedback post-BRT-135).
 export default function HomeHowItWorks() {
   return (
-    <section className="relative bg-cream border-t border-navy/10 overflow-hidden">
+    <section className="relative bg-white border-t border-navy/10 overflow-hidden">
       <GrainOverlay variant="cream" />
       <div className="relative max-w-[1080px] mx-auto px-6 md:px-10 py-24 md:py-36 grid md:grid-cols-[180px_1fr] gap-8 md:gap-16">
         {/* Rail: índice + eyebrow */}
@@ -52,7 +52,7 @@ export default function HomeHowItWorks() {
             <ol className="space-y-9">
               {STEPS.map((step, i) => (
                 <li key={step.title} className="relative">
-                  <span className="absolute -left-9 top-0 w-6 h-6 rounded-full bg-cream border-2 border-amber flex items-center justify-center text-amber font-mono text-[11px] leading-none">
+                  <span className="absolute -left-9 top-0 w-6 h-6 rounded-full bg-white border-2 border-amber flex items-center justify-center text-amber font-mono text-[11px] leading-none">
                     {i + 1}
                   </span>
                   <div className="text-navy font-semibold text-[17px] mb-1.5">

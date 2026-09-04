@@ -43,7 +43,7 @@ export default function HomeShowcase() {
   if (!products || products.length === 0) return null;
 
   return (
-    <section className="bg-cream">
+    <section className="bg-white">
       <div className="text-center pt-20 md:pt-28">
         <p className="brot-hero-kicker">Nuestro pan</p>
       </div>
