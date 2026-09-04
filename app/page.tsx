@@ -12,6 +12,7 @@ import HomeStory from "@/components/home/HomeStory";
 import HomeIngredients from "@/components/home/HomeIngredients";
 import HomeShowcase from "@/components/home/HomeShowcase";
 import HomeHowItWorks from "@/components/home/HomeHowItWorks";
+import HomePedidos from "@/components/home/HomePedidos";
 import HomeFooter from "@/components/home/HomeFooter";
 
 interface Slot {
@@ -470,16 +471,19 @@ function HomeContent() {
   }
 
   /* ─── HOME VIEW ──────────────────────────────────────────── */
-  // BRT-130: stack de secciones apilables. La sección de BRT-135
-  // (pedidos) se agrega acá antes del footer, como su propio componente
-  // en components/home/.
+  // BRT-130 a BRT-135: stack completo de secciones del home nuevo. El
+  // CTA de pedidos vive ahora en dos lugares (hero + cierre en
+  // HomePedidos) pero dispara la misma navegación — mismo goToSlots,
+  // mismo buildFlowUrl de BRT-95, sin cambios de comportamiento.
+  const goToSlots = () => router.push(buildFlowUrl({ step: "slots" }));
   return (
     <div className="min-h-screen" style={{ background: "#0E233C" }}>
-      <HomeHero onReservar={() => router.push(buildFlowUrl({ step: "slots" }))} />
+      <HomeHero onReservar={goToSlots} />
       <HomeStory />
       <HomeIngredients />
       <HomeShowcase />
       <HomeHowItWorks />
+      <HomePedidos onReservar={goToSlots} />
       <HomeFooter />
     </div>
   );
