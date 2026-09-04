@@ -472,13 +472,14 @@ function HomeContent() {
 
   /* ─── HOME VIEW ──────────────────────────────────────────── */
   // BRT-130 a BRT-135: stack completo de secciones del home nuevo. El
-  // CTA de pedidos vive ahora en dos lugares (hero + cierre en
-  // HomePedidos) pero dispara la misma navegación — mismo goToSlots,
-  // mismo buildFlowUrl de BRT-95, sin cambios de comportamiento.
+  // CTA de pedidos vive en un solo lugar (el cierre, HomePedidos) — el
+  // hero es puramente presentación, sin acción propia (fix post-BRT-135:
+  // no se duplica el botón). Misma navegación de siempre (goToSlots →
+  // buildFlowUrl de BRT-95), sin cambios de comportamiento.
   const goToSlots = () => router.push(buildFlowUrl({ step: "slots" }));
   return (
-    <div className="min-h-screen" style={{ background: "#0E233C" }}>
-      <HomeHero onReservar={goToSlots} />
+    <div className="min-h-screen" style={{ background: "#FFFFFF" }}>
+      <HomeHero />
       <HomeStory />
       <HomeIngredients />
       <HomeShowcase />

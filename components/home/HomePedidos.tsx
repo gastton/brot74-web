@@ -24,7 +24,7 @@ export default function HomePedidos({ onReservar }: HomePedidosProps) {
     <section
       className="relative flex flex-col items-center text-center overflow-hidden"
       style={{
-        background: "radial-gradient(120% 60% at 50% 30%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #F9F5EC",
+        background: "radial-gradient(120% 60% at 50% 30%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #FFFFFF",
         padding: "96px 24px",
       }}
     >
