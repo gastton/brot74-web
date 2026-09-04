@@ -8,6 +8,7 @@ import OrderModal from "@/components/OrderModal";
 import CartBar from "@/components/CartBar";
 import DateSelector from "@/components/DateSelector";
 import HomeHero from "@/components/home/HomeHero";
+import HomeStory from "@/components/home/HomeStory";
 import HomeFooter from "@/components/home/HomeFooter";
 
 interface Slot {
@@ -466,13 +467,13 @@ function HomeContent() {
   }
 
   /* ─── HOME VIEW ──────────────────────────────────────────── */
-  // BRT-130: stack de secciones apilables. Hoy solo Hero + Footer (visual
-  // idéntico al home anterior); las secciones de BRT-131 a BRT-135
-  // (historia, ingredientes, showcase, cómo funciona, pedidos) se agregan
+  // BRT-130: stack de secciones apilables. Las secciones de BRT-132 a
+  // BRT-135 (ingredientes, showcase, cómo funciona, pedidos) se agregan
   // acá en el medio, cada una como su propio componente en components/home/.
   return (
     <div className="min-h-screen" style={{ background: "#0E233C" }}>
       <HomeHero onReservar={() => router.push(buildFlowUrl({ step: "slots" }))} />
+      <HomeStory />
       <HomeFooter />
     </div>
   );
