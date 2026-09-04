@@ -2,14 +2,13 @@
 
 import BrotWordmark from "@/components/BrotWordmark";
 import GrainOverlay from "@/components/GrainOverlay";
+import CtaButton from "@/components/CtaButton";
 
 interface HomeHeroProps {
   onReservar: () => void;
 }
 
 const serif = "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)";
-
-const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
 // BRT-130: primer bloque del home. Extraído tal cual del render de
 // HomeContent (antes era la vista "home" entera) para que el stack de
@@ -80,42 +79,12 @@ export default function HomeHero({ onReservar }: HomeHeroProps) {
       </h1>
 
       {/* CTA */}
-      <button
+      <CtaButton
         onClick={onReservar}
-        className="brot-hero-cta inline-flex items-center gap-[11px] font-bold border-none cursor-pointer"
-        style={{
-          marginTop: "44px",
-          fontSize: "16px",
-          letterSpacing: ".01em",
-          color: "#0E233C",
-          background: "#C8851A",
-          padding: "18px 30px",
-          borderRadius: "12px",
-          boxShadow: "0 16px 34px -14px rgba(200,133,26,.7)",
-          transition: ctaTransition,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-2px)";
-          e.currentTarget.style.background = "#E0A33A";
-          e.currentTarget.style.boxShadow = "0 20px 40px -14px rgba(200,133,26,.85)";
-          const arrow = e.currentTarget.querySelector(".arrow") as HTMLElement | null;
-          if (arrow) arrow.style.transform = "translateX(4px)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "";
-          e.currentTarget.style.background = "#C8851A";
-          e.currentTarget.style.boxShadow = "0 16px 34px -14px rgba(200,133,26,.7)";
-          const arrow = e.currentTarget.querySelector(".arrow") as HTMLElement | null;
-          if (arrow) arrow.style.transform = "";
-        }}
-        onMouseDown={(e) => { e.currentTarget.style.transform = "translateY(-2px) scale(.97)"; }}
-        onMouseUp={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-        onTouchStart={(e) => { e.currentTarget.style.transform = "scale(.97)"; }}
-        onTouchEnd={(e) => { e.currentTarget.style.transform = ""; }}
-      >
-        Reservá tu BROT{" "}
-        <span className="arrow" style={{ fontSize: "17px", display: "inline-block", transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}>{"→"}</span>
-      </button>
+        label="Reservá tu BROT"
+        className="brot-hero-cta"
+        style={{ marginTop: "44px" }}
+      />
     </section>
   );
 }
