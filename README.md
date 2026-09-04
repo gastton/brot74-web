@@ -10,6 +10,7 @@ Sitio de e-commerce para [BROT74](https://brot74.com), panadería artesanal: cat
 - **[Vercel Blob](https://vercel.com/docs/storage/vercel-blob)** para imágenes de producto
 - Autenticación de admin con JWT ([`jose`](https://github.com/panva/jose)) en cookie `httpOnly`
 - **[Vitest](https://vitest.dev)** para tests de integración (API routes contra una base Postgres real)
+- **[Playwright](https://playwright.dev)** para tests E2E (flujo real en el navegador)
 - Deploy en **Vercel**, con un cron job (`/api/cron/cleanup`) para liberar reservas de carrito vencidas
 
 ## Funcionalidad
@@ -87,6 +88,17 @@ npm run test:db:down
 npm run db:seed
 ```
 
+### E2E (Playwright)
+
+Los tests E2E corren contra un servidor real (`npm run dev`, levantado automáticamente por Playwright) y necesitan las mismas variables de entorno que el dev server (`DATABASE_URL`, `ADMIN_PASSWORD`, `JWT_SECRET`, etc. — ver arriba).
+
+```bash
+npx playwright install --with-deps   # una sola vez
+npm run test:e2e
+```
+
+Los specs viven en `e2e/`. Todavía son solo el setup base (BRT-122) — los escenarios de negocio (checkout, reserva de stock, botón atrás, sesión de admin) se van sumando en tickets aparte.
+
 ## Scripts
 
 | Comando | Qué hace |
@@ -95,6 +107,7 @@ npm run db:seed
 | `npm run build` | `prisma generate` + `prisma migrate deploy` + build de Next |
 | `npm run lint` | ESLint |
 | `npm test` | Tests de integración (Vitest) |
+| `npm run test:e2e` | Tests E2E (Playwright) |
 | `npm run db:seed` | Carga datos de ejemplo |
 
 ## Licencia

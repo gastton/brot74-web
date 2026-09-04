@@ -56,9 +56,18 @@ next-env.d.ts
 # local Claude Code settings (may contain sensitive commands/history, machine-local)
 /.claude/settings.local.json
 
+# local Claude Code Browser-pane launch config (machine-local dev server config)
+/.claude/launch.json
+
 # design exports and raw screenshots (not source, kept out of the repo)
 /_design/
 /agent/
 /billeteras/
 /footer/
 /pantallas_brot74.pdf
+
+# Playwright (BRT-122)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
