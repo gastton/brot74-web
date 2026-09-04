@@ -22,7 +22,7 @@ export default function HomeIngredients() {
       <div className="relative max-w-[1080px] mx-auto px-6 md:px-10 py-24 md:py-36 grid md:grid-cols-[180px_1fr] gap-8 md:gap-16">
         {/* Rail: índice + eyebrow */}
         <div className="flex items-center gap-4 md:flex-col md:items-start md:gap-5">
-          <span className="font-mono text-amber text-[13px] tracking-[.08em]">02 — 06</span>
+          <span className="font-mono text-amber text-[13px] tracking-[.08em]">02 — 03</span>
           <span className="text-cream/50 text-[11px] font-semibold uppercase tracking-[.24em]">
             Ingredientes
           </span>
