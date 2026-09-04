@@ -30,7 +30,10 @@ export default function HomeShowcase() {
 
   useEffect(() => {
     fetch("/api/products")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`GET /api/products -> ${r.status}`);
+        return r.json();
+      })
       .then((data: ShowcaseProduct[]) => {
         setProducts(data.filter((p) => p.imageUrl).slice(0, 3));
       })
