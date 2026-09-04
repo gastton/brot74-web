@@ -9,12 +9,12 @@ interface CtaButtonProps {
 
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
-// BRT-135: extraído del hero (BRT-90) para reusar en la sección final de
-// Pedidos sin duplicar los handlers de hover/press — mismo botón ámbar,
-// mismo comportamiento, en dos lugares del home. `className` deja que el
-// caller siga enganchando sus propios ajustes responsive (ej. la clase
-// "brot-hero-cta" del hero, con sus overrides de altura comprimida en
-// globals.css) sin que le peguen a otros usos de este botón.
+// BRT-135: extraído del hero original (BRT-90) para tener un solo botón
+// de CTA reusable, sin duplicar handlers de hover/press. El único caller
+// hoy es HomePedidos — el CTA del hero se sacó (fix post-BRT-135: el
+// botón se muda a la sección final, no se duplica). `className`/`style`
+// quedan como escape hatch por si algún otro caller futuro necesita su
+// propio ajuste responsive.
 export default function CtaButton({ onClick, label, className, style }: CtaButtonProps) {
   return (
     <button

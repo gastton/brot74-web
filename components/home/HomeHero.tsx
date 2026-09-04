@@ -2,11 +2,6 @@
 
 import BrotWordmark from "@/components/BrotWordmark";
 import GrainOverlay from "@/components/GrainOverlay";
-import CtaButton from "@/components/CtaButton";
-
-interface HomeHeroProps {
-  onReservar: () => void;
-}
 
 const serif = "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)";
 
@@ -15,7 +10,12 @@ const serif = "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)";
 // secciones nuevas (historia, ingredientes, showcase, cómo funciona,
 // pedidos — BRT-131 a BRT-135) pueda crecer alrededor sin que este
 // componente tenga que cambiar.
-export default function HomeHero({ onReservar }: HomeHeroProps) {
+//
+// BRT-135 (fix): el CTA "Reservá tu BROT" que vivía acá se MUDÓ a la
+// sección final Pedidos — no se duplicó. El hero ahora es solo
+// presentación (marca + tagline), sin acción propia; toda conversión
+// pasa por HomePedidos al final del stack.
+export default function HomeHero() {
   return (
     <section
       className="brot-hero-section flex flex-col items-center text-center"
@@ -77,14 +77,6 @@ export default function HomeHero({ onReservar }: HomeHeroProps) {
         Pan de fermentación natural,{" "}
         <em style={{ fontStyle: "normal", color: "#C8851A" }}>como debe ser.</em>
       </h1>
-
-      {/* CTA */}
-      <CtaButton
-        onClick={onReservar}
-        label="Reservá tu BROT"
-        className="brot-hero-cta"
-        style={{ marginTop: "44px" }}
-      />
     </section>
   );
 }
