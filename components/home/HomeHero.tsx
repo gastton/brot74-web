@@ -1,5 +1,7 @@
 "use client";
 
+import BrotWordmark from "@/components/BrotWordmark";
+
 interface HomeHeroProps {
   onReservar: () => void;
 }
@@ -61,32 +63,7 @@ export default function HomeHero({ onReservar }: HomeHeroProps) {
           <circle cx="50" cy="50" r="48" fill="none" stroke="#0E233C" strokeWidth="1" opacity="0.95" />
           <circle cx="50" cy="50" r="43.6" fill="none" stroke="#0E233C" strokeWidth="0.5" opacity="0.6" />
         </svg>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            paddingBottom: ".05em",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/ramillete-mono-navy.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "baseline",
-              lineHeight: 1,
-              marginTop: ".01em",
-              fontFamily: "var(--font-jost, 'Jost', sans-serif)",
-            }}
-          >
-            <span style={{ fontWeight: 500, fontSize: ".115em", color: "#0E233C" }}>BROT</span>
-            <span style={{ fontWeight: 700, fontSize: ".115em", letterSpacing: "-.2em", marginLeft: ".18em", color: "#C8851A" }}>74</span>
-          </div>
-        </div>
+        <BrotWordmark variant="navy" />
       </div>
 
       {/* Kicker */}

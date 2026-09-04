@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
+import BrotWordmark from "@/components/BrotWordmark";
 
 function WheatIcon() {
   return (
@@ -58,32 +59,7 @@ function ConfirmacionContent() {
             <circle cx="50" cy="50" r="48" fill="none" stroke="#F9F5EC" strokeWidth="0.7" opacity="0.85" />
             <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F9F5EC" strokeWidth="0.32" opacity="0.45" />
           </svg>
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingBottom: ".05em",
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/ramillete-mono-cream.png" alt="" style={{ height: ".56em", width: "auto", display: "block" }} />
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "baseline",
-                lineHeight: 1,
-                marginTop: ".01em",
-                fontFamily: "var(--font-jost, 'Jost', sans-serif)",
-              }}
-            >
-              <span style={{ fontWeight: 500, fontSize: ".115em", color: "#F9F5EC" }}>BROT</span>
-              <span style={{ fontWeight: 700, fontSize: ".115em", letterSpacing: "-.2em", marginLeft: ".18em", color: "#C8851A" }}>74</span>
-            </div>
-          </div>
+          <BrotWordmark variant="cream" />
         </div>
 
         {/* Título */}
