@@ -1,16 +1,12 @@
 import GrainOverlay from "@/components/GrainOverlay";
 import Reveal from "@/components/Reveal";
 
-const NOT_INCLUDED = ["Sin levadura comercial", "Sin mejoradores", "Sin conservantes"];
-
-// BRT-132: tercera sección del home — ingredientes/materia prima.
-// v2 (feedback: la v1 centrada se veía casi idéntica a Historia). Mismo
+// BRT-132: tercera sección del home — ingredientes/materia prima. Mismo
 // layout editorial asimétrico (rail + columna de contenido) que
-// HomeStory para dar continuidad, pero con su propia variación: acá la
-// pull quote es corta ("Harina, agua, sal y masa madre. Nada más.") y se
-// suma una fila de tags con lo que el pan NO lleva, en vez de un tercer
-// párrafo — así las dos secciones de texto no se leen como un espejo
-// una de la otra.
+// HomeStory, con su propia pull quote corta ("Harina, agua, sal y masa
+// madre. Nada más."). La fila de tags ("Sin levadura comercial", etc.)
+// se sacó a pedido — si hace falta diferenciarla más de HomeStory,
+// conviene resolverlo con otra variación (no con tags).
 //
 // Copy anclado en datos reales del catálogo (prisma/seed.ts): todos los
 // productos comparten harina + agua + sal + masa madre, sin aditivos —
@@ -46,17 +42,6 @@ export default function HomeIngredients() {
               reconocerías en tu propia cocina, no entra en el pan.
             </p>
           </div>
-
-          <ul className="mt-8 flex flex-wrap gap-3">
-            {NOT_INCLUDED.map((item) => (
-              <li
-                key={item}
-                className="border border-navy/20 text-navy/70 text-[11px] font-semibold uppercase tracking-[.08em] rounded-full px-4 py-2"
-              >
-                {item}
-              </li>
-            ))}
-          </ul>
         </Reveal>
       </div>
     </section>
