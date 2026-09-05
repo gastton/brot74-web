@@ -11,7 +11,7 @@ import InstagramIcon from "@/components/InstagramIcon";
 export default function HomeHero() {
   return (
     <section className="relative min-h-[100svh] flex flex-col overflow-hidden">
-      <ImagePlaceholder className="absolute inset-0" label="Foto de producto — reemplazar" />
+      <ImagePlaceholder className="absolute inset-0" />
 
       {/* Topbar */}
       <div className="relative z-10 flex items-center justify-between px-6 md:px-10 py-6">
