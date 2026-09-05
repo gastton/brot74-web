@@ -1,82 +1,55 @@
-"use client";
+import ImagePlaceholder from "@/components/ImagePlaceholder";
+import InstagramIcon from "@/components/InstagramIcon";
 
-import BrotWordmark from "@/components/BrotWordmark";
-import GrainOverlay from "@/components/GrainOverlay";
-
-const serif = "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)";
-
-// BRT-130: primer bloque del home. Extraído tal cual del render de
-// HomeContent (antes era la vista "home" entera) para que el stack de
-// secciones nuevas (historia, ingredientes, showcase, cómo funciona,
-// pedidos — BRT-131 a BRT-135) pueda crecer alrededor sin que este
-// componente tenga que cambiar.
-//
-// BRT-135 (fix): el CTA "Reservá tu BROT" que vivía acá se MUDÓ a la
-// sección final Pedidos — no se duplicó. El hero ahora es solo
-// presentación (marca + tagline), sin acción propia; toda conversión
-// pasa por HomePedidos al final del stack.
+// BRT-130 / rediseño skeleton tobrod.dk: hero a sangre con foto de fondo
+// (placeholder — no hay foto de local todavía) y una card superpuesta
+// con marca + tagline, calcado del layout real de tobrod.dk: foto
+// gigante, topbar con marca a la izquierda y un link a la derecha, card
+// blanca flotando sobre la foto, ícono social suelto. Sin CTA propio —
+// el único CTA de la home vive en HomePedidos (fix post-BRT-135); el
+// link "Pedidos" de la topbar solo hace scroll ahí, no es un botón.
 export default function HomeHero() {
   return (
-    <section
-      className="brot-hero-section flex flex-col items-center text-center"
-      style={{
-        background: "radial-gradient(120% 60% at 50% 22%, rgba(200,133,26,.10), rgba(14,35,60,0) 60%), #FFFFFF",
-        minHeight: "100svh",
-        padding: "64px 40px 40px",
-        position: "relative",
-        justifyContent: "center",
-      }}
-    >
-      {/* Grano sutil — le da algo de textura "hecho a mano" al fondo
-         crema, que si no queda un poco plano/corporativo. */}
-      <GrainOverlay variant="cream" />
+    <section className="relative min-h-[100svh] flex flex-col overflow-hidden">
+      <ImagePlaceholder className="absolute inset-0" label="Foto de producto — reemplazar" />
 
-      {/* Sello — v30: ramillete navy sobre crema (antes crema sobre navy) */}
-      <div
-        className="brot-hero-seal-wrap"
-        style={{
-          position: "relative",
-          width: "230px",
-          height: "230px",
-          fontSize: "230px",
-          flexShrink: 0,
-          filter: "drop-shadow(0 20px 36px rgba(0,0,0,.35))",
-        }}
-      >
-        <svg
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
-          viewBox="0 0 100 100"
-          aria-hidden="true"
+      {/* Topbar */}
+      <div className="relative z-10 flex items-center justify-between px-6 md:px-10 py-6">
+        <span className="font-bold text-navy text-[14px] tracking-[.04em] bg-white/90 rounded-full px-4 py-2">
+          BROT 74
+        </span>
+        <a
+          href="#pedidos"
+          className="text-navy text-[12px] font-semibold uppercase tracking-[.12em] bg-white/90 rounded-full px-4 py-2 hover:bg-white transition-colors"
         >
-          <circle cx="50" cy="50" r="48" fill="none" stroke="#0E233C" strokeWidth="1" opacity="0.95" />
-          <circle cx="50" cy="50" r="43.6" fill="none" stroke="#0E233C" strokeWidth="0.5" opacity="0.6" />
-        </svg>
-        <BrotWordmark variant="navy" />
+          Pedidos
+        </a>
       </div>
 
-      {/* Kicker */}
-      <p className="brot-hero-kicker" style={{ marginTop: "48px" }}>
-        Micropanadería de masa madre
-      </p>
+      {/* Card de marca, flotando sobre la foto */}
+      <div className="relative z-10 mt-auto p-6 md:p-10">
+        <div className="bg-white max-w-[360px] p-7 md:p-8" style={{ boxShadow: "0 24px 60px -24px rgba(14,35,60,.4)" }}>
+          <h1 className="font-bold text-[26px] md:text-[30px] text-navy leading-tight">BROT 74</h1>
+          <div className="h-px bg-navy/15 my-4" />
+          <p className="text-amber text-[11px] font-bold uppercase tracking-[.2em] mb-3">
+            Micropanadería de masa madre
+          </p>
+          <p className="text-navy/70 text-[14px] leading-relaxed">
+            Pan de fermentación natural, como debe ser.
+          </p>
+        </div>
+      </div>
 
-      {/* Título */}
-      <h1
-        className="brot-hero-h1"
-        style={{
-          fontFamily: serif,
-          fontWeight: 800,
-          fontSize: "clamp(40px, 7.5vw, 60px)",
-          lineHeight: 1.08,
-          letterSpacing: "-.015em",
-          color: "#0E233C",
-          margin: "26px 0 0",
-          maxWidth: "13ch",
-          textWrap: "balance" as React.CSSProperties["textWrap"],
-        }}
+      {/* Ícono social suelto, como en tobrod.dk */}
+      <a
+        href="https://www.instagram.com/brot.74"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Instagram de BROT74"
+        className="absolute bottom-6 right-6 z-10 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-navy hover:bg-white transition-colors"
       >
-        Pan de fermentación natural,{" "}
-        <em style={{ fontStyle: "normal", color: "#C8851A" }}>como debe ser.</em>
-      </h1>
+        <InstagramIcon className="w-[18px] h-[18px]" />
+      </a>
     </section>
   );
 }

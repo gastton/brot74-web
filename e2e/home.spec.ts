@@ -6,10 +6,14 @@ import { test, expect } from "@playwright/test";
  * Sin lógica de negocio todavía — eso lo cubren los tickets de E2E
  * que dependen de este setup.
  */
+// Rediseño skeleton tobrod.dk: "BROT 74" es el <h1> de la card del hero
+// (tobrod.dk tampoco usa el tagline como heading, solo el nombre) — el
+// tagline sigue en pantalla pero como párrafo, no heading.
 test("la home carga y muestra el hero", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: /Pan de fermentación natural/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "BROT 74", exact: true, level: 1 })).toBeVisible();
+  await expect(page.getByText(/Pan de fermentación natural/i)).toBeVisible();
 });
 
 // BRT-135 (fix): el CTA de pedidos vive en un solo lugar, la sección de
