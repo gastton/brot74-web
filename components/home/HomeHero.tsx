@@ -8,12 +8,13 @@ import InstagramIcon from "@/components/InstagramIcon";
 // post-BRT-135); el link "Pedidos" de la topbar solo hace scroll ahí,
 // no es un botón.
 //
-// Foto: /public/hero-hogaza.jpg (2370×2400, casi cuadrada — vuelta a la
-// primera toma, CUT.jpg). Punto focal a mano — no viene de datos como en
-// ProductCard (es un único asset estático, no hace falta una UI de
+// Foto: /public/hero-hogaza.jpg (2400×1754, recorte final horizontal —
+// hero_hogaza_FINAL.jpg). Punto focal a mano — no viene de datos como
+// en ProductCard (es un único asset estático, no hace falta una UI de
 // punto focal para esto), pero queda como una constante fácil de
-// retocar en vez de un valor mágico en el JSX.
-const HERO_FOCAL_Y = 0; // 50 = centro; más bajo = ver más de la parte de arriba de la foto.
+// retocar en vez de un valor mágico en el JSX. Reseteado a centro (50)
+// con el recorte nuevo — ya viene bastante ajustado desde la fuente.
+const HERO_FOCAL_Y = 50; // 50 = centro; más bajo = ver más de la parte de arriba de la foto.
 
 export default function HomeHero() {
   return (
