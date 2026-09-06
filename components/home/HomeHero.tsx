@@ -1,17 +1,28 @@
-import ImagePlaceholder from "@/components/ImagePlaceholder";
 import InstagramIcon from "@/components/InstagramIcon";
 
 // BRT-130 / rediseño skeleton tobrod.dk: hero a sangre con foto de fondo
-// (placeholder — no hay foto de local todavía) y una card superpuesta
-// con marca + tagline, calcado del layout real de tobrod.dk: foto
-// gigante, topbar con marca a la izquierda y un link a la derecha, card
-// blanca flotando sobre la foto, ícono social suelto. Sin CTA propio —
-// el único CTA de la home vive en HomePedidos (fix post-BRT-135); el
-// link "Pedidos" de la topbar solo hace scroll ahí, no es un botón.
+// y una card superpuesta con marca + tagline, calcado del layout real
+// de tobrod.dk: foto gigante, topbar con marca a la izquierda y un link
+// a la derecha, card blanca flotando sobre la foto, ícono social suelto.
+// Sin CTA propio — el único CTA de la home vive en HomePedidos (fix
+// post-BRT-135); el link "Pedidos" de la topbar solo hace scroll ahí,
+// no es un botón.
+//
+// Foto: /public/hero-hogaza.jpg (3000×3037, casi cuadrada a propósito —
+// ver conversación: con recorte tipo "cover" centrado, un cuadrado
+// tolera mejor los dos extremos de aspecto del hero, desktop ancho/bajo
+// y mobile angosto/alto, que una panorámica). Sin punto focal propio
+// todavía — si el recorte se corta feo en algún tamaño, el siguiente
+// paso es sumarle focalX/focalY como ya tiene ProductCard.
 export default function HomeHero() {
   return (
     <section className="relative min-h-[100svh] flex flex-col overflow-hidden">
-      <ImagePlaceholder className="absolute inset-0" />
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url(/hero-hogaza.jpg)" }}
+        role="img"
+        aria-label="Pan de masa madre recién horneado"
+      />
 
       {/* Topbar */}
       <div className="relative z-10 flex items-center justify-between px-6 md:px-10 py-6">
