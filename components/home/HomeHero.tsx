@@ -13,7 +13,7 @@ import InstagramIcon from "@/components/InstagramIcon";
 // ProductCard (es un único asset estático, no hace falta una UI de
 // punto focal para esto), pero queda como una constante fácil de
 // retocar en vez de un valor mágico en el JSX.
-const HERO_FOCAL_Y = 15; // 50 = centro; más bajo = ver más de la parte de arriba de la foto.
+const HERO_FOCAL_Y = 0; // 50 = centro; más bajo = ver más de la parte de arriba de la foto.
 
 export default function HomeHero() {
   return (
