@@ -8,20 +8,17 @@ import InstagramIcon from "@/components/InstagramIcon";
 // post-BRT-135); el link "Pedidos" de la topbar solo hace scroll ahí,
 // no es un botón.
 //
-// Foto: /public/hero-hogaza.jpg (3000×3037, casi cuadrada). Con
-// "cover" el recorte en mobile quedaba muy pegado a la corteza (no se
-// leía que era un pan entero) — se cambia a "contain" (se ve la foto
-// completa, sin recortar) sobre un fondo crema que hace de marco/mate
-// para el espacio que sobra en los extremos de aspecto donde el
-// cuadrado no llena el contenedor entero. bg-top (no bg-center): en
-// mobile, donde el sobrante queda arriba/abajo, esto junta todo el aire
-// abajo — donde ya está la card — en vez de partirlo en dos franjas
-// (una arriba desperdiciada, otra abajo detrás de la card).
+// Foto: /public/hero-hogaza.jpg (3000×3037, casi cuadrada a propósito —
+// ver conversación: con recorte tipo "cover" centrado, un cuadrado
+// tolera mejor los dos extremos de aspecto del hero, desktop ancho/bajo
+// y mobile angosto/alto, que una panorámica). Sin punto focal propio
+// todavía — si el recorte se corta feo en algún tamaño, el siguiente
+// paso es sumarle focalX/focalY como ya tiene ProductCard.
 export default function HomeHero() {
   return (
-    <section className="relative min-h-[100svh] flex flex-col overflow-hidden bg-[#F9F5EC]">
+    <section className="relative min-h-[100svh] flex flex-col overflow-hidden">
       <div
-        className="absolute inset-0 bg-contain bg-top bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: "url(/hero-hogaza.jpg)" }}
         role="img"
         aria-label="Pan de masa madre recién horneado"
