@@ -8,18 +8,22 @@ import InstagramIcon from "@/components/InstagramIcon";
 // post-BRT-135); el link "Pedidos" de la topbar solo hace scroll ahí,
 // no es un botón.
 //
-// Foto: /public/hero-hogaza.jpg (3000×3037, casi cuadrada a propósito —
-// ver conversación: con recorte tipo "cover" centrado, un cuadrado
-// tolera mejor los dos extremos de aspecto del hero, desktop ancho/bajo
-// y mobile angosto/alto, que una panorámica). Sin punto focal propio
-// todavía — si el recorte se corta feo en algún tamaño, el siguiente
-// paso es sumarle focalX/focalY como ya tiene ProductCard.
+// Foto: /public/hero-hogaza.jpg (1903×2400, foto vertical de la hogaza).
+// Punto focal a mano (a pedido: "más arriba", sin un valor exacto) — no
+// viene de datos como en ProductCard (es un único asset estático, no
+// hace falta una UI de punto focal para esto), pero queda como una
+// constante fácil de retocar en vez de un valor mágico en el JSX.
+const HERO_FOCAL_Y = 30; // 50 = centro; más bajo = ver más de la parte de arriba de la foto.
+
 export default function HomeHero() {
   return (
     <section className="relative min-h-[100svh] flex flex-col overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url(/hero-hogaza.jpg)" }}
+        className="absolute inset-0 bg-cover"
+        style={{
+          backgroundImage: "url(/hero-hogaza.jpg)",
+          backgroundPosition: `50% ${HERO_FOCAL_Y}%`,
+        }}
         role="img"
         aria-label="Pan de masa madre recién horneado"
       />
