@@ -19,7 +19,11 @@
   position: relative;
   background: var(--paper);
   color: var(--navy);
-  font-family: "Jost", system-ui, sans-serif;
+  /* var(--font-jost): next/font/google en app/layout.tsx ya carga Jost y lo
+     expone por esta variable — un literal "Jost" acá no matchea ningún
+     @font-face real (next/font genera un nombre interno propio), así que
+     el body de la landing terminaba en system-ui/sans-serif de fallback. */
+  font-family: var(--font-jost), system-ui, sans-serif;
   font-weight: 300;
   font-size: 15px;
   line-height: 1.55;
