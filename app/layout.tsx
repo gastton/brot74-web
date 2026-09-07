@@ -12,7 +12,9 @@ const hanken = Hanken_Grotesk({
 
 const jost = Jost({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  // BRT-136: la landing nueva usa Jost 300 como peso de cuerpo (antes el
+  // sitio solo cargaba 400-700, usado nada más para el wordmark del sello).
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-jost",
   display: "swap",
 });

@@ -7,13 +7,7 @@ import ProductModal from "@/components/ProductModal";
 import OrderModal from "@/components/OrderModal";
 import CartBar from "@/components/CartBar";
 import DateSelector from "@/components/DateSelector";
-import HomeHero from "@/components/home/HomeHero";
-import HomeStory from "@/components/home/HomeStory";
-import HomeIngredients from "@/components/home/HomeIngredients";
-import HomeShowcase from "@/components/home/HomeShowcase";
-import HomeHowItWorks from "@/components/home/HomeHowItWorks";
-import HomePedidos from "@/components/home/HomePedidos";
-import HomeFooter from "@/components/home/HomeFooter";
+import HomeLanding from "@/components/home/HomeLanding";
 
 interface Slot {
   id: number | null;
@@ -471,22 +465,12 @@ function HomeContent() {
   }
 
   /* ─── HOME VIEW ──────────────────────────────────────────── */
-  // BRT-130 a BRT-135: stack completo de secciones del home nuevo. El
-  // CTA de pedidos vive ahora en dos lugares (hero + cierre en
-  // HomePedidos) pero dispara la misma navegación — mismo goToSlots,
-  // mismo buildFlowUrl de BRT-95, sin cambios de comportamiento.
+  // BRT-136: landing pública nueva (v31) — reemplaza el stack de
+  // secciones de BRT-130/135 entero. El CTA "Elegí tu BROT" del rail
+  // fijo dispara la misma navegación de siempre (mismo buildFlowUrl de
+  // BRT-95), sin cambios de comportamiento del flujo de pedido.
   const goToSlots = () => router.push(buildFlowUrl({ step: "slots" }));
-  return (
-    <div className="min-h-screen" style={{ background: "#0E233C" }}>
-      <HomeHero onReservar={goToSlots} />
-      <HomeStory />
-      <HomeIngredients />
-      <HomeShowcase />
-      <HomeHowItWorks />
-      <HomePedidos onReservar={goToSlots} />
-      <HomeFooter />
-    </div>
-  );
+  return <HomeLanding onReservar={goToSlots} />;
 }
 
 // useSearchParams() exige un límite Suspense (BRT-95) — mismo patrón que ya

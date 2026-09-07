@@ -4,10 +4,11 @@ interface BrotWordmarkProps {
 }
 
 // BRT-130: el bloque de imagen + wordmark "BROT74" del sello se repetía
-// entre el hero del home y app/confirmacion/page.tsx (mismos colores
-// invertidos) — ya estaba duplicado antes, pero SonarCloud recién lo marcó
-// como código nuevo duplicado al mover el hero a su propio archivo
-// (components/home/HomeHero.tsx). Se centraliza acá.
+// entre el hero del home (ya no existe — reemplazado por la landing de
+// BRT-136) y app/confirmacion/page.tsx. Queda acá centralizado; hoy el
+// único caller es confirmacion/page.tsx (variant="cream"), pero se deja
+// el variant="navy" por si otra pantalla vuelve a necesitar el sello
+// sobre fondo claro.
 export default function BrotWordmark({ variant }: BrotWordmarkProps) {
   const textColor = variant === "navy" ? "#0E233C" : "#F9F5EC";
   const imgSrc = variant === "navy" ? "/ramillete-mono-navy.png" : "/ramillete-mono-cream.png";
