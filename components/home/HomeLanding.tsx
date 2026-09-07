@@ -22,28 +22,6 @@ interface HomeLandingProps {
 export default function HomeLanding({ onReservar }: HomeLandingProps) {
   return (
     <div className="brot-landing">
-      {/* Rail fijo: instagram + CTA — position:fixed en desktop, baja a
-         fila horizontal debajo del hero en ≤820px (ver HomeLanding.css) */}
-      <div className="social">
-        <a
-          href="https://www.instagram.com/brot.74"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Instagram"
-        >
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
-              <circle cx="12" cy="12" r="5"></circle>
-              <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"></circle>
-            </svg>
-          </span>
-        </a>
-        <button type="button" className="pill" onClick={onReservar}>
-          Elegí tu BROT
-        </button>
-      </div>
-
       {/* Hero */}
       <header className="hero">
         <div className="hero-bg">
@@ -77,6 +55,34 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
           </div>
         </div>
       </header>
+
+      {/* Rail: position:fixed en desktop (el orden en el DOM no importa,
+         se posiciona por viewport) — en ≤820px pasa a position:static y
+         ahí sí importa el orden: va DESPUÉS del hero en el markup para
+         que cuando deje de ser fijo caiga debajo de la foto, no arriba
+         (fix: en el HTML original del diseño el rail iba antes del
+         header y quedaba arriba de la foto en mobile, al revés de lo
+         que pide el propio ticket — "baja a fila horizontal debajo del
+         hero"). Ver HomeLanding.css. */}
+      <div className="social">
+        <a
+          href="https://www.instagram.com/brot.74"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram"
+        >
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
+              <circle cx="12" cy="12" r="5"></circle>
+              <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"></circle>
+            </svg>
+          </span>
+        </a>
+        <button type="button" className="pill" onClick={onReservar}>
+          Elegí tu BROT
+        </button>
+      </div>
 
       {/* Idea */}
       <section className="wrap">
