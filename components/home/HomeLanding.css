@@ -1,0 +1,107 @@
+/* BRT-136: landing pública nueva (v31), conversión de
+   _design/design_cambios_v31/pantallas_actualizadas/landing.html.
+   Todos los selectores quedan bajo .brot-landing a propósito — el HTML
+   original define reglas globales (body, h1/h2/h3, p, a, section,
+   footer, :root) que romperían el resto del sitio (checkout, admin,
+   confirmación) si se copiaran tal cual. Variables de color propias de
+   esta entrega (--cream acá es #F4EEE2, distinto del --color-cream de
+   marca #F9F5EC que usa el resto del sitio) — es así en el diseño
+   entregado, no un error de conversión. */
+
+.brot-landing {
+  --navy: #0E233C;
+  --amber: #C8851A;
+  --cream: #F4EEE2;
+  --stone: #7C766A;
+  --paper: #FFFFFF;
+  --rule: #0E233C;
+
+  position: relative;
+  background: var(--paper);
+  color: var(--navy);
+  /* var(--font-jost): next/font/google en app/layout.tsx ya carga Jost y lo
+     expone por esta variable — un literal "Jost" acá no matchea ningún
+     @font-face real (next/font genera un nombre interno propio), así que
+     el body de la landing terminaba en system-ui/sans-serif de fallback. */
+  font-family: var(--font-jost), system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.brot-landing * { box-sizing: border-box; }
+.brot-landing a { color: var(--amber); text-decoration: none; }
+.brot-landing a:hover { color: var(--navy); }
+
+.brot-landing .wrap { max-width: 1760px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 68px); }
+.brot-landing .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(28px, 6vw, 120px); }
+.brot-landing .rule { height: 1px; background: var(--rule); opacity: .85; }
+
+.brot-landing h1,
+.brot-landing h2,
+.brot-landing h3 { font-weight: 400; margin: 0; letter-spacing: -.01em; }
+.brot-landing h2 { font-size: clamp(24px, 2.2vw, 32px); margin-bottom: 26px; }
+.brot-landing p { margin: 0 0 18px; max-width: 56ch; text-wrap: pretty; }
+.brot-landing p:last-child { margin-bottom: 0; }
+.brot-landing strong { font-weight: 500; }
+
+/* rail fijo: instagram + CTA */
+.brot-landing .social { position: fixed; right: clamp(12px, 2vw, 26px); top: 50%; transform: translateY(-50%); z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.brot-landing .social span { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); display: grid; place-items: center; color: var(--cream); }
+.brot-landing .social svg { width: 15px; height: 15px; display: block; }
+.brot-landing .pill {
+  pointer-events: auto; background: var(--navy); color: var(--cream);
+  border: none; border-radius: 999px; padding: 9px 20px;
+  font-family: inherit; font-size: 10px; letter-spacing: .18em;
+  font-weight: 600; text-transform: uppercase; white-space: nowrap;
+  cursor: pointer;
+}
+.brot-landing .pill:hover { background: var(--amber); color: var(--cream); }
+
+/* hero */
+.brot-landing .hero { position: relative; height: min(94vh, 900px); min-height: 520px; overflow: hidden; }
+.brot-landing .hero-bg { position: absolute; inset: 0; }
+.brot-landing .hero-card {
+  position: absolute; left: 32px; top: 415px; bottom: auto; width: 570px; height: auto;
+  min-height: 440px; max-width: calc(100% - 64px); background: var(--cream);
+  padding: clamp(24px, 3vw, 44px); display: flex; flex-direction: column;
+  justify-content: space-between; z-index: 3;
+}
+.brot-landing .hero-card .rule { margin-bottom: clamp(30px, 6vh, 64px); }
+.brot-landing .hero-title { font-size: clamp(44px, 6.4vw, 104px); line-height: .94; letter-spacing: -.02em; font-weight: 400; }
+
+/* secciones de contenido */
+.brot-landing section { padding: clamp(56px, 9vh, 132px) 0; }
+.brot-landing .media { position: relative; aspect-ratio: 1 / 1; width: 100%; }
+.brot-landing .media.tall { aspect-ratio: 574 / 704; margin-top: clamp(24px, 4vw, 64px); }
+.brot-landing .offset { align-self: center; }
+.brot-landing .offset .media { aspect-ratio: 16 / 26; width: 78%; margin-right: 0; margin-left: auto; margin-top: clamp(64px, 10vw, 180px); }
+.brot-landing .block-rule { margin-bottom: 30px; }
+.brot-landing .day { margin-bottom: 22px; }
+.brot-landing .day dt { font-weight: 500; margin-bottom: 2px; }
+.brot-landing .day dd { margin: 0; max-width: 60ch; }
+
+/* footer */
+.brot-landing footer { border-top: 1px solid var(--rule); padding: clamp(48px, 8vh, 110px) 0 clamp(40px, 6vh, 80px); }
+.brot-landing .foot-brand { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: .02em; font-weight: 400; margin-bottom: 18px; }
+.brot-landing .foot-note { color: var(--stone); font-size: 14px; }
+.brot-landing .foot-col h3 { font-size: clamp(19px, 1.7vw, 25px); margin-bottom: 12px; }
+.brot-landing .foot-col + .foot-col { margin-top: 40px; }
+.brot-landing .legal { margin-top: clamp(48px, 7vh, 96px); display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--stone); }
+
+/* responsive — 1200 / 820 / 520, igual que el diseño entregado */
+@media (max-width: 1200px) {
+  .brot-landing .hero-card { left: clamp(20px, 4vw, 32px); top: auto; bottom: 0; width: min(570px, 58vw); min-height: 0; }
+}
+@media (max-width: 820px) {
+  .brot-landing .grid { grid-template-columns: minmax(0, 1fr); }
+  .brot-landing .hero { height: auto; min-height: 0; overflow: visible; }
+  .brot-landing .hero-bg { position: relative; height: 56vh; min-height: 340px; }
+  .brot-landing .hero-card { position: relative; left: 0; right: 0; top: auto; bottom: auto; width: auto; max-width: none; margin: -72px clamp(16px, 4vw, 40px) 0; }
+  .brot-landing .offset .media { width: 100%; margin-right: 0; margin-top: clamp(28px, 6vw, 56px); }
+  .brot-landing .media.tall { margin-top: 0; }
+  .brot-landing .social { position: static; transform: none; flex-direction: row-reverse; align-items: center; justify-content: flex-start; gap: 14px; padding: 18px clamp(16px, 4vw, 40px) 0; }
+  .brot-landing .foot-flex { gap: 24px; }
+}
+@media (max-width: 520px) {
+  .brot-landing .hero-title { font-size: clamp(40px, 13vw, 64px); }
+}

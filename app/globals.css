@@ -36,24 +36,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Reveal: fade + translateY al entrar en viewport (components/Reveal.tsx) ── */
-.brot-reveal {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.brot-reveal.in {
-  opacity: 1;
-  transform: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .brot-reveal {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-}
-
 /* ── Badge pulsante "Pedidos abiertos" ── */
 @keyframes brot-pulse {
   0%, 100% { box-shadow: 0 0 0 0 #16C65A, 0 0 7px 1px #16C65A; }
@@ -127,64 +109,15 @@ textarea.brot-input {
   line-height: 1.5;
 }
 
-/* ── Hero v13 — kicker con filetes laterales (v30: color más oscuro,
-   legible sobre el fondo crema del hero) ── */
-.brot-hero-kicker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  color: #C8851A;
-  font-weight: 600;
-  font-size: 13px;
-  letter-spacing: .34em;
-  text-transform: uppercase;
-  text-indent: .34em;
-}
-.brot-hero-kicker::before,
-.brot-hero-kicker::after {
-  content: "";
-  width: 34px;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(224,163,58,0), rgba(224,163,58,.7));
-}
-.brot-hero-kicker::after { transform: scaleX(-1); }
-
-@media (max-width: 520px) {
-  .brot-hero-kicker { gap: 11px; font-size: 11.5px; letter-spacing: .26em; text-indent: .26em; }
-  .brot-hero-kicker::before, .brot-hero-kicker::after { width: 20px; }
-}
+/* BRT-136: acá vivían las reglas .brot-hero-* del hero navy original
+   (kicker, seal-wrap, cta, h1, foot) — huérfanas desde que ese hero se
+   reemplazó por la landing nueva (components/home/HomeLanding.tsx).
+   Eliminadas; sin ningún componente que las use. */
 
 /* ═══════════════════════════════════════════
    v2 · Responsive (mobile-first)
    Breakpoints: 768px tablet · 900px modales · 1024px desktop
    ═══════════════════════════════════════════ */
-
-/* ── Hero desktop scaling ── */
-@media (min-width: 1024px) {
-  .brot-hero-cta {
-    font-size: 16.5px !important;
-    padding: 18px 32px !important;
-    margin-top: 38px !important;
-  }
-}
-
-/* ── Hero fix: compresión vertical en pantallas bajas (v17) ── */
-@media (max-height: 760px) {
-  .brot-hero-section { padding: 40px 40px 28px !important; }
-  .brot-hero-seal-wrap { width: 182px !important; height: 182px !important; font-size: 182px !important; }
-  .brot-hero-kicker { margin-top: 30px !important; }
-  .brot-hero-h1 { margin-top: 20px !important; font-size: clamp(32px, 7vw, 46px) !important; }
-  .brot-hero-cta { margin-top: 30px !important; }
-  .brot-hero-foot { bottom: 20px !important; }
-}
-@media (max-height: 640px) {
-  .brot-hero-seal-wrap { width: 152px !important; height: 152px !important; font-size: 152px !important; }
-  .brot-hero-kicker { margin-top: 22px !important; }
-  .brot-hero-h1 { margin-top: 16px !important; font-size: clamp(29px, 6.6vw, 40px) !important; }
-  .brot-hero-cta { margin-top: 24px !important; padding: 15px 26px !important; }
-  .brot-hero-foot { bottom: 14px !important; }
-}
 
 /* ── DateSelector: horizontal card at 900px+ ── */
 @media (min-width: 900px) {
