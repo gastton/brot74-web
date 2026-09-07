@@ -57,14 +57,12 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
         </div>
       </header>
 
-      {/* Rail: position:fixed en desktop (el orden en el DOM no importa,
-         se posiciona por viewport) — en ≤820px pasa a position:static y
-         ahí sí importa el orden: va DESPUÉS del hero en el markup para
-         que cuando deje de ser fijo caiga debajo de la foto, no arriba
-         (fix: en el HTML original del diseño el rail iba antes del
-         header y quedaba arriba de la foto en mobile, al revés de lo
-         que pide el propio ticket — "baja a fila horizontal debajo del
-         hero"). Ver HomeLanding.css. */}
+      {/* Rail: position:fixed tanto en desktop como en mobile (queda
+         flotante siempre visible mientras se scrollea, como en la
+         referencia tobrod.dk) — el orden en el DOM no importa porque
+         nunca pasa a position:static. El bloque va igual después del
+         hero en el markup (antes importaba para el fallback en flujo
+         que se probó y se descartó por UX). Ver HomeLanding.css. */}
       <div className="social">
         <a
           href="https://www.instagram.com/brot.74"
