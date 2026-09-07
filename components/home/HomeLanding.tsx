@@ -17,7 +17,8 @@ interface HomeLandingProps {
 //   el router del sitio (buildFlowUrl de BRT-95), no un <a href> a
 //   https://brot74.com/?step=slots hardcodeado.
 // - Los typos heredados del copy original ("trasnferencia" ×2,
-//   "conuna") están corregidos.
+//   "conuna") están corregidos, así como los "¿" faltantes en
+//   "¿Por qué BROT 74?" y "¿Y el 74?".
 // - Las fotos van con next/image en vez de <img> planas.
 export default function HomeLanding({ onReservar }: HomeLandingProps) {
   return (
@@ -141,7 +142,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
           <div>
             <div className="rule block-rule"></div>
             <h2>
-              Por qué <span style={{ color: "#C8851A" }}>BROT 74?</span>
+              ¿Por qué <span style={{ color: "#C8851A" }}>BROT 74?</span>
             </h2>
             <dl className="day">
               <dd>
@@ -156,7 +157,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
               cotidiana, ese es Alemania.
             </p>
             <dl className="day">
-              <dt>Y el 74?</dt>
+              <dt>¿Y el 74?</dt>
               <dd>
                 Nuestra identidad está en ese número. 74% es la
                 hidratación de nuestra masa madre.
