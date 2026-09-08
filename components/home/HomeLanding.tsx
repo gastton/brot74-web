@@ -165,7 +165,9 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
               cotidiana, ese es Alemania.
             </p>
             <dl className="day">
-              <dt>¿Y el 74?</dt>
+              <dt>
+                ¿Y el <span style={{ color: "#C8851A" }}>74</span>?
+              </dt>
               <dd>
                 Nuestra identidad está en ese número. 74% es la
                 hidratación de nuestra masa madre.
