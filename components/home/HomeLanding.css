@@ -104,13 +104,18 @@
   .brot-landing .grid { grid-template-columns: minmax(0, 1fr); }
   .brot-landing .hero { height: auto; min-height: 0; overflow: visible; }
   .brot-landing .hero-bg { position: relative; height: 56vh; min-height: 340px; }
-  /* Pedido explícito: la tarjeta pasa a flotar arriba a la izquierda,
-     tapando una esquina de la foto (como tobrod.dk), en vez de ser una
-     barra ancha anclada abajo. position:absolute (igual técnica que ya
-     usa desktop) para que salga del flujo y no empuje el resto de la
-     página hacia abajo. Mismo contenido/tipografía/colores, solo
-     tamaño y posición. */
-  .brot-landing .hero-card { position: absolute; left: clamp(16px, 4vw, 24px); right: auto; top: clamp(16px, 4vw, 24px); bottom: auto; width: 50%; max-width: none; min-height: 0; margin: 0; }
+  /* Pedido explícito: la tarjeta flota (position:absolute, igual
+     técnica que ya usa desktop) al 50% de ancho, abajo a la izquierda
+     — pero NO pegada arriba como tobrod.dk, sino corrida hacia abajo
+     hasta que un 10% de su propia altura quede por debajo del borde
+     inferior de la foto (el resto, 90%, se superpone a la foto). Esto
+     ya es una decisión estética propia, distinta de la referencia.
+     Truco: bottom:0 ancla el borde inferior de la tarjeta al borde
+     inferior de la foto (0% afuera); translateY(10%) desplaza la caja
+     hacia abajo un 10% de SU PROPIA altura (a diferencia de top/bottom
+     en %, que se calculan sobre el contenedor) — así el 10% de abajo
+     queda fuera de la foto sin necesitar una altura fija. */
+  .brot-landing .hero-card { position: absolute; left: clamp(16px, 4vw, 24px); right: auto; top: auto; bottom: 0; transform: translateY(10%); width: 50%; max-width: none; min-height: 0; margin: 0; }
   .brot-landing .offset .media { width: 100%; margin-right: 0; margin-top: clamp(28px, 6vw, 56px); }
   .brot-landing .media.tall { margin-top: 0; }
   /* Pedido explícito: estructura mobile inspirada en tobrod.dk — las
