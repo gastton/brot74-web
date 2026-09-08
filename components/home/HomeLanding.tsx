@@ -87,7 +87,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
       <section className="wrap">
         <div className="grid">
           <div>
-            <div className="media tall">
+            <div className="media tall media-bleed">
               <Image
                 src="/assets/landing-idea-1.webp"
                 alt=""
@@ -110,7 +110,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
             </p>
           </div>
           <div className="offset">
-            <div className="media">
+            <div className="media media-bleed">
               <Image
                 src="/assets/landing-idea-2.webp"
                 alt=""
@@ -130,9 +130,14 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
              texto ("order" de CSS Grid, ver HomeLanding.css) — pedido
              explícito del usuario, la imagen va después de "Así de
              simple. Como el pan." solo en mobile. En desktop no cambia
-             nada, sigue siendo la columna izquierda del grid. */}
+             nada, sigue siendo la columna izquierda del grid. El
+             aspect-ratio/width de esta foto (antes inline) se movieron
+             a HomeLanding.css (.porque-media .media) porque un estilo
+             inline tiene más especificidad que cualquier regla de CSS
+             y hubiera bloqueado el override de "media-bleed" en
+             mobile. */}
           <div className="porque-media">
-            <div className="media" style={{ aspectRatio: "1 / 1.05", width: "72%" }}>
+            <div className="media media-bleed">
               <Image
                 src="/assets/landing-porque.webp"
                 alt=""
