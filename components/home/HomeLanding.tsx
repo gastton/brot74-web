@@ -179,7 +179,14 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
       </section>
 
       {/* Pedís hoy, retirás cuando esté listo */}
-      <section className="wrap" style={{ paddingTop: "clamp(56px,8vh,110px)" }}>
+      {/* paddingBottom explícito: es la última sección antes del
+         footer, así que necesita su PROPIO aire abajo (las secciones
+         anteriores no lo necesitan porque la siguiente sección aporta
+         el espacio con su paddingTop). Mismo bug de especificidad de
+         siempre (.wrap le gana a section y pisa el padding vertical a
+         0) — sin esto la línea del footer queda pegada contra
+         "Horarios de entregas". */}
+      <section className="wrap" style={{ paddingTop: "clamp(56px,8vh,110px)", paddingBottom: "clamp(56px,9vh,132px)" }}>
         <div className="grid">
           <div>
             <div className="rule block-rule"></div>
@@ -204,11 +211,24 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
               <br />
               Pasás a buscarlo en el lugar y la franja horaria de la
               fecha. Horneamos por tandas, no hay local abierto.
-              <br />
-              <br />
-              <br />
-              <br />
             </p>
+            {/* Pedido explícito: "Horarios de entregas" se movió acá desde
+               el footer, sin cambiar tamaño ni color — sigue siendo el
+               mismo bloque (className="foot-col", mismo style inline),
+               así que sigue matcheando la regla .foot-col h3 en CSS tal
+               cual estaba. Se sacaron los <br/> de relleno que tenía el
+               párrafo anterior (eran aire antes del footer; acá generaban
+               un salto raro antes de este bloque). */}
+            <div className="foot-col" style={{ marginTop: "clamp(16px,3vw,40px)" }}>
+              <h3>
+                Horarios de <span style={{ color: "#C8851A" }}>entregas</span>
+              </h3>
+              <p>
+                Miércoles: desde las 18:00 horas
+                <br />
+                Sábados: desde las 18:00 horas
+              </p>
+            </div>
           </div>
           <div></div>
         </div>
@@ -217,33 +237,20 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
       {/* Footer */}
       <footer className="wrap" id="contacto">
         <div className="grid">
-          <div style={{ gridColumn: "1 / -1" }}>
-            <div
-              className="foot-flex"
-              style={{ display: "flex", flexWrap: "wrap", gap: "clamp(28px,5vw,80px)", alignItems: "center" }}
-            >
-              <div className="foot-brand" style={{ marginBottom: 0 }}>
-                <Image
-                  src="/assets/logo-sello-mono-navy-transparente.png"
-                  alt="BROT 74"
-                  width={2400}
-                  height={2400}
-                  style={{ width: "clamp(120px,14vw,180px)", height: "auto", display: "block", marginTop: "clamp(16px,3vw,40px)" }}
-                />
-              </div>
-              <div
-                className="foot-col"
-                style={{ marginTop: "clamp(16px,3vw,40px)", flex: "1 1 260px", minWidth: "min(100%,260px)" }}
-              >
-                <h3>
-                  Horarios de <span style={{ color: "#C8851A" }}>entregas</span>
-                </h3>
-                <p>
-                  Miércoles: desde las 18:00 horas
-                  <br />
-                  Sábados: desde las 18:00 horas
-                </p>
-              </div>
+          {/* Pedido explícito: logo más chico y centrado junto con el
+             subtítulo "Micropanadería de Masa Madre" (antes: alineados
+             a la izquierda, logo más grande). textAlign:center en el
+             contenedor centra el <p> de texto; el logo (display:block)
+             necesita además su propio margin:auto para centrarse. */}
+          <div style={{ gridColumn: "1 / -1", textAlign: "center" }}>
+            <div className="foot-brand" style={{ marginBottom: 0 }}>
+              <Image
+                src="/assets/logo-sello-mono-navy-transparente.png"
+                alt="BROT 74"
+                width={2400}
+                height={2400}
+                style={{ width: "clamp(80px,9vw,120px)", height: "auto", display: "block", margin: "clamp(16px,3vw,40px) auto 0" }}
+              />
             </div>
             <div className="foot-note" style={{ marginTop: "18px" }}>
               Micropanadería de Masa Madre
