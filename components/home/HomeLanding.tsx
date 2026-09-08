@@ -126,7 +126,12 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
       {/* Por qué BROT 74 */}
       <section className="wrap" style={{ paddingTop: "clamp(90px,13vh,190px)" }}>
         <div className="grid">
-          <div>
+          {/* porque-media: en mobile este bloque pasa a estar DESPUÉS del
+             texto ("order" de CSS Grid, ver HomeLanding.css) — pedido
+             explícito del usuario, la imagen va después de "Así de
+             simple. Como el pan." solo en mobile. En desktop no cambia
+             nada, sigue siendo la columna izquierda del grid. */}
+          <div className="porque-media">
             <div className="media" style={{ aspectRatio: "1 / 1.05", width: "72%" }}>
               <Image
                 src="/assets/landing-porque.webp"

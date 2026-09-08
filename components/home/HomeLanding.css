@@ -99,6 +99,11 @@
   .brot-landing .hero-card { position: relative; left: 0; right: 0; top: auto; bottom: auto; width: auto; max-width: none; margin: -72px clamp(16px, 4vw, 40px) 0; }
   .brot-landing .offset .media { width: 100%; margin-right: 0; margin-top: clamp(28px, 6vw, 56px); }
   .brot-landing .media.tall { margin-top: 0; }
+  /* Pedido explícito: en mobile la foto de "¿Por qué BROT 74?" va
+     después del texto de la sección ("Así de simple. Como el pan."),
+     no antes. Con order (no cambia el DOM) para no tocar el desktop,
+     donde esta misma foto sigue siendo la columna izquierda. */
+  .brot-landing .porque-media { order: 2; margin-top: clamp(28px, 6vw, 56px); }
   /* El rail queda flotante también en mobile (igual que en desktop y que
      la referencia tobrod.dk), no en flujo normal — probado en producción
      con un usuario real: al pasar a position:static, el pill+IG solo se
