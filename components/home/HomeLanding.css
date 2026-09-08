@@ -99,6 +99,19 @@
   .brot-landing .hero-card { position: relative; left: 0; right: 0; top: auto; bottom: auto; width: auto; max-width: none; margin: -72px clamp(16px, 4vw, 40px) 0; }
   .brot-landing .offset .media { width: 100%; margin-right: 0; margin-top: clamp(28px, 6vw, 56px); }
   .brot-landing .media.tall { margin-top: 0; }
+  /* Bug real (no solo falta de "separación"): .brot-landing .wrap tiene
+     más clases que .brot-landing section, así que SIEMPRE le gana y
+     pisa el padding vertical a 0 — la regla ".brot-landing section"
+     de arriba nunca se aplica en ninguna sección con className="wrap".
+     Las otras 2 secciones no lo sufren porque tienen paddingTop inline
+     (mayor especificidad, gana siempre). En desktop no se nota porque
+     .hero-card es position:absolute (no ocupa espacio en el flujo); en
+     mobile pasa a estar en flujo y la sección "Idea" (sin paddingTop
+     inline) queda pegada contra la tarjeta del hero. Reponemos acá el
+     mismo valor que la regla muerta de arriba pretendía dar — solo
+     paddingTop, así no tocamos el padding horizontal de .wrap ni
+     pisamos el paddingTop inline que ya tienen las otras secciones. */
+  .brot-landing section.wrap { padding-top: clamp(56px, 9vh, 132px); }
   /* Pedido explícito: en mobile la foto de "¿Por qué BROT 74?" va
      después del texto de la sección ("Así de simple. Como el pan."),
      no antes. Con order (no cambia el DOM) para no tocar el desktop,
