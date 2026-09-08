@@ -81,7 +81,10 @@
 .brot-landing .porque-media .media { aspect-ratio: 1 / 1.05; width: 72%; }
 .brot-landing .block-rule { margin-bottom: 30px; }
 .brot-landing .day { margin-bottom: 22px; }
-.brot-landing .day dt { font-weight: 500; margin-bottom: 2px; }
+/* Pedido explícito: "¿Y el 74?" al mismo tamaño y peso que los h2
+   (ej. "¿Por qué BROT 74?") — antes heredaba el font-size del body
+   (15px) y tenía font-weight:500 (se veía en negrita al agrandarlo). */
+.brot-landing .day dt { font-weight: 400; margin-bottom: 2px; font-size: clamp(24px, 2.2vw, 32px); }
 .brot-landing .day dd { margin: 0; max-width: 60ch; }
 
 /* footer */
