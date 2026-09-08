@@ -161,7 +161,6 @@
   .brot-landing .social { position: fixed; left: auto; right: clamp(16px, 4vw, 24px); top: auto; bottom: clamp(16px, 4vw, 24px); transform: none; flex-direction: row-reverse; align-items: center; justify-content: flex-end; gap: 12px; padding: 0; }
   .brot-landing .social span,
   .brot-landing .social .pill { box-shadow: 0 4px 14px rgba(14, 35, 60, .3); }
-  .brot-landing .foot-flex { gap: 24px; }
 }
 @media (max-width: 520px) {
   .brot-landing .hero-title { font-size: clamp(40px, 13vw, 64px); }
