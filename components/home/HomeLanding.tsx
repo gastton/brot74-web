@@ -179,7 +179,14 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
       </section>
 
       {/* Pedís hoy, retirás cuando esté listo */}
-      <section className="wrap" style={{ paddingTop: "clamp(56px,8vh,110px)" }}>
+      {/* paddingBottom explícito: es la última sección antes del
+         footer, así que necesita su PROPIO aire abajo (las secciones
+         anteriores no lo necesitan porque la siguiente sección aporta
+         el espacio con su paddingTop). Mismo bug de especificidad de
+         siempre (.wrap le gana a section y pisa el padding vertical a
+         0) — sin esto la línea del footer queda pegada contra
+         "Horarios de entregas". */}
+      <section className="wrap" style={{ paddingTop: "clamp(56px,8vh,110px)", paddingBottom: "clamp(56px,9vh,132px)" }}>
         <div className="grid">
           <div>
             <div className="rule block-rule"></div>
@@ -230,14 +237,19 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
       {/* Footer */}
       <footer className="wrap" id="contacto">
         <div className="grid">
-          <div style={{ gridColumn: "1 / -1" }}>
+          {/* Pedido explícito: logo más chico y centrado junto con el
+             subtítulo "Micropanadería de Masa Madre" (antes: alineados
+             a la izquierda, logo más grande). textAlign:center en el
+             contenedor centra el <p> de texto; el logo (display:block)
+             necesita además su propio margin:auto para centrarse. */}
+          <div style={{ gridColumn: "1 / -1", textAlign: "center" }}>
             <div className="foot-brand" style={{ marginBottom: 0 }}>
               <Image
                 src="/assets/logo-sello-mono-navy-transparente.png"
                 alt="BROT 74"
                 width={2400}
                 height={2400}
-                style={{ width: "clamp(120px,14vw,180px)", height: "auto", display: "block", marginTop: "clamp(16px,3vw,40px)" }}
+                style={{ width: "clamp(80px,9vw,120px)", height: "auto", display: "block", margin: "clamp(16px,3vw,40px) auto 0" }}
               />
             </div>
             <div className="foot-note" style={{ marginTop: "18px" }}>

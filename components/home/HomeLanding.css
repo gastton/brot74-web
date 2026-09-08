@@ -89,6 +89,16 @@
 
 /* footer */
 .brot-landing footer { border-top: 1px solid var(--rule); padding: clamp(48px, 8vh, 110px) 0 clamp(40px, 6vh, 80px); }
+/* Mismo bug de especificidad que ya se arregló para las secciones
+   (ver la regla de section.wrap en la media query ≤820px): footer
+   también tiene className="wrap", y ".brot-landing .wrap" (2 clases)
+   le gana a ".brot-landing footer" (1 clase + elemento) y pisa su
+   padding vertical a 0 — la línea del border-top quedaba pegada
+   contra el contenido anterior. No se notaba antes porque el párrafo
+   de "Pedís hoy" tenía <br/> de relleno al final; se sacaron al mover
+   "Horarios de entregas" ahí y quedó expuesto. Reponemos acá el mismo
+   valor que la regla de arriba pretendía dar. */
+.brot-landing footer.wrap { padding-top: clamp(48px, 8vh, 110px); padding-bottom: clamp(40px, 6vh, 80px); }
 .brot-landing .foot-brand { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: .02em; font-weight: 400; margin-bottom: 18px; }
 .brot-landing .foot-note { color: var(--stone); font-size: 14px; }
 .brot-landing .foot-col h3 { font-size: clamp(19px, 1.7vw, 25px); margin-bottom: 12px; }
