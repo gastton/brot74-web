@@ -109,6 +109,11 @@ Los specs viven en `e2e/`. Todavía son solo el setup base (BRT-122) — los esc
 | `npm test` | Tests de integración (Vitest) |
 | `npm run test:e2e` | Tests E2E (Playwright) |
 | `npm run db:seed` | Carga datos de ejemplo |
+| `npm run dependabot:triage` | Corre el agente de triage de Dependabot (ver abajo) |
+
+## Automatización
+
+El repo tiene un agente que triagea automáticamente las PRs de Dependabot todos los días: clasifica el riesgo, aprueba las no críticas con CI en verde, y deja trazabilidad en Jira y Slack para las críticas. Corre vía GitHub Actions (`.github/workflows/dependabot-triage.yml`), no en Vercel. Ver [scripts/dependabot-triage/README.md](scripts/dependabot-triage/README.md) para el runbook completo (qué hace, qué secrets necesita, cómo correrlo a mano, troubleshooting).
 
 ## Licencia
 
