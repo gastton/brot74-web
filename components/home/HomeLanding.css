@@ -79,7 +79,19 @@
    porque un estilo inline le gana en especificidad a cualquier regla de
    CSS, y hubiera bloqueado el override de .media-bleed en mobile. */
 .brot-landing .porque-media .media { aspect-ratio: 1 / 1.05; width: 72%; }
+.brot-landing .retiro-col { align-self: center; }
+.brot-landing .retiro-media { aspect-ratio: 481 / 852; width: 481px; max-width: 100%; margin-left: auto; margin-right: 0; transform: translateY(clamp(12px, 2vw, 32px)); }
 .brot-landing .block-rule { margin-bottom: 30px; }
+.brot-landing .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(20px, 2.4vw, 30px); max-width: 56ch; }
+/* Pedido explícito: sin línea arriba del primer paso (quedaba pegada
+   justo debajo del título "Pedís hoy..."). Las líneas siguen
+   separando 1→2 y 2→3 (:not(:first-child)), como divisores entre
+   pasos, no como remate del título. */
+.brot-landing .step:not(:first-child) { border-top: 1px solid color-mix(in srgb, var(--navy) 28%, transparent); padding-top: 14px; }
+.brot-landing .step-n { display: block; font-size: clamp(28px, 3vw, 40px); line-height: 1; font-weight: 300; letter-spacing: -.02em; color: var(--stone); margin-bottom: 12px; }
+.brot-landing .step-n b { font-weight: inherit; color: var(--amber); }
+.brot-landing .step-t { margin: 0 0 6px; font-size: clamp(17px, 1.4vw, 21px); font-weight: 500; letter-spacing: -.01em; }
+.brot-landing .step-d { margin: 0; color: var(--navy); }
 .brot-landing .day { margin-bottom: 22px; }
 /* Pedido explícito: "¿Y el 74?" al mismo tamaño y peso que los h2
    (ej. "¿Por qué BROT 74?") — antes heredaba el font-size del body
@@ -103,7 +115,8 @@
    arriba, es deliberado. */
 .brot-landing footer.wrap { padding-top: clamp(24px, 4vh, 52px); padding-bottom: clamp(40px, 6vh, 80px); }
 .brot-landing .foot-brand { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: .02em; font-weight: 400; margin-bottom: 18px; }
-.brot-landing .foot-note { color: var(--stone); font-size: 14px; }
+.brot-landing .foot-note { color: var(--stone); font-size: 15px; }
+.brot-landing .foot-place { margin-top: 10px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--stone); font-weight: 600; }
 .brot-landing .foot-col h3 { font-size: clamp(19px, 1.7vw, 25px); margin-bottom: 12px; }
 /* list-style-type: disc explícito porque el preflight de Tailwind
    saca el bullet por default (list-style-type: none) — sin esto no
@@ -116,7 +129,7 @@
 
 /* responsive — 1200 / 820 / 520, igual que el diseño entregado */
 @media (max-width: 1200px) {
-  .brot-landing .hero-card { left: clamp(20px, 4vw, 32px); top: auto; bottom: 0; width: min(570px, 58vw); min-height: 0; }
+  .brot-landing .hero-card { left: clamp(20px, 4vw, 32px); top: auto; bottom: 0; width: min(570px, 58vw); min-height: 320px; }
 }
 @media (max-width: 820px) {
   /* Salvaguarda para .media-bleed (más abajo): "left:50%; margin-left:
@@ -175,6 +188,7 @@
      no antes. Con order (no cambia el DOM) para no tocar el desktop,
      donde esta misma foto sigue siendo la columna izquierda. */
   .brot-landing .porque-media { order: 2; margin-top: clamp(28px, 6vw, 56px); }
+  .brot-landing .retiro-media { width: 72%; margin: clamp(28px, 7vw, 56px) auto 0; transform: none; }
   /* El rail queda flotante también en mobile (igual que en desktop y que
      la referencia tobrod.dk), no en flujo normal — probado en producción
      con un usuario real: al pasar a position:static, el pill+IG solo se

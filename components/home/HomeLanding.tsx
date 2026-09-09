@@ -191,27 +191,34 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
           <div>
             <div className="rule block-rule"></div>
             <h2>
-              Pedís hoy,{" "}
-              <span style={{ color: "#C8851A" }}>retirás cuando esté listo</span>
+              Pedís hoy, retirás cuando esté listo
             </h2>
-            <p>
-              1. Elegí tu BROT
-              <br />
-              Elegís la fecha y armás tu pedido online, según lo que
-              haya disponible para esa tanda.
-            </p>
-            <p>
-              2. Pagá por transferencia.
-              <br />
-              Confirmás con una transferencia. Sin filas, sin efectivo,
-              a tu ritmo.
-            </p>
-            <p>
-              3. Retirá en tu horario.
-              <br />
-              Pasás a buscarlo en el lugar y la franja horaria de la
-              fecha. Horneamos por tandas, no hay local abierto.
-            </p>
+            <ol className="steps">
+              <li className="step">
+                <span className="step-n">0<b>1</b></span>
+                <h4 className="step-t">Elegí tu BROT</h4>
+                <p className="step-d">
+                  Elegís la fecha y armás tu pedido online, según lo que
+                  haya disponible para esa tanda.
+                </p>
+              </li>
+              <li className="step">
+                <span className="step-n">0<b>2</b></span>
+                <h4 className="step-t">Pagá por transferencia</h4>
+                <p className="step-d">
+                  Confirmás con una transferencia. Sin filas, sin efectivo,
+                  a tu ritmo.
+                </p>
+              </li>
+              <li className="step">
+                <span className="step-n">0<b>3</b></span>
+                <h4 className="step-t">Retirá en tu horario</h4>
+                <p className="step-d">
+                  Pasás a buscarlo en el lugar y la franja horaria de la
+                  fecha. Horneamos por tandas, no hay local abierto.
+                </p>
+              </li>
+            </ol>
             {/* Pedido explícito: "Horarios de entregas" se movió acá desde
                el footer, sin cambiar tamaño ni color — sigue siendo el
                mismo bloque (className="foot-col", mismo style inline),
@@ -219,9 +226,9 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
                cual estaba. Se sacaron los <br/> de relleno que tenía el
                párrafo anterior (eran aire antes del footer; acá generaban
                un salto raro antes de este bloque). */}
-            <div className="foot-col" style={{ marginTop: "clamp(16px,3vw,40px)" }}>
+            <div className="foot-col" style={{ marginTop: "clamp(28px,4.5vw,56px)", borderTop: "1px solid color-mix(in srgb, var(--navy) 28%, transparent)", paddingTop: "clamp(18px,2.4vw,30px)" }}>
               <h3>
-                Horarios <span style={{ color: "#C8851A" }}>de entregas</span>
+                Horarios de <span style={{ color: "#C8851A" }}>entregas</span>
               </h3>
               <ul>
                 <li>Miércoles: desde las 18:00 horas</li>
@@ -229,7 +236,17 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
               </ul>
             </div>
           </div>
-          <div></div>
+          <div className="retiro-col">
+            <div className="media retiro-media">
+              <Image
+                src="/assets/landing-retiro.png"
+                alt="Bolsa kraft con panes lista para retirar"
+                fill
+                style={{ objectFit: "cover" }}
+                sizes="(min-width: 820px) 481px, 72vw"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -254,6 +271,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
             <div className="foot-note" style={{ marginTop: "18px" }}>
               Micropanadería de Masa Madre
             </div>
+            <div className="foot-place">Mendiolaza, Córdoba</div>
           </div>
         </div>
         <div className="legal"></div>
