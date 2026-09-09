@@ -163,9 +163,13 @@
      .media-bleed es una utility class que tiene que ganarle sí o sí al
      ancho/margin contextual de cada foto (ej. ".offset .media" define
      margin-left:auto con más especificidad — sin !important quedaba
-     desplazada fuera de pantalla en vez de a sangre). */
+     desplazada fuera de pantalla en vez de a sangre). max-width
+     también !important: .retiro-media (v34) trae max-width:100% para
+     acotarla en desktop, y sin esto el ancho quedaba capado al de su
+     columna (335px) en vez de los 100vw pedidos. */
   .brot-landing .media-bleed {
     width: 100vw !important;
+    max-width: 100vw !important;
     position: relative;
     left: 50% !important;
     margin-left: -50vw !important;
@@ -188,7 +192,12 @@
      no antes. Con order (no cambia el DOM) para no tocar el desktop,
      donde esta misma foto sigue siendo la columna izquierda. */
   .brot-landing .porque-media { order: 2; margin-top: clamp(28px, 6vw, 56px); }
-  .brot-landing .retiro-media { width: 72%; margin: clamp(28px, 7vw, 56px) auto 0; transform: none; }
+  /* Pedido explícito: esta foto también va a sangre en mobile (antes
+     iba contenida al 72%, centrada) — el ancho/centrado horizontal
+     ahora lo maneja .media-bleed (agregada en el JSX). transform:none
+     se mantiene: sin el desplazamiento óptico que sí tiene en
+     desktop. */
+  .brot-landing .retiro-media { margin-top: clamp(28px, 7vw, 56px); transform: none; }
   /* El rail queda flotante también en mobile (igual que en desktop y que
      la referencia tobrod.dk), no en flujo normal — probado en producción
      con un usuario real: al pasar a position:static, el pill+IG solo se

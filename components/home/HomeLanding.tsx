@@ -237,13 +237,17 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
             </div>
           </div>
           <div className="retiro-col">
-            <div className="media retiro-media">
+            {/* media-bleed: pedido explícito, SOLO en mobile esta foto
+               también va a sangre (de punta a punta), igual que las de
+               "Idea" y "¿Por qué BROT 74?". Desktop no se toca — ahí
+               sigue a su tamaño real (481px). Ver HomeLanding.css. */}
+            <div className="media retiro-media media-bleed">
               <Image
                 src="/assets/landing-retiro.png"
                 alt="Bolsa kraft con panes lista para retirar"
                 fill
                 style={{ objectFit: "cover" }}
-                sizes="(min-width: 820px) 481px, 72vw"
+                sizes="(min-width: 820px) 481px, 100vw"
               />
             </div>
           </div>
