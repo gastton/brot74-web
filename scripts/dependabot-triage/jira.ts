@@ -58,12 +58,23 @@ async function jiraFetch<T>(path: string, init?: RequestInit): Promise<T> {
     },
   });
 
+  // Se lee el body una sola vez como texto: evita el error genérico
+  // "Unexpected end of JSON input" que no dice nada — si el parseo falla,
+  // el mensaje de error trae el body real para poder diagnosticarlo.
+  const cuerpoTexto = await res.text().catch(() => "");
+
   if (!res.ok) {
-    const cuerpo = await res.text().catch(() => "");
-    throw new Error(`Jira ${init?.method ?? "GET"} ${path} -> HTTP ${res.status}: ${cuerpo.slice(0, 500)}`);
+    throw new Error(`Jira ${init?.method ?? "GET"} ${path} -> HTTP ${res.status}: ${cuerpoTexto.slice(0, 500)}`);
   }
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  if (!cuerpoTexto) return undefined as T;
+
+  try {
+    return JSON.parse(cuerpoTexto) as T;
+  } catch {
+    throw new Error(
+      `Jira ${init?.method ?? "GET"} ${path} -> HTTP ${res.status} con body no-JSON: ${cuerpoTexto.slice(0, 500)}`,
+    );
+  }
 }
 
 /** Convierte texto plano (párrafos separados por línea en blanco) a ADF. */
