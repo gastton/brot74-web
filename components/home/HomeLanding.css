@@ -83,7 +83,11 @@
 .brot-landing .retiro-media { aspect-ratio: 481 / 852; width: 481px; max-width: 100%; margin-left: auto; margin-right: 0; transform: translateY(clamp(12px, 2vw, 32px)); }
 .brot-landing .block-rule { margin-bottom: 30px; }
 .brot-landing .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(20px, 2.4vw, 30px); max-width: 56ch; }
-.brot-landing .step { border-top: 1px solid color-mix(in srgb, var(--navy) 28%, transparent); padding-top: 14px; }
+/* Pedido explícito: sin línea arriba del primer paso (quedaba pegada
+   justo debajo del título "Pedís hoy..."). Las líneas siguen
+   separando 1→2 y 2→3 (:not(:first-child)), como divisores entre
+   pasos, no como remate del título. */
+.brot-landing .step:not(:first-child) { border-top: 1px solid color-mix(in srgb, var(--navy) 28%, transparent); padding-top: 14px; }
 .brot-landing .step-n { display: block; font-size: clamp(28px, 3vw, 40px); line-height: 1; font-weight: 300; letter-spacing: -.02em; color: var(--stone); margin-bottom: 12px; }
 .brot-landing .step-n b { font-weight: inherit; color: var(--amber); }
 .brot-landing .step-t { margin: 0 0 6px; font-size: clamp(17px, 1.4vw, 21px); font-weight: 500; letter-spacing: -.01em; }
