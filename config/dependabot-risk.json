@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "alwaysBlockOnMajorBump": true,
+  "severityLevels": ["low", "moderate", "high", "critical"],
+  "severityBlockThreshold": "high",
+  "criticalPackages": [
+    "next",
+    "prisma",
+    "@prisma/client",
+    "@vercel/blob",
+    "jsonwebtoken",
+    "jose",
+    "bcryptjs"
+  ]
+}
