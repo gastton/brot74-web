@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { delimiter, join } from "node:path";
 
 /**
  * BRT-139: detecta las PRs abiertas de Dependabot y extrae la metadata de
@@ -9,6 +11,35 @@ import { execFileSync } from "node:child_process";
  * resto del agente de triage (BRT-142, aprobar PRs) y ya viene autenticado
  * en el runner de GitHub Actions sin necesidad de credenciales propias.
  */
+
+/**
+ * Resuelve el path absoluto de un ejecutable buscando en las carpetas de
+ * `PATH`, en vez de pasarle el nombre pelado a `execFileSync` y dejar que
+ * el propio proceso hijo lo busque en el momento de ejecutarlo (Sonar
+ * S4036 / CWE-426, "Untrusted Search Path"). El binario resuelto se cachea
+ * por nombre para no recorrer `PATH` en cada llamada.
+ */
+const resolvedExecutables = new Map<string, string>();
+
+function resolveExecutable(name: string): string {
+  const cached = resolvedExecutables.get(name);
+  if (cached) return cached;
+
+  const candidates = process.platform === "win32" ? [`${name}.exe`, `${name}.cmd`] : [name];
+  const dirs = (process.env.PATH ?? "").split(delimiter).filter(Boolean);
+
+  for (const dir of dirs) {
+    for (const candidate of candidates) {
+      const full = join(dir, candidate);
+      if (existsSync(full)) {
+        resolvedExecutables.set(name, full);
+        return full;
+      }
+    }
+  }
+
+  throw new Error(`No encontré "${name}" en el PATH del sistema.`);
+}
 
 export type BumpType = "major" | "minor" | "patch" | "unknown";
 
@@ -54,7 +85,7 @@ export function repoSlug(): string {
   if (fromEnv) return fromEnv;
 
   const remote = execFileSync(
-    "git",
+    resolveExecutable("git"),
     ["config", "--get", "remote.origin.url"],
     { encoding: "utf8" },
   ).trim();
@@ -66,7 +97,9 @@ export function repoSlug(): string {
 }
 
 function ghApi<T>(path: string): T {
-  const output = execFileSync("gh", ["api", path], { encoding: "utf8" });
+  const output = execFileSync(resolveExecutable("gh"), ["api", path], {
+    encoding: "utf8",
+  });
   return JSON.parse(output) as T;
 }
 
@@ -109,11 +142,6 @@ function severityForPackage(
   return severidades.sort((a, b) => SEVERITY_RANK[b] - SEVERITY_RANK[a])[0];
 }
 
-// Título de Dependabot: "Bump next from 16.3.0 to 16.3.1". Sin anclar al
-// inicio del string a propósito: este repo tiene conventional commits
-// activado, así que Dependabot antepone "chore(deps): " / "chore(deps-dev): ".
-const BUMP_TITLE_RE = /bump (\S+) from (\S+) to (\S+)/i;
-
 function parseVersionParts(version: string): [number, number, number] | null {
   const cleaned = version.replace(/^v/, "").split(/[-+]/)[0];
   const parts = cleaned.split(".").map(Number);
@@ -132,22 +160,50 @@ function bumpTypeFromVersions(desde: string, hasta: string): BumpType {
   return "unknown";
 }
 
+const UNKNOWN_BUMP = {
+  bumpType: "unknown" as const,
+  versionDesde: null,
+  versionHasta: null,
+};
+
+/**
+ * Parsea el título de Dependabot: "Bump next from 16.3.0 to 16.3.1". Este
+ * repo tiene conventional commits activado, así que Dependabot antepone
+ * "chore(deps): " / "chore(deps-dev): " — por eso se busca "bump " en
+ * cualquier posición del título en vez de anclar al inicio.
+ *
+ * Parseo manual con `indexOf`/`slice` en vez de un único regex con varios
+ * cuantificadores sin límite (evita el riesgo de backtracking súper-lineal
+ * que marca Sonar en ese patrón — acá no hace falta, son tres substrings
+ * separados por literales fijos).
+ */
 function parseBump(
   title: string,
 ): Pick<DependabotPrRisk, "paquete" | "bumpType" | "versionDesde" | "versionHasta"> {
-  const match = title.match(BUMP_TITLE_RE);
-  if (!match) {
-    // PR agrupada o título con formato no estándar (ej. dependabot.yml con
-    // `groups:` a futuro) — no podemos identificar el paquete ni el bump,
-    // el motor de clasificación (BRT-140) trata "unknown" como crítico.
-    return {
-      paquete: title,
-      bumpType: "unknown",
-      versionDesde: null,
-      versionHasta: null,
-    };
+  const lower = title.toLowerCase();
+  const bumpAt = lower.indexOf("bump ");
+  if (bumpAt === -1) {
+    return { paquete: title, ...UNKNOWN_BUMP };
   }
-  const [, paquete, versionDesde, versionHasta] = match;
+
+  const fromAt = lower.indexOf(" from ", bumpAt);
+  const toAt = fromAt === -1 ? -1 : lower.indexOf(" to ", fromAt);
+  if (fromAt === -1 || toAt === -1) {
+    return { paquete: title, ...UNKNOWN_BUMP };
+  }
+
+  const paquete = title.slice(bumpAt + "bump ".length, fromAt).trim();
+  const versionDesde = title.slice(fromAt + " from ".length, toAt).trim();
+  // Corta en el primer espacio para descartar sufijos tipo "in /apps/web"
+  // que Dependabot agrega en monorepos con varios `directory:`.
+  const resto = title.slice(toAt + " to ".length).trimStart();
+  const espacioAt = resto.indexOf(" ");
+  const versionHasta = espacioAt === -1 ? resto : resto.slice(0, espacioAt);
+
+  if (!paquete || !versionDesde || !versionHasta) {
+    return { paquete: title, ...UNKNOWN_BUMP };
+  }
+
   return {
     paquete,
     bumpType: bumpTypeFromVersions(versionDesde, versionHasta),
