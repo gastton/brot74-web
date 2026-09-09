@@ -10,8 +10,8 @@ import { classifyDependabotPRs } from "./risk.js";
  *
  * Detecta (BRT-139) + clasifica (BRT-140) + aplica Nivel 1 (BRT-142: aprueba
  * las no críticas con CI en verde, nunca mergea) + gestiona tickets de Jira
- * (BRT-143) y deja un resumen en el job summary de Actions. Todavía NO
- * notifica a Slack (BRT-144) — se suma acá mismo cuando se implemente.
+ * y notifica a Slack por cada crítica nueva (BRT-143/BRT-144) y deja un
+ * resumen en el job summary de Actions.
  */
 
 type PrProcesada = DependabotPrRisk & {
@@ -58,8 +58,8 @@ function resumenMarkdown(procesadas: PrProcesada[], jira: ResultadoJira): string
     "|---|---|---|---|---|---|---|",
     filas,
     "",
-    "_El merge sigue siendo manual en todos los casos. Notificación a Slack todavía no" +
-      " está implementada — ver [BRT-137](https://brot74.atlassian.net/browse/BRT-137)._",
+    "_El merge sigue siendo manual en todos los casos. Cada crítica nueva también se avisa" +
+      " por Slack — ver [BRT-137](https://brot74.atlassian.net/browse/BRT-137)._",
     "",
     lineaJira,
   ].join("\n");

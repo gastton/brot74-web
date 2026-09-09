@@ -5,9 +5,8 @@ name: Dependabot Triage Agent
 # del repo. Corre en cron todos los días y se puede disparar a mano.
 #
 # Detecta + clasifica (BRT-139/BRT-140), aprueba las no críticas con CI
-# verde (Nivel 1: BRT-142) y gestiona tickets de Jira (BRT-143). Todavía no
-# notifica a Slack (BRT-144) — cuando se implemente, este workflow no
-# necesita cambios: solo va a hacer más el mismo `npm run dependabot:triage`.
+# verde (Nivel 1: BRT-142), gestiona tickets de Jira y avisa por Slack cada
+# crítica nueva (BRT-143/BRT-144).
 
 on:
   schedule:
@@ -63,4 +62,8 @@ jobs:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
           JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          # BRT-144: Incoming Webhook del canal de Slack del proyecto.
+          # Optativo: sin este secret, se crean los tickets de Jira pero no
+          # se avisa por Slack.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: npm run dependabot:triage

@@ -1,6 +1,7 @@
 import type { DependabotPrRisk } from "./github.js";
 import type { AccionResultado } from "./actions.js";
 import type { RiskResult } from "./risk.js";
+import { notificarCritica } from "./slack.js";
 
 /**
  * BRT-143: gestión de tickets Jira del agente de triage.
@@ -10,6 +11,9 @@ import type { RiskResult } from "./risk.js";
  *   crítica sin resolver.
  * - Un ticket dedicado por PR crítica (Bug, label `dependabot-pr-<numero>`)
  *   con el análisis de riesgo. No se autocierra — requiere revisión humana.
+ *   Cuando el ticket es nuevo, dispara además la notificación a Slack
+ *   (BRT-144) — separación de canales: el batch es ruido de rutina, esto
+ *   es señal de atención humana.
  *
  * Habla directo con la Jira REST API v3 (no el MCP de Atlassian: este
  * script corre en un runner de GitHub Actions, no dentro de una sesión de
@@ -145,6 +149,11 @@ async function cerrarComoDone(issueKey: string): Promise<void> {
   });
 }
 
+function urlDelIssue(key: string): string {
+  const baseUrl = (process.env.JIRA_BASE_URL ?? "").replace(/\/$/, "");
+  return `${baseUrl}/browse/${key}`;
+}
+
 function urlDeLaCorrida(): string | undefined {
   const { GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID } = process.env;
   if (!GITHUB_SERVER_URL || !GITHUB_REPOSITORY || !GITHUB_RUN_ID) return undefined;
@@ -249,6 +258,9 @@ export async function actualizarJira(procesadas: PrProcesada[]): Promise<Resulta
       if (esNuevo) {
         await linkearIssues(batchKey, key);
         criticasNuevas.push(key);
+        // BRT-144: Slack se notifica en el mismo momento en que nace el
+        // ticket dedicado — no en cada corrida que lo vuelve a encontrar.
+        await notificarCritica(pr, key, urlDelIssue(key));
       }
     }
 
