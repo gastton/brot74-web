@@ -54,9 +54,25 @@ function construirMensaje(pr: PrProcesada, jiraKey: string, jiraUrl: string) {
  * la corrida.
  */
 export async function notificarCritica(pr: PrProcesada, jiraKey: string, jiraUrl: string): Promise<void> {
-  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+  // .trim(): `gh secret set` interactivo puede colar un salto de línea o
+  // espacio al final si se pegó desde otro lado — evita un "Failed to
+  // parse URL" por algo tan tonto como eso.
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL?.trim();
   if (!webhookUrl) {
     console.warn(`Falta SLACK_WEBHOOK_URL — no se notifica a Slack la PR crítica #${pr.numero}.`);
+    return;
+  }
+
+  // GitHub Actions enmascara el valor del secret en los logs (sale como
+  // "***"), así que un error de fetch no dice nada útil. La longitud sí
+  // pasa el filtro de enmascarado (no es el secret, es un número) y alcanza
+  // para diagnosticar sin exponer nada: una URL de Incoming Webhook real
+  // ronda los 80-90 caracteres.
+  if (!/^https:\/\//.test(webhookUrl)) {
+    console.warn(
+      `SLACK_WEBHOOK_URL no empieza con "https://" (longitud: ${webhookUrl.length}) — revisá que el secret` +
+        ` tenga solo la URL, sin texto de más. No se notifica la PR crítica #${pr.numero}.`,
+    );
     return;
   }
 
