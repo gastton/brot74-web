@@ -1,7 +1,6 @@
 import type { DependabotPrRisk } from "./github.js";
 import type { AccionResultado } from "./actions.js";
 import type { RiskResult } from "./risk.js";
-import { notificarCritica } from "./slack.js";
 
 /**
  * BRT-143: gestión de tickets Jira del agente de triage.
@@ -11,9 +10,10 @@ import { notificarCritica } from "./slack.js";
  *   crítica sin resolver.
  * - Un ticket dedicado por PR crítica (Bug, label `dependabot-pr-<numero>`)
  *   con el análisis de riesgo. No se autocierra — requiere revisión humana.
- *   Cuando el ticket es nuevo, dispara además la notificación a Slack
- *   (BRT-144) — separación de canales: el batch es ruido de rutina, esto
- *   es señal de atención humana.
+ *
+ * No dispara Slack directamente (eso lo arma index.ts con el resultado
+ * completo de la corrida — BRT-144 pasó de notificar por cada ticket
+ * crítico nuevo a mandar un resumen único al final de cada corrida).
  *
  * Habla directo con la Jira REST API v3 (no el MCP de Atlassian: este
  * script corre en un runner de GitHub Actions, no dentro de una sesión de
@@ -31,9 +31,18 @@ const PROJECT_KEY = process.env.JIRA_PROJECT_KEY ?? "BRT";
 
 export type PrProcesada = DependabotPrRisk & RiskResult & AccionResultado;
 
+export interface CriticaConTicket {
+  pr: PrProcesada;
+  jiraKey: string;
+  jiraUrl: string;
+}
+
 export interface ResultadoJira {
   batchKey: string | null;
   criticasNuevas: string[];
+  /** Todas las PRs críticas de la corrida con su ticket (nuevo o ya
+   * existente) — BRT-144 lo usa para listar los pendientes en Slack. */
+  criticas: CriticaConTicket[];
   omitido?: string;
 }
 
@@ -243,34 +252,33 @@ export async function actualizarJira(procesadas: PrProcesada[]): Promise<Resulta
   const faltantes = credencialesFaltantes();
   if (faltantes) {
     console.warn(`${faltantes} — no se gestionan tickets de Jira esta corrida.`);
-    return { batchKey: null, criticasNuevas: [], omitido: faltantes };
+    return { batchKey: null, criticasNuevas: [], criticas: [], omitido: faltantes };
   }
 
   try {
     const fecha = new Date().toISOString().slice(0, 10);
     const batchKey = await findOrCreateBatchIssue(fecha, procesadas);
 
-    const criticas = procesadas.filter((pr) => pr.critica);
+    const criticasDeHoy = procesadas.filter((pr) => pr.critica);
     const criticasNuevas: string[] = [];
+    const criticas: CriticaConTicket[] = [];
 
-    for (const pr of criticas) {
+    for (const pr of criticasDeHoy) {
       const { key, esNuevo } = await findOrCreateCriticalIssue(pr);
+      criticas.push({ pr, jiraKey: key, jiraUrl: urlDelIssue(key) });
       if (esNuevo) {
         await linkearIssues(batchKey, key);
         criticasNuevas.push(key);
-        // BRT-144: Slack se notifica en el mismo momento en que nace el
-        // ticket dedicado — no en cada corrida que lo vuelve a encontrar.
-        await notificarCritica(pr, key, urlDelIssue(key));
       }
     }
 
-    if (criticas.length === 0) {
+    if (criticasDeHoy.length === 0) {
       await cerrarComoDone(batchKey);
     }
 
-    return { batchKey, criticasNuevas };
+    return { batchKey, criticasNuevas, criticas };
   } catch (err) {
     console.warn("Falló la gestión de tickets de Jira (se sigue sin romper la corrida):", (err as Error).message);
-    return { batchKey: null, criticasNuevas: [], omitido: (err as Error).message };
+    return { batchKey: null, criticasNuevas: [], criticas: [], omitido: (err as Error).message };
   }
 }

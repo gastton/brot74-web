@@ -1,44 +1,53 @@
-import type { PrProcesada } from "./jira.js";
-
 /**
- * BRT-144: notificación a Slack. Se dispara **solo** cuando se crea un
- * ticket dedicado nuevo por PR crítica (nunca por el ticket batch de
- * rutina) — separación de canales del diseño de la épica (BRT-137): ruido
- * operativo de bajo interés vs. señal de alta atención humana.
+ * BRT-144: notificación a Slack. Se dispara **en cada corrida** del triage
+ * (haya o no PRs críticas) con un resumen: cuántas PRs se encontraron,
+ * cuántas se resolvieron solas (Nivel 1) y cuáles críticas quedan
+ * pendientes, cada una con link directo a su ticket de Jira.
  *
  * Usa un Incoming Webhook (`SLACK_WEBHOOK_URL`). Si falta o falla, no es
  * fatal — se loguea y el resto de la corrida sigue (mismo criterio que
- * Dependabot Alerts y Jira).
+ * Dependabot Alerts y Jira). No vuelve a consultar Jira/GitHub por su
+ * cuenta: arma el mensaje solo con lo que ya generó la corrida.
  */
 
-function severidadEmoji(severidad?: string): string {
-  switch (severidad) {
-    case "critical":
-      return "🟣";
-    case "high":
-      return "🔴";
-    case "moderate":
-      return "🟠";
-    case "low":
-      return "🟡";
-    default:
-      return "⚪";
-  }
+export interface CriticaPendiente {
+  numero: number;
+  paquete: string;
+  jiraKey: string;
+  jiraUrl: string;
 }
 
-function construirMensaje(pr: PrProcesada, jiraKey: string, jiraUrl: string) {
-  const versiones =
-    pr.versionDesde && pr.versionHasta ? `${pr.versionDesde} → ${pr.versionHasta}` : "sin datos de versión";
+export interface ResumenCorrida {
+  totalEncontradas: number;
+  totalResueltasAuto: number;
+  criticasPendientes: CriticaPendiente[];
+  /** Motivo por el que Jira no pudo confirmar el estado de las críticas
+   * esta corrida (credenciales ausentes, Jira caído) — si está presente,
+   * `criticasPendientes` puede no reflejar la realidad. */
+  jiraOmitido?: string;
+}
+
+// Exportada para poder verificar el formato del mensaje sin pasar por la
+// red (el resto de la función hace fetch a un webhook real).
+export function construirMensaje(resumen: ResumenCorrida) {
+  const { totalEncontradas, totalResueltasAuto, criticasPendientes, jiraOmitido } = resumen;
+
+  const seccionCriticas = jiraOmitido
+    ? `⚠️ No se pudo confirmar el estado de las críticas en Jira esta corrida (${jiraOmitido}).`
+    : criticasPendientes.length === 0
+      ? "✅ Ninguna crítica pendiente."
+      : criticasPendientes
+          .map((c) => `⚠️ <${c.jiraUrl}|${c.jiraKey}> — \`${c.paquete}\` (#${c.numero})`)
+          .join("\n");
 
   const texto =
-    `${severidadEmoji(pr.severidad)} *PR crítica de Dependabot: \`${pr.paquete}\`* (#${pr.numero})\n` +
-    `Bump: *${pr.bumpType}* (${versiones})\n` +
-    `Severidad: *${pr.severidad ?? "sin CVE asociado"}*\n` +
-    `Motivo: ${pr.motivo}\n` +
-    `<${pr.url}|Ver PR en GitHub> · <${jiraUrl}|${jiraKey} en Jira>`;
+    `🤖 *Triage de Dependabot*\n` +
+    `PRs encontradas: *${totalEncontradas}*\n` +
+    `Resueltas automáticamente: *${totalResueltasAuto}*\n\n` +
+    seccionCriticas;
 
   return {
-    text: `PR crítica de Dependabot: ${pr.paquete} (#${pr.numero}) — ${jiraKey}`,
+    text: `Triage de Dependabot: ${totalEncontradas} PR(s), ${criticasPendientes.length} crítica(s) pendiente(s)`,
     blocks: [
       {
         type: "section",
@@ -49,17 +58,16 @@ function construirMensaje(pr: PrProcesada, jiraKey: string, jiraUrl: string) {
 }
 
 /**
- * Notifica una PR crítica recién detectada (ticket de Jira ya creado).
- * Nunca tira una excepción — un fallo de Slack no debe frenar el resto de
- * la corrida.
+ * Notifica el resumen de la corrida completa. Nunca tira una excepción —
+ * un fallo de Slack no debe frenar el resto de la corrida.
  */
-export async function notificarCritica(pr: PrProcesada, jiraKey: string, jiraUrl: string): Promise<void> {
+export async function notificarResumenCorrida(resumen: ResumenCorrida): Promise<void> {
   // .trim(): `gh secret set` interactivo puede colar un salto de línea o
   // espacio al final si se pegó desde otro lado — evita un "Failed to
   // parse URL" por algo tan tonto como eso.
   const webhookUrl = process.env.SLACK_WEBHOOK_URL?.trim();
   if (!webhookUrl) {
-    console.warn(`Falta SLACK_WEBHOOK_URL — no se notifica a Slack la PR crítica #${pr.numero}.`);
+    console.warn("Falta SLACK_WEBHOOK_URL — no se notifica el resumen de la corrida a Slack.");
     return;
   }
 
@@ -71,7 +79,7 @@ export async function notificarCritica(pr: PrProcesada, jiraKey: string, jiraUrl
   if (!/^https:\/\//.test(webhookUrl)) {
     console.warn(
       `SLACK_WEBHOOK_URL no empieza con "https://" (longitud: ${webhookUrl.length}) — revisá que el secret` +
-        ` tenga solo la URL, sin texto de más. No se notifica la PR crítica #${pr.numero}.`,
+        ` tenga solo la URL, sin texto de más. No se notifica el resumen.`,
     );
     return;
   }
@@ -80,7 +88,7 @@ export async function notificarCritica(pr: PrProcesada, jiraKey: string, jiraUrl
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(construirMensaje(pr, jiraKey, jiraUrl)),
+      body: JSON.stringify(construirMensaje(resumen)),
     });
 
     // Slack responde el webhook con HTTP 200 incluso para varios errores
@@ -93,9 +101,6 @@ export async function notificarCritica(pr: PrProcesada, jiraKey: string, jiraUrl
       throw new Error(`Slack webhook -> HTTP ${res.status}, body: "${cuerpo.slice(0, 300)}"`);
     }
   } catch (err) {
-    console.warn(
-      `No se pudo notificar a Slack la PR crítica #${pr.numero} (no rompe la corrida):`,
-      (err as Error).message,
-    );
+    console.warn("No se pudo notificar el resumen a Slack (no rompe la corrida):", (err as Error).message);
   }
 }
