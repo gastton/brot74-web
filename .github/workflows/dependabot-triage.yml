@@ -36,7 +36,11 @@ jobs:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      # --ignore-scripts: este job no necesita nada de lo que instalan los
+      # postinstall de prisma/sharp/playwright (no corre build ni Prisma) —
+      # evita ejecutar lifecycle scripts de terceros en un workflow que
+      # justamente existe para manejar riesgo de dependencias.
+      - run: npm ci --ignore-scripts
 
       - name: Detectar y clasificar PRs de Dependabot
         env:
