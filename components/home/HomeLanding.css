@@ -96,9 +96,12 @@
    padding vertical a 0 — la línea del border-top quedaba pegada
    contra el contenido anterior. No se notaba antes porque el párrafo
    de "Pedís hoy" tenía <br/> de relleno al final; se sacaron al mover
-   "Horarios de entregas" ahí y quedó expuesto. Reponemos acá el mismo
-   valor que la regla de arriba pretendía dar. */
-.brot-landing footer.wrap { padding-top: clamp(48px, 8vh, 110px); padding-bottom: clamp(40px, 6vh, 80px); }
+   "Horarios de entregas" ahí y quedó expuesto. En principio se repuso
+   acá el mismo valor que la regla de arriba pretendía dar; v33 lo
+   redujo a propósito (110px → 52px) para subir el sello + "Micropanadería
+   de Masa Madre" — ya no matchea el valor de la regla muerta de
+   arriba, es deliberado. */
+.brot-landing footer.wrap { padding-top: clamp(24px, 4vh, 52px); padding-bottom: clamp(40px, 6vh, 80px); }
 .brot-landing .foot-brand { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: .02em; font-weight: 400; margin-bottom: 18px; }
 .brot-landing .foot-note { color: var(--stone); font-size: 14px; }
 .brot-landing .foot-col h3 { font-size: clamp(19px, 1.7vw, 25px); margin-bottom: 12px; }

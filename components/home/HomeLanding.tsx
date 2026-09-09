@@ -248,7 +248,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
                 alt="BROT 74"
                 width={2400}
                 height={2400}
-                style={{ width: "clamp(80px,9vw,120px)", height: "auto", display: "block", margin: "clamp(16px,3vw,40px) auto 0" }}
+                style={{ width: "clamp(80px,9vw,120px)", height: "auto", display: "block", margin: "0 auto" }}
               />
             </div>
             <div className="foot-note" style={{ marginTop: "18px" }}>
