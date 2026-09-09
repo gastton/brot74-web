@@ -16,7 +16,8 @@
     "test:db:down": "docker compose -f docker-compose.test.yml down",
     "test:e2e": "playwright test",
     "dependabot:detect": "tsx scripts/dependabot-triage/github.ts",
-    "dependabot:classify": "tsx scripts/dependabot-triage/risk.ts"
+    "dependabot:classify": "tsx scripts/dependabot-triage/risk.ts",
+    "dependabot:triage": "tsx scripts/dependabot-triage/index.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
