@@ -46,7 +46,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
           </div>
           <div
             style={{
-              fontSize: "14px",
+              fontSize: "12px",
               letterSpacing: "1.76px",
               textTransform: "uppercase",
               marginBottom: "clamp(20px,6vh,72px)",
@@ -166,7 +166,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
             </p>
             <dl className="day">
               <dt>
-                ¿Y el <span style={{ color: "#C8851A" }}>74</span>?
+                ¿Y el <span style={{ color: "#C8851A" }}>74?</span>
               </dt>
               <dd>
                 Nuestra identidad está en ese número. 74% es la
@@ -191,8 +191,8 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
           <div>
             <div className="rule block-rule"></div>
             <h2>
-              Pedís hoy, retirás cuando{" "}
-              <span style={{ color: "#C8851A" }}>esté listo</span>
+              Pedís hoy,{" "}
+              <span style={{ color: "#C8851A" }}>retirás cuando esté listo</span>
             </h2>
             <p>
               1. Elegí tu BROT
@@ -221,13 +221,12 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
                un salto raro antes de este bloque). */}
             <div className="foot-col" style={{ marginTop: "clamp(16px,3vw,40px)" }}>
               <h3>
-                Horarios de <span style={{ color: "#C8851A" }}>entregas</span>
+                Horarios <span style={{ color: "#C8851A" }}>de entregas</span>
               </h3>
-              <p>
-                Miércoles: desde las 18:00 horas
-                <br />
-                Sábados: desde las 18:00 horas
-              </p>
+              <ul>
+                <li>Miércoles: desde las 18:00 horas</li>
+                <li>Sábados: desde las 18:00 horas</li>
+              </ul>
             </div>
           </div>
           <div></div>
