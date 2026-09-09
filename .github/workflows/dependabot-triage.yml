@@ -22,7 +22,9 @@ concurrency:
 permissions:
   contents: read
   pull-requests: write
-  # Necesario para leer Dependabot Alerts (severidad de CVE) vía `gh api`.
+  # No alcanza para leer Dependabot Alerts (ver DEPENDABOT_ALERTS_TOKEN más
+  # abajo — BRT-147, confirmado con 403 en corrida real de BRT-141), pero se
+  # deja igual: es el permiso de menor privilegio correcto para lo demás.
   security-events: read
 
 jobs:
@@ -45,4 +47,8 @@ jobs:
       - name: Detectar y clasificar PRs de Dependabot
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # BRT-147: PAT propio con permiso de lectura de Dependabot Alerts
+          # (el GITHUB_TOKEN default no puede leer ese endpoint). Optativo:
+          # si el secret no existe, el paso sigue andando sin severidad.
+          DEPENDABOT_ALERTS_TOKEN: ${{ secrets.DEPENDABOT_ALERTS_TOKEN }}
         run: npm run dependabot:triage
