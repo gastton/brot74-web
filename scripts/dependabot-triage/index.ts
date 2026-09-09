@@ -3,6 +3,7 @@ import { aplicarNivel1 } from "./actions.js";
 import type { DependabotPrRisk } from "./github.js";
 import { actualizarJira, type ResultadoJira } from "./jira.js";
 import { classifyDependabotPRs } from "./risk.js";
+import { notificarResumenCorrida } from "./slack.js";
 
 /**
  * BRT-141: entrypoint que corre el workflow de GitHub Actions
@@ -10,8 +11,8 @@ import { classifyDependabotPRs } from "./risk.js";
  *
  * Detecta (BRT-139) + clasifica (BRT-140) + aplica Nivel 1 (BRT-142: aprueba
  * las no críticas con CI en verde, nunca mergea) + gestiona tickets de Jira
- * y notifica a Slack por cada crítica nueva (BRT-143/BRT-144) y deja un
- * resumen en el job summary de Actions.
+ * (BRT-143) + manda un resumen a Slack de la corrida completa (BRT-144) y
+ * deja el mismo resumen en el job summary de Actions.
  */
 
 type PrProcesada = DependabotPrRisk & {
@@ -58,8 +59,8 @@ function resumenMarkdown(procesadas: PrProcesada[], jira: ResultadoJira): string
     "|---|---|---|---|---|---|---|",
     filas,
     "",
-    "_El merge sigue siendo manual en todos los casos. Cada crítica nueva también se avisa" +
-      " por Slack — ver [BRT-137](https://brot74.atlassian.net/browse/BRT-137)._",
+    "_El merge sigue siendo manual en todos los casos. Al final de cada corrida se manda" +
+      " un resumen a Slack — ver [BRT-137](https://brot74.atlassian.net/browse/BRT-137)._",
     "",
     lineaJira,
   ].join("\n");
@@ -79,6 +80,18 @@ async function main(): Promise<void> {
 
   const jira = await actualizarJira(procesadas);
   console.log("Jira:", jira);
+
+  await notificarResumenCorrida({
+    totalEncontradas: procesadas.length,
+    totalResueltasAuto: procesadas.filter((pr) => pr.accion === "aprobada").length,
+    criticasPendientes: jira.criticas.map((c) => ({
+      numero: c.pr.numero,
+      paquete: c.pr.paquete,
+      jiraKey: c.jiraKey,
+      jiraUrl: c.jiraUrl,
+    })),
+    jiraOmitido: jira.omitido,
+  });
 
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (summaryPath) {
