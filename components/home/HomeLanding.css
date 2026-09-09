@@ -74,7 +74,7 @@
 .brot-landing .media { position: relative; aspect-ratio: 1 / 1; width: 100%; }
 .brot-landing .media.tall { aspect-ratio: 574 / 704; margin-top: clamp(24px, 4vw, 64px); }
 .brot-landing .offset { align-self: center; }
-.brot-landing .offset .media { aspect-ratio: 16 / 26; width: 78%; margin-right: 0; margin-left: auto; margin-top: clamp(64px, 10vw, 180px); }
+.brot-landing .offset .media { aspect-ratio: 16 / 26; width: 78%; margin-right: 0; margin-left: auto; margin-top: clamp(64px, 10vw, 180px); transform: translateY(clamp(24px, 4vw, 72px)); }
 /* antes inline en el JSX (style={{aspectRatio, width}}) — se movió acá
    porque un estilo inline le gana en especificidad a cualquier regla de
    CSS, y hubiera bloqueado el override de .media-bleed en mobile. */
@@ -102,6 +102,9 @@
 .brot-landing .foot-brand { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: .02em; font-weight: 400; margin-bottom: 18px; }
 .brot-landing .foot-note { color: var(--stone); font-size: 14px; }
 .brot-landing .foot-col h3 { font-size: clamp(19px, 1.7vw, 25px); margin-bottom: 12px; }
+.brot-landing .foot-col ul { margin: 0; padding-left: 1.2em; }
+.brot-landing .foot-col li { margin: 0 0 4px; }
+.brot-landing .foot-col li::marker { color: var(--amber); }
 .brot-landing .foot-col + .foot-col { margin-top: 40px; }
 .brot-landing .legal { margin-top: clamp(48px, 7vh, 96px); display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--stone); }
 
