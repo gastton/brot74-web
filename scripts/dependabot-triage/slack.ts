@@ -83,9 +83,14 @@ export async function notificarCritica(pr: PrProcesada, jiraKey: string, jiraUrl
       body: JSON.stringify(construirMensaje(pr, jiraKey, jiraUrl)),
     });
 
-    if (!res.ok) {
-      const cuerpo = await res.text().catch(() => "");
-      throw new Error(`Slack webhook -> HTTP ${res.status}: ${cuerpo.slice(0, 300)}`);
+    // Slack responde el webhook con HTTP 200 incluso para varios errores
+    // (ej. "no_service" si el webhook está deshabilitado/borrado,
+    // "channel_not_found", "action_prohibited") — el cuerpo, no el status,
+    // es la única forma de distinguir un envío real de un fallo silencioso.
+    // Éxito real: cuerpo es exactamente el texto "ok".
+    const cuerpo = (await res.text().catch(() => "")).trim();
+    if (!res.ok || cuerpo !== "ok") {
+      throw new Error(`Slack webhook -> HTTP ${res.status}, body: "${cuerpo.slice(0, 300)}"`);
     }
   } catch (err) {
     console.warn(
