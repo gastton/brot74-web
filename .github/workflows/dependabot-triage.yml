@@ -51,6 +51,12 @@ jobs:
           # (el GITHUB_TOKEN default no puede leer ese endpoint). Optativo:
           # si el secret no existe, el paso sigue andando sin severidad.
           DEPENDABOT_ALERTS_TOKEN: ${{ secrets.DEPENDABOT_ALERTS_TOKEN }}
+          # BRT-149: GitHub bloquea a nivel de plataforma que el GITHUB_TOKEN
+          # default apruebe PRs ("GitHub Actions is not permitted to approve
+          # pull requests") — hace falta un PAT de una identidad real.
+          # Optativo: sin este secret, el agente detecta/clasifica/reporta
+          # pero no aprueba nada.
+          PR_APPROVE_TOKEN: ${{ secrets.PR_APPROVE_TOKEN }}
           # BRT-143: credenciales de Jira (API token propio, no OAuth) para
           # crear/buscar tickets. Optativo: sin estos secrets, el paso sigue
           # corriendo (detección + clasificación + Nivel 1) sin tocar Jira.

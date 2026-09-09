@@ -65,17 +65,62 @@ function getEstadoChecksParaPR(owner: string, repo: string, numero: number): Est
   return estadoDeChecksRequeridos(checkRuns);
 }
 
-function aprobarPR(owner: string, repo: string, numero: number, motivoClasificacion: string): void {
-  runGh([
-    "pr",
-    "review",
-    String(numero),
-    "--repo",
-    `${owner}/${repo}`,
-    "--approve",
-    "--body",
-    `🤖 Aprobada automáticamente por el agente de triage de Dependabot (Nivel 1) — ${motivoClasificacion} CI en verde (lint + integration). El merge sigue siendo manual.`,
-  ]);
+/**
+ * BRT-149: GitHub bloquea a nivel de plataforma que el `GITHUB_TOKEN`
+ * default de un workflow apruebe PRs ("GitHub Actions is not permitted to
+ * approve pull requests") — no es un tema de permisos del workflow, es una
+ * restricción fija para evitar que un workflow se auto-apruebe sus propios
+ * cambios. Hace falta un PAT de una identidad real, igual que ya resolvimos
+ * para Dependabot Alerts (BRT-147) y Jira (BRT-143).
+ */
+function tokenDeAprobacion(): string | undefined {
+  return process.env.PR_APPROVE_TOKEN;
+}
+
+/**
+ * Intenta aprobar la PR. Nunca tira una excepción hacia arriba — un fallo
+ * puntual (auth, rate limit, lo que sea) no debe frenar el resto de la
+ * corrida ni la actualización de Jira (BRT-149: antes crasheaba todo el
+ * proceso acá mismo).
+ */
+function intentarAprobar(
+  owner: string,
+  repo: string,
+  numero: number,
+  motivoClasificacion: string,
+): { aprobada: boolean; motivo: string } {
+  const token = tokenDeAprobacion();
+  if (!token) {
+    return {
+      aprobada: false,
+      motivo: "No crítica y CI en verde, pero falta PR_APPROVE_TOKEN — el agente no puede aprobar sin un PAT propio.",
+    };
+  }
+
+  try {
+    runGh(
+      [
+        "pr",
+        "review",
+        String(numero),
+        "--repo",
+        `${owner}/${repo}`,
+        "--approve",
+        "--body",
+        `🤖 Aprobada automáticamente por el agente de triage de Dependabot (Nivel 1) — ${motivoClasificacion} CI en verde (lint + integration). El merge sigue siendo manual.`,
+      ],
+      token,
+    );
+    return {
+      aprobada: true,
+      motivo: "No crítica y CI en verde — aprobada automáticamente. Falta el merge manual.",
+    };
+  } catch (err) {
+    return {
+      aprobada: false,
+      motivo: `No crítica y CI en verde, pero falló la aprobación (se reintenta en la próxima corrida): ${(err as Error).message}`,
+    };
+  }
 }
 
 /**
@@ -97,29 +142,40 @@ export function aplicarNivel1<T extends DependabotPrRisk & RiskResult>(
       };
     }
 
-    const estado = getEstadoChecksParaPR(owner, repo, pr.numero);
+    // BRT-149: cualquier fallo puntual acá (consultar checks, aprobar) no
+    // debe frenar el resto de las PRs ni la actualización de Jira — se
+    // reporta esta PR como no tocada y la corrida sigue.
+    try {
+      const estado = getEstadoChecksParaPR(owner, repo, pr.numero);
 
-    if (estado === "pendiente") {
+      if (estado === "pendiente") {
+        return {
+          ...pr,
+          accion: "no-tocada",
+          motivoAccion: "No crítica, pero lint/integration todavía no terminaron — se evalúa de nuevo mañana.",
+        };
+      }
+
+      if (estado === "rojo") {
+        return {
+          ...pr,
+          accion: "no-tocada",
+          motivoAccion: "No crítica, pero CI está en rojo (lint o integration fallaron) — no se aprueba sola.",
+        };
+      }
+
+      const resultado = intentarAprobar(owner, repo, pr.numero, pr.motivo);
+      return {
+        ...pr,
+        accion: resultado.aprobada ? "aprobada" : "no-tocada",
+        motivoAccion: resultado.motivo,
+      };
+    } catch (err) {
       return {
         ...pr,
         accion: "no-tocada",
-        motivoAccion: "No crítica, pero lint/integration todavía no terminaron — se evalúa de nuevo mañana.",
+        motivoAccion: `No se pudo procesar esta PR (se reintenta en la próxima corrida): ${(err as Error).message}`,
       };
     }
-
-    if (estado === "rojo") {
-      return {
-        ...pr,
-        accion: "no-tocada",
-        motivoAccion: "No crítica, pero CI está en rojo (lint o integration fallaron) — no se aprueba sola.",
-      };
-    }
-
-    aprobarPR(owner, repo, pr.numero, pr.motivo);
-    return {
-      ...pr,
-      accion: "aprobada",
-      motivoAccion: "No crítica y CI en verde — aprobada automáticamente. Falta el merge manual.",
-    };
   });
 }
