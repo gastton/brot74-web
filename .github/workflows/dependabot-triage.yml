@@ -4,10 +4,9 @@ name: Dependabot Triage Agent
 # test.yml a propósito: no es CI de la app, es un proceso de mantenimiento
 # del repo. Corre en cron todos los días y se puede disparar a mano.
 #
-# Hoy solo detecta + clasifica (BRT-139/BRT-140) y deja un resumen — todavía
-# no aprueba PRs (Nivel 1: BRT-142) ni toca Jira/Slack (BRT-143/BRT-144).
-# Cuando esas historias se implementen, este workflow no necesita cambios:
-# solo va a hacer más el mismo `npm run dependabot:triage`.
+# Detecta + clasifica (BRT-139/BRT-140), aprueba las no críticas con CI
+# verde (Nivel 1: BRT-142), gestiona tickets de Jira y avisa por Slack cada
+# crítica nueva (BRT-143/BRT-144).
 
 on:
   schedule:
@@ -44,11 +43,27 @@ jobs:
       # justamente existe para manejar riesgo de dependencias.
       - run: npm ci --ignore-scripts
 
-      - name: Detectar y clasificar PRs de Dependabot
+      - name: Detectar, clasificar, aprobar y actualizar Jira
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # BRT-147: PAT propio con permiso de lectura de Dependabot Alerts
           # (el GITHUB_TOKEN default no puede leer ese endpoint). Optativo:
           # si el secret no existe, el paso sigue andando sin severidad.
           DEPENDABOT_ALERTS_TOKEN: ${{ secrets.DEPENDABOT_ALERTS_TOKEN }}
+          # BRT-149: GitHub bloquea a nivel de plataforma que el GITHUB_TOKEN
+          # default apruebe PRs ("GitHub Actions is not permitted to approve
+          # pull requests") — hace falta un PAT de una identidad real.
+          # Optativo: sin este secret, el agente detecta/clasifica/reporta
+          # pero no aprueba nada.
+          PR_APPROVE_TOKEN: ${{ secrets.PR_APPROVE_TOKEN }}
+          # BRT-143: credenciales de Jira (API token propio, no OAuth) para
+          # crear/buscar tickets. Optativo: sin estos secrets, el paso sigue
+          # corriendo (detección + clasificación + Nivel 1) sin tocar Jira.
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          # BRT-144: Incoming Webhook del canal de Slack del proyecto.
+          # Optativo: sin este secret, se crean los tickets de Jira pero no
+          # se avisa por Slack.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: npm run dependabot:triage

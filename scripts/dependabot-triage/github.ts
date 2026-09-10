@@ -96,14 +96,23 @@ export function repoSlug(): string {
   return match[1];
 }
 
-function ghApi<T>(path: string, token?: string): T {
-  const output = execFileSync(resolveExecutable("gh"), ["api", path], {
+/**
+ * Corre un comando `gh` arbitrario (no solo `gh api`) resolviendo el
+ * ejecutable por path absoluto. Exportada para que el resto del agente
+ * (BRT-142: aprobar PRs) reuse el mismo mecanismo en vez de invocar `gh`
+ * por su cuenta.
+ */
+export function runGh(args: string[], token?: string): string {
+  return execFileSync(resolveExecutable("gh"), args, {
     encoding: "utf8",
     // Sin `token`, hereda el auth de `gh` tal cual (GITHUB_TOKEN del
     // workflow, o la sesión de `gh auth login` local).
     env: token ? { ...process.env, GH_TOKEN: token } : process.env,
   });
-  return JSON.parse(output) as T;
+}
+
+export function ghApi<T>(path: string, token?: string): T {
+  return JSON.parse(runGh(["api", path], token)) as T;
 }
 
 function listOpenDependabotPRs(owner: string, repo: string): GitHubPullRequest[] {
