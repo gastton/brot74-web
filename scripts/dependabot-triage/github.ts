@@ -96,11 +96,23 @@ export function repoSlug(): string {
   return match[1];
 }
 
-function ghApi<T>(path: string): T {
-  const output = execFileSync(resolveExecutable("gh"), ["api", path], {
+/**
+ * Corre un comando `gh` arbitrario (no solo `gh api`) resolviendo el
+ * ejecutable por path absoluto. Exportada para que el resto del agente
+ * (BRT-142: aprobar PRs) reuse el mismo mecanismo en vez de invocar `gh`
+ * por su cuenta.
+ */
+export function runGh(args: string[], token?: string): string {
+  return execFileSync(resolveExecutable("gh"), args, {
     encoding: "utf8",
+    // Sin `token`, hereda el auth de `gh` tal cual (GITHUB_TOKEN del
+    // workflow, o la sesión de `gh auth login` local).
+    env: token ? { ...process.env, GH_TOKEN: token } : process.env,
   });
-  return JSON.parse(output) as T;
+}
+
+export function ghApi<T>(path: string, token?: string): T {
+  return JSON.parse(runGh(["api", path], token)) as T;
 }
 
 function listOpenDependabotPRs(owner: string, repo: string): GitHubPullRequest[] {
@@ -112,13 +124,21 @@ function listOpenDependabotPRs(owner: string, repo: string): GitHubPullRequest[]
 
 /**
  * Lee las Dependabot Alerts abiertas del repo para cruzar severidad por
- * paquete. No es fatal si falla (repo sin alerts habilitadas, token sin el
- * scope `security_events`): el resto del triage sigue sin severidad.
+ * paquete. No es fatal si falla (repo sin alerts habilitadas, token sin
+ * permiso): el resto del triage sigue sin severidad.
+ *
+ * BRT-147: este endpoint específico no acepta el `GITHUB_TOKEN` default de
+ * un workflow bajo ningún permiso (403 "Resource not accessible by
+ * integration", confirmado en corrida real de BRT-141) — hace falta un PAT
+ * propio con permiso de lectura de Dependabot Alerts. Si existe la env var
+ * `DEPENDABOT_ALERTS_TOKEN` se usa esa para esta llamada puntual; el resto
+ * del script (listar/aprobar PRs) sigue con el token default de `gh`.
  */
 function listOpenDependabotAlerts(owner: string, repo: string): DependabotAlert[] {
   try {
     return ghApi<DependabotAlert[]>(
       `repos/${owner}/${repo}/dependabot/alerts?state=open&per_page=100`,
+      process.env.DEPENDABOT_ALERTS_TOKEN,
     );
   } catch (err) {
     console.warn(
