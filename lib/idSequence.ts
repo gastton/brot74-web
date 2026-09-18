@@ -18,12 +18,32 @@ export async function resyncIdSequence(tableName: string) {
   );
 }
 
-/** True si el error es un choque de unique constraint (P2002) sobre el campo "id". */
+/**
+ * True si el error es un choque de unique constraint (P2002) sobre el
+ * campo "id" — específicamente la primary key, no cualquier otro unique
+ * constraint del modelo (ej. `ProductStock` tiene uno compuesto).
+ *
+ * BRT-179 (Prisma 7): con el driver adapter, `err.meta` dejó de traer el
+ * `target` semántico (`['id']`) que ponía el motor en Rust — ahora viene
+ * el error crudo de Postgres en `meta.driverAdapterError.cause`, con el
+ * nombre del constraint (`constraint.index`), no el nombre del campo. Para
+ * una primary key, Postgres/Prisma nombran ese índice `"<Tabla>_pkey"` por
+ * convención — se detecta por ahí. Se deja también el chequeo viejo por
+ * `target` como fallback, no debería doler.
+ */
 export function isIdConflict(err: unknown): boolean {
-  return (
-    err instanceof Prisma.PrismaClientKnownRequestError &&
-    err.code === "P2002" &&
-    Array.isArray(err.meta?.target) &&
-    (err.meta.target as string[]).includes("id")
-  );
+  if (!(err instanceof Prisma.PrismaClientKnownRequestError) || err.code !== "P2002") {
+    return false;
+  }
+
+  const meta = err.meta as
+    | { target?: unknown; driverAdapterError?: { cause?: { constraint?: { index?: unknown } } } }
+    | undefined;
+
+  if (Array.isArray(meta?.target)) {
+    return (meta.target as unknown[]).includes("id");
+  }
+
+  const constraintIndex = meta?.driverAdapterError?.cause?.constraint?.index;
+  return typeof constraintIndex === "string" && constraintIndex.endsWith("_pkey");
 }
