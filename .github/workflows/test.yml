@@ -13,6 +13,12 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      # BRT-179 (Prisma 7): prisma.config.ts ahora se carga también para
+      # `prisma generate`, y exige que DIRECT_URL exista — aunque generate
+      # nunca se conecta de verdad a la base, solo lee el schema. No hace
+      # falta que sea una URL alcanzable.
+      DIRECT_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
     steps:
       - uses: actions/checkout@v7
 

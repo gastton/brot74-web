@@ -31,6 +31,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // BRT-179: Prisma Client generado (prisma generate), no código propio.
+    "app/generated/**",
   ]),
 ]);
 

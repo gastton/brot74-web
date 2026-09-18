@@ -1,4 +1,5 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import { join } from "node:path";
 import dotenv from "dotenv";
 import { beforeAll, afterEach, afterAll } from "vitest";
 
@@ -35,7 +36,14 @@ for (const name of ["ADMIN_PASSWORD", "JWT_SECRET", "DIRECT_URL"] as const) {
 import { prisma } from "@/lib/db";
 
 beforeAll(() => {
-  execSync("npx prisma db push --skip-generate --accept-data-loss", {
+  // BRT-179 (Prisma 7): `db push` sacó el flag --skip-generate (ya no
+  // regenera el client solo, así que ni hacía falta pedirle que no lo
+  // haga). `prisma generate` corre aparte, antes de esto, en CI.
+  //
+  // Binario local (node_modules/.bin, versión fijada en package-lock.json)
+  // en vez de `npx` — mismo criterio que el job e2e de test.yml: evita que
+  // el proceso resuelva el comando por PATH (Sonar S4036 / CWE-426).
+  execFileSync(join(process.cwd(), "node_modules/.bin/prisma"), ["db", "push", "--accept-data-loss"], {
     stdio: "inherit",
     env: process.env,
   });

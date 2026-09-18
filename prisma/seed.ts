@@ -1,6 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../app/generated/prisma/client";
 
-const prisma = new PrismaClient();
+// BRT-179 (Prisma 7): driver adapter obligatorio, igual que en lib/db.ts.
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("Seeding BROT.74 database...");

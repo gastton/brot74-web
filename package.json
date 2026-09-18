@@ -19,11 +19,9 @@
     "dependabot:classify": "tsx scripts/dependabot-triage/risk.ts",
     "dependabot:triage": "tsx scripts/dependabot-triage/index.ts"
   },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
-  },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
     "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
@@ -32,7 +30,7 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.46.0",
     "next": "16.3.5",
-    "prisma": "^5.22.0",
+    "prisma": "^7.10.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "sharp": "^0.35.4"
