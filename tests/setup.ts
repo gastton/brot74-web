@@ -35,7 +35,10 @@ for (const name of ["ADMIN_PASSWORD", "JWT_SECRET", "DIRECT_URL"] as const) {
 import { prisma } from "@/lib/db";
 
 beforeAll(() => {
-  execSync("npx prisma db push --skip-generate --accept-data-loss", {
+  // BRT-179 (Prisma 7): `db push` sacó el flag --skip-generate (ya no
+  // regenera el client solo, así que ni hacía falta pedirle que no lo
+  // haga). `npx prisma generate` corre aparte, antes de esto, en CI.
+  execSync("npx prisma db push --accept-data-loss", {
     stdio: "inherit",
     env: process.env,
   });
