@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { formatCurrency } from "@/lib/utils";
 
 /**
  * Generador de tarjetas de pan para WhatsApp/Instagram (1080×1350).
@@ -449,12 +450,29 @@ function Bullet({ label, value, price }: { label: string; value: string; price?:
   );
 }
 
-export default function BreadCardGenerator({ onClose }: { onClose?: () => void }) {
-  const [name, setName] = useState("PAN DE CENTENO 100%");
-  const [ingredients, setIngredients] = useState("Harinas de trigo integral, 000 y centeno. Semillas de girasol, chía y lino. Nueces.");
+export interface BreadCardProduct {
+  name: string;
+  price: number;
+  weight: string;
+  ingredients: string;
+  imageUrl: string;
+}
+
+export default function BreadCardGenerator({
+  onClose,
+  product,
+}: {
+  onClose?: () => void;
+  /** BRT-118: producto que disparó "Generar tarjeta" — precarga el form. Cada apertura remonta el componente, así que un producto distinto arranca de cero. */
+  product?: BreadCardProduct | null;
+}) {
+  const [name, setName] = useState(() => product?.name || "PAN DE CENTENO 100%");
+  const [ingredients, setIngredients] = useState(
+    () => product?.ingredients || "Harinas de trigo integral, 000 y centeno. Semillas de girasol, chía y lino. Nueces."
+  );
   const [fermentTime, setFermentTime] = useState("24hs en frío");
-  const [weight, setWeight] = useState("750g");
-  const [price, setPrice] = useState("$8.500");
+  const [weight, setWeight] = useState(() => product?.weight || "750g");
+  const [price, setPrice] = useState(() => (product?.price ? formatCurrency(product.price) : "$8.500"));
   const [note, setNote] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [fitMode, setFitMode] = useState<FitMode>("cover");
@@ -497,7 +515,8 @@ export default function BreadCardGenerator({ onClose }: { onClose?: () => void }
     return () => clearTimeout(t);
   }, [name]);
 
-  const displayImageUrl = uploadedImageUrl || DEFAULT_IMAGE;
+  const displayImageUrl = uploadedImageUrl || product?.imageUrl || DEFAULT_IMAGE;
+  const hasPreloadedPhoto = Boolean(uploadedImageUrl || product?.imageUrl);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -642,7 +661,7 @@ export default function BreadCardGenerator({ onClose }: { onClose?: () => void }
                       className="flex-1 text-left rounded-[10px] px-3 py-2.5 text-[13px] font-medium hover:opacity-80 transition-opacity"
                       style={{ fontFamily: JOST, border: "1px dashed #C6B79C", background: "#fff", color: NAVY }}
                     >
-                      {uploadedImageUrl ? "Cambiar foto…" : "Elegir archivo…"}
+                      {hasPreloadedPhoto ? "Cambiar foto…" : "Elegir archivo…"}
                     </button>
                     {uploadedImageUrl && (
                       <button
