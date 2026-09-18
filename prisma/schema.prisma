@@ -1,17 +1,17 @@
+// BRT-179 (Prisma 7): el generator pasa a "prisma-client" con output
+// obligatorio — ya no se genera en node_modules/.prisma/client, y el
+// import deja de ser desde "@prisma/client" (ver lib/db.ts).
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
 }
 
+// BRT-179 (Prisma 7): "url"/"directUrl" ya no se soportan acá. La URL que
+// usa el CLI (migrate/db push) vive en prisma.config.ts (con DIRECT_URL,
+// sin pooler — por BRT-112). La URL que usa el PrismaClient en runtime va
+// en el driver adapter, en lib/db.ts (con DATABASE_URL, pooled).
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  // Conexión sin pooler para los comandos de migración (migrate deploy/dev/
-  // resolve, db push). El pooler de Neon (pgbouncer, modo transacción) no
-  // sostiene el advisory lock que usa Prisma Migrate, y esos comandos
-  // fallan con "Error P1002: ... timed out" (ver BRT-112). El Prisma Client
-  // en runtime sigue usando `url` (pooled) como siempre.
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 model Product {
