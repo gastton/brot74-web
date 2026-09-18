@@ -6,6 +6,7 @@ import Image from "next/image";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import FocalPicker from "@/components/FocalPicker";
 import BreadCardGenerator from "@/components/admin/BreadCardGenerator";
+import type { BreadCardProduct } from "@/components/admin/BreadCardGenerator";
 import { formatCurrency } from "@/lib/utils";
 import { toastError, toastSuccess } from "@/lib/toast";
 
@@ -56,7 +57,7 @@ export default function ProductosPage() {
   const [uploading, setUploading] = useState(false);
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [showCardGenerator, setShowCardGenerator] = useState(false);
+  const [cardGeneratorProduct, setCardGeneratorProduct] = useState<BreadCardProduct | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function fetchProducts() {
@@ -232,7 +233,15 @@ export default function ProductosPage() {
 
               <div className="flex justify-end mt-3 pt-3 border-t border-border/60">
                 <button
-                  onClick={() => setShowCardGenerator(true)}
+                  onClick={() =>
+                    setCardGeneratorProduct({
+                      name: p.name,
+                      price: p.price,
+                      weight: p.weight,
+                      ingredients: p.ingredients,
+                      imageUrl: p.imageUrl,
+                    })
+                  }
                   className="flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-brown transition-colors"
                 >
                   <FileImage className="w-3.5 h-3.5" /> Generar tarjeta
@@ -371,9 +380,9 @@ export default function ProductosPage() {
 
       {zoomSrc && <ImageZoomModal src={zoomSrc} onClose={() => setZoomSrc(null)} />}
 
-      {showCardGenerator && (
+      {cardGeneratorProduct && (
         <div className="fixed inset-0 z-[60] overflow-y-auto">
-          <BreadCardGenerator onClose={() => setShowCardGenerator(false)} />
+          <BreadCardGenerator product={cardGeneratorProduct} onClose={() => setCardGeneratorProduct(null)} />
         </div>
       )}
     </div>
