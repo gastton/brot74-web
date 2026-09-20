@@ -180,7 +180,7 @@ export default function ProductModal({
         {product.imageUrl && (
           <div
             className="brot-modal-photo relative w-full overflow-hidden"
-            style={{ height: "234px", cursor: "pointer" }}
+            style={{ height: "340px", cursor: "pointer" }}
             onClick={() => setShowZoom(true)}
           >
             <Image
@@ -225,7 +225,7 @@ export default function ProductModal({
 
           {/* Gramaje */}
           {product.weight && (
-            <div className="font-semibold text-[13px] text-stone mt-[6px]" style={{ letterSpacing: ".02em" }}>{product.weight}</div>
+            <div className="brot-mlabel mt-[6px]">{product.weight}</div>
           )}
 
           {/* Descripción */}
@@ -274,7 +274,7 @@ export default function ProductModal({
           )}
 
           {!slotSelected && (
-            <p className="mt-4 text-[13px] font-medium text-stone bg-[#F9F5EC] rounded-xl px-4 py-3">
+            <p className="mt-4 text-[13px] font-medium text-stone bg-[#F4EEE2] rounded-[4px] px-4 py-3">
               Elegí una fecha de entrega para agregar al pedido
             </p>
           )}
@@ -283,29 +283,16 @@ export default function ProductModal({
           <div className="brot-modal-rule" style={{ height: "1px", background: "rgba(14,35,60,.10)", marginTop: "22px" }} />
 
           {/* Pie: stock + controles */}
-          <div className="brot-modal-foot flex flex-col gap-[14px] mt-[18px]">
+          <div className="brot-modal-foot flex flex-col gap-[14px] mt-[30px]">
 
           {/* Stock — desktop (sin cambios) */}
           {stockText && (
             <div className="brot-modal-stock-desktop items-center gap-2">
               {!isOutOfStock && (
-                <span className="w-2 h-2 rounded-full flex-none" style={{ background: stockColor, boxShadow: "0 0 0 4px rgba(22,198,90,.16)" }} />
+                <span className="w-2 h-2 rounded-full flex-none" style={{ background: stockColor }} />
               )}
               <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: stockColor }}>
                 {stockText}
-              </span>
-            </div>
-          )}
-
-          {/* Stock — mobile (contra el total disponible, nada se descontó
-             todavía porque acá se elige la cantidad antes de confirmar) */}
-          {mobileStockText && (
-            <div className="brot-modal-stock-mobile items-center gap-2">
-              {!mobileOutOfStock && (
-                <span className="w-2 h-2 rounded-full flex-none" style={{ background: mobileStockColor, boxShadow: "0 0 0 4px rgba(22,198,90,.16)" }} />
-              )}
-              <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: mobileStockColor }}>
-                {mobileStockText}
               </span>
             </div>
           )}
@@ -319,10 +306,12 @@ export default function ProductModal({
                 <button
                   onClick={onAdd}
                   disabled={!canAdd}
-                  className="brot-modal-cta w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
+                  className="brot-modal-cta w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[4px] border-none"
                   style={{
                     background: "#0E233C",
-                    color: "#F9F5EC",
+                    color: "#F4EEE2",
+                    textTransform: "uppercase",
+                    letterSpacing: ".08em",
                     opacity: canAdd ? 1 : 0.4,
                     cursor: canAdd ? "pointer" : "not-allowed",
                     transition: ctaTransition,
@@ -333,26 +322,19 @@ export default function ProductModal({
                   {canAdd ? "Sumar este BROT" : "No disponible"}
                 </button>
               ) : (
-                /* Stepper + subtotal */
+                /* Stepper + subtotal — v37: sin recuadro, "−" con hairline (BRT-181) */
                 <div className="flex items-center justify-between gap-[14px]">
                   {/* Stepper */}
-                  <div
-                    className="inline-flex items-center gap-1"
-                    style={{
-                      background: "#F9F5EC",
-                      border: "1.5px solid rgba(14,35,60,.16)",
-                      borderRadius: "14px",
-                      padding: "5px",
-                    }}
-                  >
+                  <div className="inline-flex items-center gap-2">
                     <button
                       onClick={onRemove}
                       aria-label="Restar"
-                      className="flex items-center justify-center rounded-full border-none"
+                      className="flex items-center justify-center rounded-full"
                       style={{
                         width: "44px",
                         height: "44px",
-                        background: "#FBF7EF",
+                        background: "transparent",
+                        border: "var(--brot-hair)",
                         color: "#0E233C",
                         cursor: "pointer",
                         transition: "transform .12s",
@@ -378,7 +360,7 @@ export default function ProductModal({
                         width: "44px",
                         height: "44px",
                         background: "#0E233C",
-                        color: "#F9F5EC",
+                        color: "#F4EEE2",
                         cursor: canAdd ? "pointer" : "not-allowed",
                         opacity: canAdd ? 1 : 0.35,
                         transition: "transform .12s, opacity .15s",
@@ -393,7 +375,7 @@ export default function ProductModal({
 
                   {/* Subtotal */}
                   <div className="text-right">
-                    <div className="font-medium text-[13px] text-stone">Subtotal</div>
+                    <div className="brot-mlabel">Subtotal</div>
                     <div className="font-bold text-[20px] text-navy mt-0.5">
                       {formatCurrency(product.price * quantity)}
                     </div>
@@ -409,78 +391,88 @@ export default function ProductModal({
              de "elegir cantidad → confirmar → volver al listado" de la
              referencia (sin copiar su estilo). */}
           {slotSelected && (
-            <div className="brot-modal-controls-mobile flex-col gap-[14px]">
-              <div
-                className="w-full flex items-center justify-between"
-                style={{ background: "#F9F5EC", border: "1.5px solid rgba(14,35,60,.16)", borderRadius: "14px", padding: "5px" }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    // BRT-96: en cantidad 1, "−" ya no se limita a clampear el
-                    // stepper local — si el producto YA está en el carrito
-                    // (quantity > 0), lo saca del carrito de una, igual que
-                    // hace el "−" de desktop con onRemove. Si nunca se agregó
-                    // (quantity === 0, mobileQty arranca en 1 igual) no hay
-                    // nada que sacar, así que ahí el botón sigue deshabilitado.
-                    if (mobileQty <= 1) {
-                      if (quantity > 0) { onRemove(); onClose(); }
-                      return;
-                    }
-                    setMobileQty((q) => q - 1);
-                  }}
-                  disabled={mobileQty <= 1 && quantity === 0}
-                  aria-label="Restar cantidad"
-                  className="flex items-center justify-center rounded-full border-none"
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    background: "#FBF7EF",
-                    color: "#0E233C",
-                    cursor: mobileQty <= 1 && quantity === 0 ? "not-allowed" : "pointer",
-                    opacity: mobileQty <= 1 && quantity === 0 ? 0.4 : 1,
-                    transition: "transform .12s, opacity .15s",
-                  }}
-                  onMouseDown={(e) => { if (mobileQty > 1 || quantity > 0) e.currentTarget.style.transform = "scale(.9)"; }}
-                  onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
-                </button>
-                <span className="font-bold text-[20px] text-navy text-center" style={{ minWidth: "40px" }}>
-                  {mobileQty}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
-                  disabled={mobileOutOfStock || mobileMaxReached}
-                  aria-label="Sumar cantidad"
-                  className="flex items-center justify-center rounded-full border-none"
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    background: "#0E233C",
-                    color: "#F9F5EC",
-                    cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
-                    opacity: (mobileOutOfStock || mobileMaxReached) ? 0.35 : 1,
-                    transition: "transform .12s, opacity .15s",
-                  }}
-                  onMouseDown={(e) => { if (!mobileOutOfStock && !mobileMaxReached) e.currentTarget.style.transform = "scale(.9)"; }}
-                  onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M12 5v14"/></svg>
-                </button>
+            <div className="brot-modal-controls-mobile flex-1 flex-col gap-[14px]">
+              {/* v37: el stepper pierde el recuadro — círculos de 34px con
+                 hairline, en la misma fila que "N disponibles" (BRT-181). */}
+              <div className="w-full flex items-center justify-between">
+                {mobileStockText && (
+                  <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: mobileStockColor }}>
+                    {mobileStockText}
+                  </span>
+                )}
+                <div className="inline-flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // BRT-96: en cantidad 1, "−" ya no se limita a clampear el
+                      // stepper local — si el producto YA está en el carrito
+                      // (quantity > 0), lo saca del carrito de una, igual que
+                      // hace el "−" de desktop con onRemove. Si nunca se agregó
+                      // (quantity === 0, mobileQty arranca en 1 igual) no hay
+                      // nada que sacar, así que ahí el botón sigue deshabilitado.
+                      if (mobileQty <= 1) {
+                        if (quantity > 0) { onRemove(); onClose(); }
+                        return;
+                      }
+                      setMobileQty((q) => q - 1);
+                    }}
+                    disabled={mobileQty <= 1 && quantity === 0}
+                    aria-label="Restar cantidad"
+                    className="flex items-center justify-center rounded-full"
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      background: "transparent",
+                      border: "var(--brot-hair)",
+                      color: "#0E233C",
+                      cursor: mobileQty <= 1 && quantity === 0 ? "not-allowed" : "pointer",
+                      opacity: mobileQty <= 1 && quantity === 0 ? 0.4 : 1,
+                      transition: "transform .12s, opacity .15s",
+                    }}
+                    onMouseDown={(e) => { if (mobileQty > 1 || quantity > 0) e.currentTarget.style.transform = "scale(.9)"; }}
+                    onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
+                  </button>
+                  <span className="font-bold text-[16px] text-navy text-center" style={{ minWidth: "24px" }}>
+                    {mobileQty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
+                    disabled={mobileOutOfStock || mobileMaxReached}
+                    aria-label="Sumar cantidad"
+                    className="flex items-center justify-center rounded-full border-none"
+                    style={{
+                      width: "34px",
+                      height: "34px",
+                      background: "#0E233C",
+                      color: "#F4EEE2",
+                      cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
+                      opacity: (mobileOutOfStock || mobileMaxReached) ? 0.35 : 1,
+                      transition: "transform .12s, opacity .15s",
+                    }}
+                    onMouseDown={(e) => { if (!mobileOutOfStock && !mobileMaxReached) e.currentTarget.style.transform = "scale(.9)"; }}
+                    onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M12 5v14"/></svg>
+                  </button>
+                </div>
               </div>
 
+              {/* v37: CTA anclado al pie de la pantalla (BRT-181). */}
               <button
                 type="button"
                 onClick={() => { onConfirmQuantity(mobileQty); onClose(); }}
                 disabled={!mobileCanConfirm}
-                className="w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[14px] border-none"
+                className="w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[4px] border-none mt-auto"
                 style={{
                   background: "#0E233C",
-                  color: "#F9F5EC",
+                  color: "#F4EEE2",
+                  textTransform: "uppercase",
+                  letterSpacing: ".08em",
                   opacity: mobileCanConfirm ? 1 : 0.4,
                   cursor: mobileCanConfirm ? "pointer" : "not-allowed",
                   transition: ctaTransition,
@@ -502,10 +494,10 @@ export default function ProductModal({
           {cartCount > 0 && (
             <button
               onClick={onCheckout}
-              className="brot-modal-desktop-bar flex items-center gap-3 w-full mt-5 rounded-[16px] border-none"
+              className="brot-modal-desktop-bar flex items-center gap-3 w-full mt-5 rounded-[4px] border-none"
               style={{
                 background: "#0E233C",
-                color: "#F9F5EC",
+                color: "#F4EEE2",
                 padding: "14px 18px",
                 cursor: "pointer",
                 transition: ctaTransition,
@@ -517,15 +509,15 @@ export default function ProductModal({
                 className="w-9 h-9 flex-none rounded-full flex items-center justify-center"
                 style={{ border: "1px solid rgba(249,245,236,.38)" }}
               >
-                <ShoppingCart size={18} color="#F9F5EC" strokeWidth={1.7} />
+                <ShoppingCart size={18} color="#F4EEE2" strokeWidth={1.7} />
               </span>
-              <span className="font-semibold text-[16px] whitespace-nowrap">
+              <span className="font-semibold text-[16px] whitespace-nowrap" style={{ textTransform: "uppercase", letterSpacing: ".06em" }}>
                 {cartCount} producto{cartCount !== 1 ? "s" : ""}
               </span>
               <span className="font-bold text-[18px] ml-auto whitespace-nowrap">
                 {formatCurrency(cartTotal)}
               </span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F9F5EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </button>
           )}
         </div>

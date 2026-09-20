@@ -31,7 +31,7 @@ function ConfirmacionContent() {
           maxWidth: "420px",
           background: "#fff",
           border: "1px solid rgba(14,35,60,.07)",
-          borderRadius: "24px",
+          borderRadius: "var(--brot-radius)",
           boxShadow: "0 36px 70px -30px rgba(14,35,60,.42)",
           padding: "44px 36px 36px",
         }}
@@ -56,8 +56,8 @@ function ConfirmacionContent() {
             viewBox="0 0 100 100"
             aria-hidden="true"
           >
-            <circle cx="50" cy="50" r="48" fill="none" stroke="#F9F5EC" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F9F5EC" strokeWidth="0.32" opacity="0.45" />
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#F4EEE2" strokeWidth="0.7" opacity="0.85" />
+            <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F4EEE2" strokeWidth="0.32" opacity="0.45" />
           </svg>
           <BrotWordmark variant="cream" />
         </div>
@@ -76,7 +76,7 @@ function ConfirmacionContent() {
 
         {/* Número de pedido */}
         {orderId && (
-          <div className="font-semibold text-[14px] mt-[14px]" style={{ color: "#A8A296" }}>
+          <div className="brot-mlabel brot-mlabel-amber mt-[14px]" style={{ textAlign: "center" }}>
             Pedido #{orderId}
           </div>
         )}
@@ -84,7 +84,7 @@ function ConfirmacionContent() {
         {/* Pill WhatsApp */}
         <div
           className="mt-[26px] flex items-start justify-center gap-[8px] font-semibold text-[16px] leading-[1.45] text-navy"
-          style={{ background: "#FBF1DF", borderRadius: "16px", padding: "18px 22px" }}
+          style={{ background: "#FBF1DF", borderRadius: "var(--brot-radius)", padding: "18px 22px" }}
         >
           <span className="mt-[3px] flex-none">
             <WheatIcon />
@@ -95,10 +95,12 @@ function ConfirmacionContent() {
         {/* CTA Volver */}
         <Link
           href="/"
-          className="mt-6 block w-full font-bold text-[16.5px] tracking-[.01em] py-[17px] rounded-[14px] no-underline flex items-center justify-center"
+          className="mt-6 block w-full font-bold text-[16.5px] tracking-[.01em] py-[17px] rounded-[4px] no-underline flex items-center justify-center"
           style={{
             background: "#0E233C",
-            color: "#F9F5EC",
+            color: "#F4EEE2",
+            textTransform: "uppercase",
+            letterSpacing: ".08em",
             transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
           }}
           onMouseEnter={(e) => {
