@@ -68,15 +68,12 @@ function InfoRow({ icon, label, value, last }: InfoRowProps) {
     >
       <span
         className="flex-none w-[42px] h-[42px] rounded-full flex items-center justify-center"
-        style={{ background: "#F9F5EC", border: "1px solid rgba(14,35,60,.10)" }}
+        style={{ background: "#F4EEE2", border: "1px solid rgba(14,35,60,.10)" }}
       >
         {icon}
       </span>
       <div>
-        <div
-          className="font-bold text-[10px] uppercase tracking-[.16em] whitespace-nowrap"
-          style={{ color: "#C8851A" }}
-        >
+        <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap">
           {label}
         </div>
         <div className="font-semibold text-[16.5px] text-navy mt-[3px]">
@@ -118,7 +115,7 @@ function NoSlotsEmptyState() {
 
   return (
     <article
-      className="rounded-[22px] text-center"
+      className="rounded-[4px] text-center"
       style={{
         background: "#FBF7EF",
         border: "1px solid rgba(14,35,60,.10)",
@@ -144,7 +141,7 @@ function NoSlotsEmptyState() {
 
       {/* Formulario / confirmación */}
       {sent ? (
-        <div className="flex flex-col items-center gap-2 mt-6 rounded-[14px] py-5 px-4" style={{ background: "#F9F5EC" }}>
+        <div className="flex flex-col items-center gap-2 mt-6 rounded-[4px] py-5 px-4" style={{ background: "#F4EEE2" }}>
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C8851A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>
           </svg>
@@ -173,10 +170,12 @@ function NoSlotsEmptyState() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full border-none cursor-pointer font-bold text-[15px] tracking-[.03em] py-4 rounded-[14px]"
+            className="w-full border-none cursor-pointer font-bold text-[15px] tracking-[.03em] py-4 rounded-[4px]"
             style={{
               background: "#0E233C",
-              color: "#F9F5EC",
+              color: "#F4EEE2",
+              textTransform: "uppercase",
+              letterSpacing: ".08em",
               transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
               opacity: loading ? 0.6 : 1,
             }}
@@ -235,7 +234,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
         return (
           <article
             key={slot.id ?? `slot-${i}`}
-            className="brot-card-article rounded-[22px] overflow-hidden"
+            className="brot-card-article rounded-[4px] overflow-hidden"
             style={{
               background: "#FBF7EF",
               border: "1px solid rgba(14,35,60,.10)",
@@ -264,7 +263,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
               {/* Fecha centrada */}
               <div
                 className="absolute inset-0 flex flex-col items-center justify-center text-center select-none"
-                style={{ color: "#F9F5EC", textShadow: "0 2px 18px rgba(14,35,60,.5)" }}
+                style={{ color: "#F4EEE2", textShadow: "0 2px 18px rgba(14,35,60,.5)" }}
               >
                 <div className="font-bold text-[17px] tracking-[.3em] uppercase">{weekday}</div>
                 <div className="font-semibold text-[12px] tracking-[.3em] uppercase mt-0.5" style={{ opacity: 0.85 }}>
@@ -285,7 +284,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
             </div>
 
             {/* ── Cuerpo ── */}
-            <div className="brot-card-body px-6 pb-6 pt-2">
+            <div className="brot-card-body px-6 pb-[42px] pt-2">
               {slot.pickupTime && (
                 <InfoRow icon={<ClockIcon />} label="Horario de retiro" value={slot.pickupTime} />
               )}
@@ -298,10 +297,12 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
               <button
                 disabled={!isOpen}
                 onClick={() => { if (isOpen && slot.id !== null) onChange(slot.id); }}
-                className="group mt-[18px] w-full flex items-center justify-center gap-[10px] font-bold text-[15px] tracking-[.03em] py-[17px] rounded-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="group mt-[18px] w-full flex items-center justify-center gap-[10px] font-bold text-[15px] tracking-[.03em] py-[17px] rounded-[4px] disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
                   background: "#0E233C",
-                  color: "#F9F5EC",
+                  color: "#F4EEE2",
+                  textTransform: "uppercase",
+                  letterSpacing: ".08em",
                   transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
                 }}
                 onMouseEnter={(e) => { if (isOpen) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}

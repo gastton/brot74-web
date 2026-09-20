@@ -32,13 +32,13 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
       <div
         className="hidden md:block fixed bottom-0 left-0 right-0 z-[60] p-4"
         style={{
-          background: "linear-gradient(to top, #F9F5EC 60%, transparent)",
+          background: "linear-gradient(to top, #F4EEE2 60%, transparent)",
           paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
         }}
       >
         {error && (
           <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto mb-2">
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm text-center">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-[4px] px-4 py-2 text-sm text-center">
               {error}
             </div>
           </div>
@@ -47,10 +47,10 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           <button
             onClick={onCheckout}
             disabled={reserving}
-            className="w-full flex items-center gap-3 rounded-[16px] border-none"
+            className="w-full flex items-center gap-3 rounded-[4px] border-none"
             style={{
               background: "#0E233C",
-              color: "#F9F5EC",
+              color: "#F4EEE2",
               padding: "14px 18px",
               cursor: "pointer",
               boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
@@ -60,13 +60,13 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
             onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
           >
             <span className="w-9 h-9 flex-none rounded-full flex items-center justify-center" style={{ border: "1px solid rgba(249,245,236,.38)" }}>
-              <ShoppingCart size={18} color="#F9F5EC" strokeWidth={1.7} />
+              <ShoppingCart size={18} color="#F4EEE2" strokeWidth={1.7} />
             </span>
-            <span className="font-semibold text-[16px] whitespace-nowrap">
+            <span className="font-semibold text-[16px] whitespace-nowrap" style={{ textTransform: "uppercase", letterSpacing: ".06em" }}>
               {reserving ? "Reservando…" : `${count} producto${count !== 1 ? "s" : ""}`}
             </span>
             <span className="font-bold text-[18px] ml-auto whitespace-nowrap">{formatCurrency(total)}</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F9F5EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 6l6 6-6 6"/>
             </svg>
           </button>
@@ -78,12 +78,12 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
         className="md:hidden fixed z-[60]"
         style={{
           right: "18px",
-          bottom: "calc(18px + env(safe-area-inset-bottom))",
+          bottom: "calc(41px + env(safe-area-inset-bottom))",
         }}
       >
         {error && (
           <div className="absolute bottom-full right-0 mb-2 w-[220px]">
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 text-xs text-center">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-[4px] px-3 py-2 text-xs text-center">
               {error}
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           onTouchStart={(e) => { e.currentTarget.style.transform = "scale(.95)"; }}
           onTouchEnd={(e) => { e.currentTarget.style.transform = ""; }}
         >
-          <ShoppingCart size={24} color="#F9F5EC" strokeWidth={1.7} />
+          <ShoppingCart size={24} color="#F4EEE2" strokeWidth={1.7} />
           <span
             className="absolute flex items-center justify-center rounded-full font-bold"
             style={{
@@ -118,7 +118,7 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
               padding: "0 5px",
               fontSize: "12px",
               background: "#C8851A",
-              color: "#F9F5EC",
+              color: "#F4EEE2",
               boxShadow: "0 2px 6px -1px rgba(14,35,60,.5)",
             }}
           >

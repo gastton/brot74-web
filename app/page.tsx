@@ -327,7 +327,7 @@ function HomeContent() {
   /* ─── SLOTS VIEW ────────────────────────────────────────── */
   if (view === "slots") {
     return (
-      <div className="min-h-screen" style={{ background: "#F9F5EC" }}>
+      <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
         <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 py-10">
           {/* Título */}
           <header className="mb-5 text-center">

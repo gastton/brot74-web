@@ -4,8 +4,8 @@
   /* BROT 74 — Paleta de marca */
   --color-navy:     #0E233C;
   --color-amber:    #C8851A;
-  --color-cream:    #F9F5EC;
-  --color-paper:    #FBF7EF;
+  --color-cream:    #F4EEE2;
+  --color-paper:    #FFFFFF;
   --color-stone:    #7C766A;
   --color-open:     #16C65A;
   --color-open-ink: #3F8F5B;
@@ -20,19 +20,25 @@
   --color-amber-light: #D9983D;
 
   /* Tipografías */
-  --font-sans:  var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
-  --font-serif: var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
+  --font-sans:  var(--font-jost, 'Jost', system-ui, sans-serif);
+  --font-serif: var(--font-jost, 'Jost', system-ui, sans-serif);
 }
 
 :root {
-  --background: #F9F5EC;
+  --background: #F4EEE2;
   --foreground: #0E233C;
+
+  /* v37 · tokens del lenguaje de la landing */
+  --brot-radius: 4px;
+  --brot-hair: 1px solid rgba(14,35,60,.16);
+  --brot-hair-soft: 1px solid rgba(14,35,60,.10);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
+  font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
+  font-weight: 300;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -59,13 +65,14 @@ body {
 /* ── Botón principal ── */
 .btn-primary {
   background-color: #0E233C;
-  color: #F9F5EC;
-  padding: 17px 24px;
-  border-radius: 14px;
-  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 16.5px;
-  letter-spacing: 0.01em;
+  color: #F4EEE2;
+  padding: 15px 18px;
+  border-radius: var(--brot-radius);
+  font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   border: none;
   cursor: pointer;
   display: flex;
@@ -73,36 +80,77 @@ body {
   justify-content: center;
   gap: 11px;
   width: 100%;
-  transition: transform 0.18s cubic-bezier(.2,.7,.3,1), box-shadow 0.18s;
+  transition: background-color 0.18s;
 }
 .btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 30px -16px rgba(14,35,60,.55);
+  background-color: #C8851A;
 }
 .btn-primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
+/* ── v37 (BRT-181): /admin queda fuera del alcance de la unificación visual
+   (ver APLICAR.md) — pero los tokens de arriba son globales (@theme/:root),
+   así que acá se revierten específicamente para el subárbol del panel admin
+   y del login, a los valores que tenían antes de esta entrega. ── */
+.admin-scope {
+  --color-cream: #F9F5EC;
+  --color-paper: #FBF7EF;
+  --font-sans:  var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
+  --font-serif: var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
+  --background: #F9F5EC;
+  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
+  font-weight: 400;
+}
+.admin-scope .btn-primary {
+  padding: 17px 24px;
+  border-radius: 14px;
+  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 16.5px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  transition: transform 0.18s cubic-bezier(.2,.7,.3,1), box-shadow 0.18s;
+}
+.admin-scope .btn-primary:hover:not(:disabled) {
+  background-color: #0E233C;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 30px -16px rgba(14,35,60,.55);
+}
+
+/* ── v37 · micro-label en versalitas (kickers, labels de formulario y de dato) ── */
+.brot-mlabel {
+  font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #7C766A;
+}
+.brot-mlabel-amber { color: #C8851A; }
+
 /* ── Input base ── */
 .brot-input {
   width: 100%;
-  font-family: var(--font-hanken, 'Hanken Grotesk'), system-ui, sans-serif;
+  font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
+  font-weight: 400;
   font-size: 15px;
   color: #0E233C;
   background: #fff;
-  border: 1.5px solid rgba(14,35,60,.16);
-  border-radius: 12px;
-  padding: 14px 16px;
+  border: var(--brot-hair);
+  border-radius: var(--brot-radius);
+  padding: 13px 14px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .brot-input::placeholder {
   color: #A8A296;
+  font-weight: 300;
 }
 .brot-input:focus {
   border-color: #0E233C;
-  box-shadow: 0 0 0 3px rgba(14,35,60,.16);
+  box-shadow: none;
 }
 textarea.brot-input {
   resize: none;
@@ -153,14 +201,22 @@ textarea.brot-input {
   padding: 0;
 }
 .brot-modal-inner {
-  border-radius: 20px 20px 0 0;
+  border-radius: 4px 4px 0 0;
   height: 100vh;
   height: 100dvh;
   max-height: 100vh;
   max-height: 100dvh;
 }
 .brot-modal-body {
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 340px);
+  padding-bottom: calc(42px + env(safe-area-inset-bottom));
+}
+/* v37: el foot se estira para ocupar el resto del alto disponible en mobile,
+   así el CTA puede anclarse al pie con margin-top:auto (ver ProductModal). */
+.brot-modal-foot {
+  flex: 1 1 auto;
 }
 /* En mobile la barra de carrito del modal no se muestra — la cubre el
    <CartBar> fijo (BRT-89). En desktop (900px+) sigue igual que siempre. */
@@ -186,9 +242,6 @@ textarea.brot-input {
 .brot-modal-controls-desktop {
   display: none;
 }
-.brot-modal-stock-mobile {
-  display: flex;
-}
 .brot-modal-controls-mobile {
   display: flex;
 }
@@ -205,7 +258,7 @@ textarea.brot-input {
     max-width: 760px !important;
     height: auto !important;
     max-height: 88vh !important;
-    border-radius: 22px !important;
+    border-radius: var(--brot-radius) !important;
     overflow: hidden !important;
   }
   .brot-modal-photo {
@@ -226,11 +279,12 @@ textarea.brot-input {
   .brot-modal-controls-desktop {
     display: block;
   }
-  .brot-modal-stock-mobile,
   .brot-modal-controls-mobile {
     display: none;
   }
   .brot-modal-body {
+    display: block;
+    min-height: 0;
     flex: 1;
     padding: 40px !important;
     overflow-y: auto;
@@ -247,6 +301,7 @@ textarea.brot-input {
     margin-top: 26px !important;
   }
   .brot-modal-foot {
+    flex: 0 1 auto !important;
     flex-direction: row !important;
     align-items: center !important;
     gap: 16px !important;
@@ -273,12 +328,14 @@ textarea.brot-input {
   padding: 0;
 }
 .brot-co-modal {
-  border-radius: 20px 20px 0 0 !important;
+  border-radius: 4px 4px 0 0 !important;
   height: 100vh;
   height: 100dvh;
   max-height: 100vh;
   max-height: 100dvh;
-  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(42px + env(safe-area-inset-bottom));
 }
 
 /* ── OrderModal checkout (form step) v29: two columns at 900px+, Productos a la
@@ -293,7 +350,7 @@ textarea.brot-input {
     max-width: 720px !important;
     height: auto !important;
     max-height: 90vh !important;
-    border-radius: 22px !important;
+    border-radius: var(--brot-radius) !important;
     padding-bottom: 0;
   }
   .brot-co-lines {

@@ -65,7 +65,7 @@ export default function ProductCard({
       <div
         className="relative overflow-hidden flex-none w-[104px] h-[104px] md:w-full md:h-auto md:aspect-square"
         style={{
-          borderRadius: "16px",
+          borderRadius: "var(--brot-radius)",
           background: "#ddd6c8",
           border: "1px solid rgba(14,35,60,.08)",
           boxShadow: isDisabled ? "none" : "0 16px 28px -22px rgba(14,35,60,.45)",
@@ -118,7 +118,7 @@ export default function ProductCard({
         {quantity > 0 && !outOfStock && (
           <div
             className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-            style={{ background: "#0E233C", color: "#F9F5EC", boxShadow: "0 2px 8px rgba(14,35,60,.4)" }}
+            style={{ background: "#0E233C", color: "#F4EEE2" }}
           >
             {quantity}
           </div>
@@ -128,7 +128,7 @@ export default function ProductCard({
         {slotSelected && remaining !== null && remaining <= 2 && remaining > 0 && (
           <div
             className="absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full"
-            style={{ background: "#C8851A", color: "#F9F5EC" }}
+            style={{ background: "#C8851A", color: "#F4EEE2" }}
           >
             Últimos {remaining}
           </div>
@@ -177,7 +177,7 @@ export default function ProductCard({
         {/* Peso — solo desktop, como siempre (BRT-92: mobile no lo muestra,
            en su lugar va la descripción). */}
         {weight && (
-          <div className="hidden md:block font-medium text-[12.5px] text-stone mt-0.5">{weight}</div>
+          <div className="hidden md:block brot-mlabel mt-0.5">{weight}</div>
         )}
 
         <div className="font-bold text-[15.5px] mt-2" style={{ color: "#C8851A" }}>
