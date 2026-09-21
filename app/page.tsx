@@ -40,6 +40,37 @@ interface Product {
 
 type CartMap = Record<number, number>;
 
+// Persistencia del carrito — envuelta en try/catch porque localStorage puede
+// tirar (incógnito estricto, navegador que lo bloquea) en cualquiera de sus
+// métodos, no solo al escribir; ante cualquier falla se degrada a "no hay
+// carrito guardado" sin romper el flujo (mismo criterio que BRT-182 en
+// OrderModal).
+const CART_STORAGE_KEY = "brot74-cart";
+
+function readSavedCart(): string | null {
+  try {
+    return localStorage.getItem(CART_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedCart(value: string) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, value);
+  } catch {
+    /* localStorage no disponible — no hay nada que persistir */
+  }
+}
+
+function clearSavedCart() {
+  try {
+    localStorage.removeItem(CART_STORAGE_KEY);
+  } catch {
+    /* localStorage no disponible — no hay nada que limpiar */
+  }
+}
+
 // BRT-95: cada paso navegable del flujo se refleja en la URL vía query
 // params — la URL manda, el estado de "en qué paso estoy" se deriva de ella
 // (no vive en un useState propio) para que "atrás" del navegador retroceda
@@ -120,7 +151,7 @@ function HomeContent() {
     if (loadingSlots || cartRestoredRef.current) return;
     cartRestoredRef.current = true;
     if (slotParam) return;
-    const saved = localStorage.getItem("brot74-cart");
+    const saved = readSavedCart();
     if (!saved) return;
     try {
       const { slotId, cart: savedCart } = JSON.parse(saved);
@@ -130,10 +161,10 @@ function HomeContent() {
         setCart(savedCart);
         router.replace(buildFlowUrl({ slot: slotId }));
       } else {
-        localStorage.removeItem("brot74-cart");
+        clearSavedCart();
       }
     } catch {
-      localStorage.removeItem("brot74-cart");
+      clearSavedCart();
     }
   }, [loadingSlots, slots, slotParam, router]);
 
@@ -173,9 +204,9 @@ function HomeContent() {
   // Persist cart to localStorage on every change
   useEffect(() => {
     if (selectedSlotId && Object.keys(cart).length > 0) {
-      localStorage.setItem("brot74-cart", JSON.stringify({ slotId: selectedSlotId, cart }));
+      writeSavedCart(JSON.stringify({ slotId: selectedSlotId, cart }));
     } else if (selectedSlotId) {
-      localStorage.removeItem("brot74-cart");
+      clearSavedCart();
     }
   }, [cart, selectedSlotId]);
 
@@ -303,7 +334,7 @@ function HomeContent() {
   function closeCheckout(clearCart?: boolean) {
     if (clearCart) {
       setCart({});
-      localStorage.removeItem("brot74-cart");
+      clearSavedCart();
     }
     if (!selectedSlotId) return;
     const depth = checkoutParam === "payment" ? 2 : checkoutParam === "form" ? 1 : 0;
@@ -320,7 +351,7 @@ function HomeContent() {
     // que el navegador termine de irse dejaba ver un flash de la grilla de
     // productos de atrás. Dejamos el modal montado hasta que la página
     // completa se reemplace sola.
-    localStorage.removeItem("brot74-cart");
+    clearSavedCart();
     window.location.href = `/confirmacion?order=${orderId}&status=pending`;
   }
 
