@@ -184,7 +184,7 @@ function NoSlotsEmptyState() {
           >
             {loading ? "Enviando…" : "Avisame cuando abra"}
           </button>
-          <p className="font-medium text-[12px] leading-[1.4] text-center m-0" style={{ color: "#A8A296" }}>
+          <p className="font-medium text-[13.5px] leading-[1.45] text-center m-0" style={{ color: "#5F6B76" }}>
             Te escribimos una sola vez, para la próxima fecha. Sin spam.
           </p>
         </form>

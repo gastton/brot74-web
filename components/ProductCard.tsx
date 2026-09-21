@@ -106,7 +106,7 @@ export default function ProductCard({
               background: "rgba(248,243,234,.78)",
               backdropFilter: "blur(5px)",
               WebkitBackdropFilter: "blur(5px)",
-              color: "#7C766A",
+              color: "#4E5A69",
               boxShadow: "0 3px 10px -5px rgba(0,0,0,.35)",
             }}
           >
@@ -146,7 +146,7 @@ export default function ProductCard({
             aria-disabled={limitReached}
             disabled={limitReached}
             onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
-            className="absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center border-none"
+            className="absolute bottom-2 right-2 w-11 h-11 rounded-full flex items-center justify-center border-none"
             style={{
               background: "rgba(248,243,234,.9)",
               backdropFilter: "blur(6px)",
@@ -172,7 +172,7 @@ export default function ProductCard({
         className="pt-3 px-0.5 flex-1 min-w-0 md:pt-3"
         style={{ opacity: outOfStock ? 0.5 : 1 }}
       >
-        <div className="font-semibold text-[16.5px] text-navy leading-snug">{name}</div>
+        <div className="font-semibold text-[18px] text-navy leading-snug">{name}</div>
 
         {/* Peso — solo desktop, como siempre (BRT-92: mobile no lo muestra,
            en su lugar va la descripción). */}
@@ -180,7 +180,7 @@ export default function ProductCard({
           <div className="hidden md:block brot-mlabel mt-0.5">{weight}</div>
         )}
 
-        <div className="font-bold text-[15.5px] mt-2" style={{ color: "#C8851A" }}>
+        <div className="font-bold text-[17px] mt-2 text-navy">
           {formatCurrency(price)}
         </div>
 
@@ -192,7 +192,7 @@ export default function ProductCard({
         {description && (
           <div className="md:hidden">
             <p
-              className="text-[13px] text-stone mt-1.5 leading-snug"
+              className="text-[14.5px] text-stone mt-1.5 leading-snug"
               style={{
                 display: "-webkit-box",
                 WebkitLineClamp: 3,

@@ -6,16 +6,21 @@
   --color-amber:    #C8851A;
   --color-cream:    #F4EEE2;
   --color-paper:    #FFFFFF;
-  --color-stone:    #7C766A;
+  /* v38 · stone pasa a navy desaturado: es color de TEXTO en todo el flujo
+     (text-stone) y a #7C766A daba 3,4:1 sobre crema. El beige original
+     queda disponible como --color-stone-line para bordes. */
+  --color-stone:      #4E5A69;
+  --color-stone-line: #7C766A;
   --color-open:     #16C65A;
-  --color-open-ink: #3F8F5B;
-  --color-faint:    #A8A296;
+  --color-open-ink: #2F6B47;
+  --color-faint:    #5F6B76;
+  --color-amber-ink: #8F5C10;
 
   /* Aliases para clases existentes en los componentes */
   --color-brown:       #0E233C;
   --color-brown-light: #2A3B52;
   --color-charcoal:    #0A1B2E;
-  --color-muted:       #7C766A;
+  --color-muted:       #4E5A69;
   --color-border:      #C8B99A;
   --color-amber-light: #D9983D;
 
@@ -28,6 +33,12 @@
   --background: #F4EEE2;
   --foreground: #0E233C;
 
+  /* v38 · UI v2.0 tanda 1 — tinta legible y área de toque mínima */
+  --brot-ink: #4E5A69;
+  --brot-ink-faint: #5F6B76;
+  --brot-amber-ink: #8F5C10;
+  --brot-tap: 44px;
+
   /* v37 · tokens del lenguaje de la landing */
   --brot-radius: 4px;
   --brot-hair: 1px solid rgba(14,35,60,.16);
@@ -38,7 +49,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
-  font-weight: 300;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,7 +67,7 @@ body {
 
 /* ── OrderModal: tacho de la lista de productos, atenuado — se resalta con el hover de la fila ── */
 .brot-co-line .brot-co-del {
-  opacity: .4;
+  opacity: .75;
 }
 .brot-co-line:hover .brot-co-del {
   opacity: 1;
@@ -66,13 +77,13 @@ body {
 .btn-primary {
   background-color: #0E233C;
   color: #F4EEE2;
-  padding: 15px 18px;
+  padding: 16px 20px;
   border-radius: var(--brot-radius);
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
   font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  min-height: 52px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -97,6 +108,10 @@ body {
 .admin-scope {
   --color-cream: #F9F5EC;
   --color-paper: #FBF7EF;
+  /* v38: /admin sigue fuera de alcance — revierte los tokens de tinta */
+  --color-stone: #7C766A;
+  --color-muted: #7C766A;
+  --color-faint: #A8A296;
   --font-sans:  var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
   --font-serif: var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
   --background: #F9F5EC;
@@ -122,35 +137,64 @@ body {
 /* ── v37 · micro-label en versalitas (kickers, labels de formulario y de dato) ── */
 .brot-mlabel {
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .18em;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  color: #7C766A;
+  color: #4E5A69;
 }
-.brot-mlabel-amber { color: #C8851A; }
+.brot-mlabel-amber { color: #8F5C10; }
+
+/* ── v38 · rótulo de campo: caja normal y tamaño legible. Reemplaza a
+   .brot-mlabel en los labels de formulario (ver manual_steps). ── */
+.brot-flabel {
+  font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: #0E233C;
+}
+
+/* ── v38 · área de toque mínima para botones de ícono ── */
+.brot-touch {
+  min-width: var(--brot-tap);
+  min-height: var(--brot-tap);
+}
+
+/* ── v38 · foco visible de teclado en toda la app ── */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid #0E233C;
+  outline-offset: 2px;
+}
+
+/* ── v38 · en táctil no existe el hover, que hoy es el único refuerzo
+   visual de los botones: el press pasa a tener su propio estado. ── */
+@media (hover: none) {
+  button:active:not(:disabled) { opacity: .82; }
+}
 
 /* ── Input base ── */
 .brot-input {
   width: 100%;
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
   font-weight: 400;
-  font-size: 15px;
+  font-size: 16.5px;
   color: #0E233C;
   background: #fff;
   border: var(--brot-hair);
   border-radius: var(--brot-radius);
-  padding: 13px 14px;
+  min-height: 48px;
+  padding: 14px 15px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .brot-input::placeholder {
-  color: #A8A296;
-  font-weight: 300;
+  color: #5F6B76;
+  font-weight: 400;
 }
 .brot-input:focus {
   border-color: #0E233C;
-  box-shadow: none;
+  box-shadow: 0 0 0 3px rgba(14,35,60,.14);
 }
 textarea.brot-input {
   resize: none;

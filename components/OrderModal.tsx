@@ -209,7 +209,9 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
   const [hasCopiedAlias, setHasCopiedAlias] = useState(false); // se mantiene: habilita "Ya pagué"
+  const [cvuCopied, setCvuCopied] = useState(false); // feedback transitorio del botón "Copiar" de la fila CVU (1.4s)
   const [toastVisible, setToastVisible] = useState(false);
+  const [toastText, setToastText] = useState("Alias copiado");
 
   const orderDoneRef = useRef(false);
   const successScheduledRef = useRef(false);
@@ -331,6 +333,19 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
     setAliasCopied(true);
     setHasCopiedAlias(true);
     setTimeout(() => setAliasCopied(false), 1400);
+    setToastText("Alias copiado");
+    setToastVisible(true);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 1600);
+  }
+
+  // Copia el CVU — espejo de handleCopyAlias.
+  function handleCopyCvu() {
+    navigator.clipboard?.writeText(CVU).catch(() => {});
+    setCvuCopied(true);
+    setHasCopiedAlias(true);
+    setTimeout(() => setCvuCopied(false), 1400);
+    setToastText("CVU copiado");
     setToastVisible(true);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 1600);
@@ -393,7 +408,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
           <button
             onClick={handleCloseClick}
             aria-label="Cerrar"
-            className="flex-none mt-0.5 flex items-center justify-center border-none bg-transparent p-0"
+            className="brot-touch flex-none mt-0.5 flex items-center justify-center border-none bg-transparent p-0"
             style={{ cursor: "pointer", transition: "transform .15s, opacity .15s", opacity: step === "payment" ? 1 : 0.6 }}
             onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.opacity = "1"; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.opacity = step === "payment" ? "1" : "0.6"; }}
@@ -424,7 +439,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">Titular</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all" style={{ letterSpacing: ".005em" }}>{TITULAR}</div>
+                    <div className="font-bold text-[16.5px] text-navy mt-[1px]" style={{ letterSpacing: ".005em", overflowWrap: "anywhere" }}>{TITULAR}</div>
                   </div>
                 </div>
               )}
@@ -432,7 +447,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">CUIT / CUIL</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all" style={{ letterSpacing: ".005em" }}>{CUIT}</div>
+                    <div className="font-bold text-[16.5px] text-navy mt-[1px]" style={{ letterSpacing: ".005em", overflowWrap: "anywhere" }}>{CUIT}</div>
                   </div>
                 </div>
               )}
@@ -440,16 +455,46 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">Alias</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all" style={{ letterSpacing: ".005em" }}>{ALIAS}</div>
+                    <div className="font-bold text-[16.5px] text-navy mt-[1px]" style={{ letterSpacing: ".005em", overflowWrap: "anywhere" }}>{ALIAS}</div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyAlias}
+                    className="brot-touch flex-none inline-flex items-center justify-center font-medium text-[13px]"
+                    style={{
+                      border: "1px solid rgba(14,35,60,.16)",
+                      borderRadius: "var(--brot-radius)",
+                      background: "transparent",
+                      color: "#0E233C",
+                      padding: "0 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {aliasCopied ? "Copiado" : "Copiar"}
+                  </button>
                 </div>
               )}
               {CVU && (
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]">
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">CVU</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all tracking-wide">{CVU}</div>
+                    <div className="font-bold text-[16.5px] text-navy mt-[1px] tracking-wide" style={{ overflowWrap: "anywhere" }}>{CVU}</div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleCopyCvu}
+                    className="brot-touch flex-none inline-flex items-center justify-center font-medium text-[13px]"
+                    style={{
+                      border: "1px solid rgba(14,35,60,.16)",
+                      borderRadius: "var(--brot-radius)",
+                      background: "transparent",
+                      color: "#0E233C",
+                      padding: "0 12px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {cvuCopied ? "Copiado" : "Copiar"}
+                  </button>
                 </div>
               )}
             </div>
@@ -483,7 +528,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 >
                   {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
                 </button>
-                <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
+                <div className="text-center text-[14px] text-stone" style={{ marginTop: "10px" }}>
                   Pagá desde tu app o home banking con el alias
                 </div>
               </div>
@@ -623,7 +668,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                     >
                       <span className="font-bold text-[15px] text-navy whitespace-nowrap">
                         {item.name}
-                        <i className="text-stone" style={{ fontStyle: "normal", fontWeight: 500, fontSize: "12.5px", marginLeft: "9px" }}>×{item.quantity}</i>
+                        <i className="text-stone" style={{ fontStyle: "normal", fontWeight: 400, fontSize: "14px", marginLeft: "9px" }}>×{item.quantity}</i>
                       </span>
                       <span className="flex items-center gap-[10px] flex-none">
                         <span className="font-bold text-[15px] text-navy whitespace-nowrap">
@@ -633,7 +678,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                           type="button"
                           aria-label={`Quitar ${item.name}`}
                           onClick={() => onRemoveItem(item.id)}
-                          className="brot-co-del w-[26px] h-[26px] inline-flex items-center justify-center rounded-[4px] border-none bg-transparent cursor-pointer text-stone"
+                          className="brot-co-del w-11 h-11 inline-flex items-center justify-center rounded-[4px] border-none bg-transparent cursor-pointer text-stone"
                           style={{ transition: "background .15s, color .15s, opacity .15s" }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(166,68,46,.10)"; e.currentTarget.style.color = "#A6442E"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = ""; }}
@@ -663,7 +708,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
               ].map((field) => (
                 <div key={field.id}>
-                  <label className="block brot-mlabel" style={{ marginBottom: "6px" }}>
+                  <label className="block brot-flabel" style={{ marginBottom: "6px" }}>
                     {field.label} <span style={{ color: "#C8851A" }}>*</span>
                   </label>
                   <input
@@ -674,10 +719,11 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                     required={field.required}
                     className="w-full text-navy bg-white outline-none"
                     style={{
-                      fontSize: "15px",
-                      border: "1.5px solid rgba(14,35,60,.13)",
-                      borderRadius: "12px",
-                      padding: "11px 15px",
+                      fontSize: "16.5px",
+                      border: "1.5px solid rgba(14,35,60,.16)",
+                      borderRadius: "var(--brot-radius)",
+                      minHeight: "48px",
+                      padding: "14px 15px",
                       transition: "border-color .15s, box-shadow .15s",
                     }}
                     onFocus={(e) => { e.currentTarget.style.borderColor = "#C8851A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(200,133,26,.16)"; }}
@@ -694,19 +740,20 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             </div>
 
             {/* Acciones */}
-            <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "8px", marginTop: "auto" }}>
+            <div className="brot-co-actions" style={{ display: "flex", flexDirection: "column-reverse", alignItems: "stretch", gap: "10px", marginTop: "auto" }}>
               <button
                 type="button"
                 onClick={() => onClose()}
-                className="flex-1 min-w-0 font-bold text-[12px] whitespace-nowrap overflow-hidden text-ellipsis"
+                className="w-full font-medium text-[15px]"
                 style={{
-                  border: "1.5px solid rgba(14,35,60,.14)",
-                  background: "#fff",
-                  color: "#0E233C",
+                  border: "none",
+                  background: "transparent",
+                  color: "#4E5A69",
                   borderRadius: "var(--brot-radius)",
-                  padding: "10px 6px",
-                  textTransform: "uppercase",
-                  letterSpacing: ".02em",
+                  minHeight: "44px",
+                  padding: "12px 6px",
+                  textTransform: "none",
+                  letterSpacing: ".01em",
                   cursor: "pointer",
                   transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .15s",
                 }}
@@ -718,14 +765,15 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               <button
                 type="submit"
                 disabled={expired}
-                className="flex-1 min-w-0 font-bold text-[12px] whitespace-nowrap overflow-hidden text-ellipsis"
+                className="w-full font-semibold text-[16px]"
                 style={{
                   border: "none",
                   background: "#0E233C",
                   color: "#F4EEE2",
                   borderRadius: "var(--brot-radius)",
-                  padding: "10px 6px",
-                  textTransform: "uppercase",
+                  minHeight: "52px",
+                  padding: "16px 6px",
+                  textTransform: "none",
                   letterSpacing: ".02em",
                   cursor: expired ? "not-allowed" : "pointer",
                   opacity: expired ? 0.4 : 1,
@@ -762,7 +810,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             transition: "opacity .2s, transform .2s",
           }}
         >
-          Alias copiado
+          {toastText}
         </div>
       )}
 

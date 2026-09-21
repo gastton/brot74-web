@@ -64,7 +64,7 @@ export default function ImageZoomModal({ src, alt = "", onClose }: ImageZoomModa
           </button>
         </div>
         <button onClick={onClose}
-          className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+          className="brot-touch w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>

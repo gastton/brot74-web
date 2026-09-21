@@ -73,7 +73,7 @@ export default function ProductModal({
   const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0);
 
   const stockColor =
-    isOutOfStock          ? "#7C766A"
+    isOutOfStock          ? "#4E5A69"
     : remaining === null  ? "#3F8F5B"
     : remaining >= 3      ? "#3F8F5B"
     : remaining > 0       ? "#C8851A"
@@ -95,7 +95,7 @@ export default function ProductModal({
   const mobileCanConfirm = slotSelected && !mobileOutOfStock;
 
   const mobileStockColor =
-    mobileOutOfStock        ? "#7C766A"
+    mobileOutOfStock        ? "#4E5A69"
     : product.stock === null ? "#3F8F5B"
     : product.stock >= 3     ? "#3F8F5B"
     : product.stock > 0      ? "#C8851A"
@@ -138,7 +138,7 @@ export default function ProductModal({
         <button
           onClick={onClose}
           aria-label="Volver"
-          className="brot-modal-back-desktop absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full items-center justify-center"
+          className="brot-modal-back-desktop absolute top-[14px] left-[14px] z-10 w-[44px] h-[44px] rounded-full items-center justify-center"
           style={{
             background: "rgba(248,243,234,.85)",
             backdropFilter: "blur(6px)",
@@ -158,7 +158,7 @@ export default function ProductModal({
         <button
           onClick={onClose}
           aria-label="Cerrar"
-          className="brot-modal-back-mobile absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full items-center justify-center"
+          className="brot-modal-back-mobile absolute top-[14px] left-[14px] z-10 w-[44px] h-[44px] rounded-full items-center justify-center"
           style={{
             background: "#FBF7EF",
             border: "none",
@@ -208,7 +208,7 @@ export default function ProductModal({
         {/* Cuerpo */}
         <div className="brot-modal-body px-6 pb-6 pt-[22px]">
           {/* Overline */}
-          <div className="brot-modal-kicker flex items-center gap-[9px] mb-[14px]" style={{ fontSize: "11px", fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#C8851A" }}>
+          <div className="brot-modal-kicker flex items-center gap-[9px] mb-[14px]" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: ".1em", textTransform: "uppercase", color: "#8F5C10" }}>
             <span>Masa madre · Fermentación 18 h</span>
             <span style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, rgba(200,133,26,.4), rgba(200,133,26,0))" }} />
           </div>
@@ -249,8 +249,8 @@ export default function ProductModal({
                 type="button"
                 aria-expanded={!descCollapsed}
                 onClick={() => setDescCollapsed((c) => !c)}
-                className="brot-modal-more inline-flex items-center gap-[6px] mt-[11px] border-none bg-transparent p-0 cursor-pointer font-bold text-[13.5px]"
-                style={{ color: "#C8851A", letterSpacing: ".01em", alignSelf: "flex-start" }}
+                className="brot-modal-more inline-flex items-center gap-[6px] mt-[11px] border-none bg-transparent p-0 cursor-pointer font-bold text-[15px] min-h-[44px]"
+                style={{ color: "#8F5C10", letterSpacing: ".01em", alignSelf: "flex-start" }}
               >
                 <span>{descCollapsed ? "Seguir leyendo" : "Ver menos"}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "transform .2s ease", transform: descCollapsed ? "" : "rotate(180deg)" }}>
@@ -265,7 +265,7 @@ export default function ProductModal({
             <div className="flex items-center gap-2 mt-4">
               <WheatIcon />
               <span
-                className="text-[13.5px] text-stone"
+                className="text-[14.5px] text-stone"
                 style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
               >
                 {product.ingredients}
@@ -291,7 +291,7 @@ export default function ProductModal({
               {!isOutOfStock && (
                 <span className="w-2 h-2 rounded-full flex-none" style={{ background: stockColor }} />
               )}
-              <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: stockColor }}>
+              <span className="font-semibold text-[15px] whitespace-nowrap" style={{ color: stockColor }}>
                 {stockText}
               </span>
             </div>
@@ -306,12 +306,12 @@ export default function ProductModal({
                 <button
                   onClick={onAdd}
                   disabled={!canAdd}
-                  className="brot-modal-cta w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[4px] border-none"
+                  className="brot-modal-cta w-full font-semibold text-[16.5px] tracking-[.01em] py-4 rounded-[4px] border-none min-h-[52px]"
                   style={{
                     background: "#0E233C",
                     color: "#F4EEE2",
-                    textTransform: "uppercase",
-                    letterSpacing: ".08em",
+                    textTransform: "none",
+                    letterSpacing: ".02em",
                     opacity: canAdd ? 1 : 0.4,
                     cursor: canAdd ? "pointer" : "not-allowed",
                     transition: ctaTransition,
@@ -396,7 +396,7 @@ export default function ProductModal({
                  hairline, en la misma fila que "N disponibles" (BRT-181). */}
               <div className="w-full flex items-center justify-between">
                 {mobileStockText && (
-                  <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: mobileStockColor }}>
+                  <span className="font-semibold text-[15px] whitespace-nowrap" style={{ color: mobileStockColor }}>
                     {mobileStockText}
                   </span>
                 )}
@@ -420,8 +420,8 @@ export default function ProductModal({
                     aria-label="Restar cantidad"
                     className="flex items-center justify-center rounded-full"
                     style={{
-                      width: "34px",
-                      height: "34px",
+                      width: "44px",
+                      height: "44px",
                       background: "transparent",
                       border: "var(--brot-hair)",
                       color: "#0E233C",
@@ -435,7 +435,7 @@ export default function ProductModal({
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
                   </button>
-                  <span className="font-bold text-[16px] text-navy text-center" style={{ minWidth: "24px" }}>
+                  <span className="font-bold text-[20px] text-navy text-center" style={{ minWidth: "40px" }}>
                     {mobileQty}
                   </span>
                   <button
@@ -445,8 +445,8 @@ export default function ProductModal({
                     aria-label="Sumar cantidad"
                     className="flex items-center justify-center rounded-full border-none"
                     style={{
-                      width: "34px",
-                      height: "34px",
+                      width: "44px",
+                      height: "44px",
                       background: "#0E233C",
                       color: "#F4EEE2",
                       cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
@@ -467,12 +467,12 @@ export default function ProductModal({
                 type="button"
                 onClick={() => { onConfirmQuantity(mobileQty); onClose(); }}
                 disabled={!mobileCanConfirm}
-                className="w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[4px] border-none mt-auto"
+                className="w-full font-semibold text-[16.5px] tracking-[.01em] py-4 rounded-[4px] border-none mt-auto min-h-[52px]"
                 style={{
                   background: "#0E233C",
                   color: "#F4EEE2",
-                  textTransform: "uppercase",
-                  letterSpacing: ".08em",
+                  textTransform: "none",
+                  letterSpacing: ".02em",
                   opacity: mobileCanConfirm ? 1 : 0.4,
                   cursor: mobileCanConfirm ? "pointer" : "not-allowed",
                   transition: ctaTransition,
