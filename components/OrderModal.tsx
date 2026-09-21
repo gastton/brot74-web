@@ -168,9 +168,37 @@ function formatCountdown(seconds: number): string {
   return `${m}:${s}`;
 }
 
+// BRT-182: recordar nombre y teléfono entre pedidos. Envuelto en try/catch
+// porque localStorage puede tirar (modo incógnito, navegador que lo
+// bloquea) — ante cualquier falla, se degrada a formulario vacío sin romper
+// el flujo.
+const CONTACT_STORAGE_KEY = "brot74-contact";
+
+function loadSavedContact(): { name: string; phone: string } {
+  try {
+    const raw = localStorage.getItem(CONTACT_STORAGE_KEY);
+    if (!raw) return { name: "", phone: "" };
+    const parsed = JSON.parse(raw);
+    return {
+      name: typeof parsed?.name === "string" ? parsed.name : "",
+      phone: typeof parsed?.phone === "string" ? parsed.phone : "",
+    };
+  } catch {
+    return { name: "", phone: "" };
+  }
+}
+
+function saveContact(name: string, phone: string) {
+  try {
+    localStorage.setItem(CONTACT_STORAGE_KEY, JSON.stringify({ name, phone }));
+  } catch {
+    /* localStorage no disponible — no hay nada que persistir */
+  }
+}
+
 export default function OrderModal({ items, slotId, slotLabel, step, sessionToken, expiresAt, onRemoveItem, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
-  const [name, setName]       = useState("");
-  const [phone, setPhone]     = useState("");
+  const [name, setName]       = useState(() => loadSavedContact().name);
+  const [phone, setPhone]     = useState(() => loadSavedContact().phone);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
@@ -272,6 +300,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
         return null;
       }
       setOrderId(data.orderId);
+      saveContact(name.trim(), phone.trim());
       return data.orderId;
     } catch {
       orderDoneRef.current = false;
