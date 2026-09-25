@@ -208,7 +208,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   const [expired, setExpired] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
-  const [hasCopiedAlias, setHasCopiedAlias] = useState(false); // se mantiene: habilita "Ya pagué"
   const [toastVisible, setToastVisible] = useState(false);
 
   const orderDoneRef = useRef(false);
@@ -329,7 +328,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   function handleCopyAlias() {
     navigator.clipboard?.writeText(ALIAS).catch(() => {});
     setAliasCopied(true);
-    setHasCopiedAlias(true);
     setTimeout(() => setAliasCopied(false), 1400);
     setToastVisible(true);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -372,15 +370,15 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               className="text-navy m-0"
               style={
                 step === "payment"
-                  ? { fontWeight: 700, fontSize: "27px", letterSpacing: "-.01em" }
-                  : { fontWeight: 800, fontSize: "28px", letterSpacing: "-.015em", lineHeight: 1.05 }
+                  ? { fontWeight: 400, fontSize: "30px", letterSpacing: "-.015em", lineHeight: 1.08 }
+                  : { fontWeight: 400, fontSize: "30px", letterSpacing: "-.015em", lineHeight: 1.08 }
               }
             >
               {step === "payment" ? "Pagá por transferencia" : "Tu pedido"}
             </h3>
             {(step === "payment" || items.length > 0) && (
               <div
-                className="text-[14.5px] text-stone flex items-center gap-[7px]"
+                className="text-[15px] text-stone flex items-center gap-[7px]"
                 style={{ fontStyle: "italic", marginTop: "6px", whiteSpace: "nowrap" }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", opacity: 0.75 }}>
@@ -393,10 +391,10 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
           <button
             onClick={handleCloseClick}
             aria-label="Cerrar"
-            className="flex-none mt-0.5 flex items-center justify-center border-none bg-transparent p-0"
-            style={{ cursor: "pointer", transition: "transform .15s, opacity .15s", opacity: step === "payment" ? 1 : 0.6 }}
+            className="flex-none -mt-2 -mr-3 w-11 h-11 flex items-center justify-center border-none bg-transparent p-0"
+            style={{ cursor: "pointer", transition: "transform .15s, opacity .15s", opacity: 1 }}
             onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.opacity = "1"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.opacity = step === "payment" ? "1" : "0.6"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.opacity = "1"; }}
           >
             <CloseIcon />
           </button>
@@ -409,8 +407,8 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
           <div className="brot-cf-body px-[26px] py-[24px] space-y-[22px]">
             {/* Total */}
             <div className="brot-cf-tot text-center">
-              <div className="font-semibold text-[14.5px] text-stone" style={{ textTransform: "uppercase", letterSpacing: ".08em" }}>Total a transferir</div>
-              <div className="brot-cf-tot-amount font-bold leading-none mt-[6px]" style={{ fontSize: "46px", letterSpacing: "-.02em", color: "#C8851A" }}>
+              <div className="font-semibold text-[12px] text-stone" style={{ textTransform: "uppercase", letterSpacing: ".12em" }}>Total a transferir</div>
+              <div className="brot-cf-tot-amount font-normal leading-none mt-[8px]" style={{ fontSize: "48px", letterSpacing: "-.02em", color: "#C8851A" }}>
                 {formatCurrency(total)}
               </div>
             </div>
@@ -424,7 +422,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">Titular</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all" style={{ letterSpacing: ".005em" }}>{TITULAR}</div>
+                    <div className="font-normal text-[16px] text-navy mt-[2px] break-all" style={{ letterSpacing: ".005em" }}>{TITULAR}</div>
                   </div>
                 </div>
               )}
@@ -432,7 +430,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">CUIT / CUIL</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all" style={{ letterSpacing: ".005em" }}>{CUIT}</div>
+                    <div className="font-normal text-[16px] text-navy mt-[2px] break-all" style={{ letterSpacing: ".005em" }}>{CUIT}</div>
                   </div>
                 </div>
               )}
@@ -440,7 +438,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">Alias</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all" style={{ letterSpacing: ".005em" }}>{ALIAS}</div>
+                    <div className="font-medium text-[18px] text-navy mt-[2px] break-all" style={{ letterSpacing: ".005em" }}>{ALIAS}</div>
                   </div>
                 </div>
               )}
@@ -448,7 +446,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 <div className="flex items-center gap-[10px] px-[14px] py-[9px]">
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel">CVU</div>
-                    <div className="font-bold text-[14.5px] text-navy mt-[1px] break-all tracking-wide">{CVU}</div>
+                    <div className="font-normal text-[16px] text-navy mt-[2px] break-all tracking-wide">{CVU}</div>
                   </div>
                 </div>
               )}
@@ -462,15 +460,15 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                   type="button"
                   onClick={handleCopyAlias}
                   disabled={expired}
-                  className="w-full font-bold text-[15px]"
+                  className="w-full font-medium text-[16px] min-h-[52px]"
                   style={{
                     border: aliasCopied ? "1.5px solid rgba(14,35,60,.16)" : "none",
                     background: aliasCopied ? "rgba(63,143,91,.08)" : "#0E233C",
-                    color: aliasCopied ? "#3F8F5B" : "#F4EEE2",
+                    color: aliasCopied ? "#2F6B44" : "#F4EEE2",
                     borderRadius: "var(--brot-radius)",
-                    padding: "10px 6px",
-                    textTransform: "uppercase",
-                    letterSpacing: ".08em",
+                    padding: "0 18px",
+                    textTransform: "none",
+                    letterSpacing: ".01em",
                     cursor: expired ? "not-allowed" : "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -483,7 +481,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 >
                   {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
                 </button>
-                <div className="text-center text-[12.5px] text-stone" style={{ marginTop: "10px" }}>
+                <div className="text-center text-[15px] text-stone" style={{ marginTop: "10px" }}>
                   Pagá desde tu app o home banking con el alias
                 </div>
               </div>
@@ -491,26 +489,26 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               <button
                 type="button"
                 onClick={handleYaPague}
-                disabled={loading || !hasCopiedAlias || expired}
-                className="w-full font-bold text-[16.5px] tracking-[.01em]"
+                disabled={loading || expired}
+                className="w-full font-medium text-[16px] min-h-[52px] tracking-[.01em]"
                 style={{
                   marginTop: "22px",
                   border: "none",
                   background: "#0E233C",
                   color: "#F4EEE2",
                   borderRadius: "var(--brot-radius)",
-                  padding: "10px",
-                  textTransform: "uppercase",
-                  letterSpacing: ".08em",
-                  cursor: (loading || !hasCopiedAlias || expired) ? "not-allowed" : "pointer",
-                  opacity: (loading || !hasCopiedAlias || expired) ? 0.4 : 1,
+                  padding: "0 18px",
+                  textTransform: "none",
+                  letterSpacing: ".01em",
+                  cursor: (loading || expired) ? "not-allowed" : "pointer",
+                  opacity: (loading || expired) ? 0.4 : 1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "11px",
                   transition: ctaTransition,
                 }}
-                onMouseEnter={(e) => { if (!loading && hasCopiedAlias && !expired) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
+                onMouseEnter={(e) => { if (!loading && !expired) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
@@ -542,13 +540,13 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             >
               <div className="flex items-baseline justify-between gap-[10px]" style={{ flexWrap: "nowrap" }}>
                 <span
-                  className="font-bold text-[13px] whitespace-nowrap"
-                  style={{ color: (expired || isUrgent) ? "#A6442E" : "#0E233C", textTransform: "uppercase", letterSpacing: ".04em" }}
+                  className="font-medium text-[15px] whitespace-nowrap"
+                  style={{ color: (expired || isUrgent) ? "#A6442E" : "#0E233C", textTransform: "none", letterSpacing: 0 }}
                 >
                   {expired ? "Tu reserva expiró" : "Te guardamos tu pedido por"}
                 </span>
                 <span
-                  className="font-extrabold text-[15.5px] flex-none"
+                  className="font-semibold text-[18px] flex-none"
                   style={{ fontVariantNumeric: "tabular-nums", color: (expired || isUrgent) ? "#A6442E" : "#0E233C" }}
                 >
                   {formatCountdown(secondsLeft)}
@@ -562,7 +560,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                   className="absolute inset-y-0 left-0 rounded-full"
                   style={{
                     width: `${fillPct}%`,
-                    background: (expired || isUrgent) ? "#A6442E" : "#C8851A",
+                    background: (expired || isUrgent) ? "#A6442E" : "#8A5A0E",
                     transition: "width .25s linear, background .4s",
                   }}
                 />
@@ -612,28 +610,28 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               </div>
               <div
                 className="brot-co-summary overflow-hidden"
-                style={{ background: "#fff", borderRadius: "var(--brot-radius)", boxShadow: "0 8px 18px -14px rgba(14,35,60,.3)", padding: "10px 14px 6px" }}
+                style={{ background: "#fff", borderRadius: "var(--brot-radius)", border: "1px solid rgba(14,35,60,.16)", padding: "2px 4px 6px 14px" }}
               >
                 <div className="brot-co-lines">
                   {items.map((item, i) => (
                     <div
                       key={item.id}
                       className="brot-co-line flex items-center justify-between gap-3"
-                      style={{ padding: "11px 0", borderBottom: i < items.length - 1 ? "1px solid rgba(14,35,60,.10)" : "none" }}
+                      style={{ padding: "5px 0", borderBottom: i < items.length - 1 ? "1px solid rgba(14,35,60,.10)" : "none" }}
                     >
-                      <span className="font-bold text-[15px] text-navy whitespace-nowrap">
+                      <span className="font-normal text-[16px] text-navy whitespace-nowrap">
                         {item.name}
-                        <i className="text-stone" style={{ fontStyle: "normal", fontWeight: 500, fontSize: "12.5px", marginLeft: "9px" }}>×{item.quantity}</i>
+                        <i className="text-stone" style={{ fontStyle: "normal", fontWeight: 400, fontSize: "16px", marginLeft: "6px" }}>×{item.quantity}</i>
                       </span>
                       <span className="flex items-center gap-[10px] flex-none">
-                        <span className="font-bold text-[15px] text-navy whitespace-nowrap">
+                        <span className="font-normal text-[16px] text-navy whitespace-nowrap">
                           {formatCurrency(item.price * item.quantity)}
                         </span>
                         <button
                           type="button"
                           aria-label={`Quitar ${item.name}`}
                           onClick={() => onRemoveItem(item.id)}
-                          className="brot-co-del w-[26px] h-[26px] inline-flex items-center justify-center rounded-[4px] border-none bg-transparent cursor-pointer text-stone"
+                          className="brot-co-del w-11 h-11 inline-flex items-center justify-center rounded-[4px] border-none bg-transparent cursor-pointer text-stone"
                           style={{ transition: "background .15s, color .15s, opacity .15s" }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(166,68,46,.10)"; e.currentTarget.style.color = "#A6442E"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = ""; }}
@@ -648,8 +646,8 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                   className="flex items-baseline justify-between gap-3"
                   style={{ padding: "12px 2px 4px", marginTop: "2px", borderTop: "1.5px solid #0E233C" }}
                 >
-                  <span className="font-bold text-[16px] text-navy">Total</span>
-                  <span className="font-extrabold text-[24px] whitespace-nowrap" style={{ color: "#C8851A" }}>
+                  <span className="font-medium text-[17px] text-navy">Total</span>
+                  <span className="font-semibold text-[26px] whitespace-nowrap" style={{ color: "#8A5A0E" }}>
                     {formatCurrency(total)}
                   </span>
                 </div>
@@ -663,8 +661,8 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                 { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
               ].map((field) => (
                 <div key={field.id}>
-                  <label className="block brot-mlabel" style={{ marginBottom: "6px" }}>
-                    {field.label} <span style={{ color: "#C8851A" }}>*</span>
+                  <label className="block brot-mlabel" style={{ marginBottom: "6px", color: "#0E233C" }}>
+                    {field.label}
                   </label>
                   <input
                     type={field.type}
@@ -674,14 +672,15 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                     required={field.required}
                     className="w-full text-navy bg-white outline-none"
                     style={{
-                      fontSize: "15px",
-                      border: "1.5px solid rgba(14,35,60,.13)",
-                      borderRadius: "12px",
-                      padding: "11px 15px",
+                      fontSize: "16px",
+                      minHeight: "52px",
+                      border: "1px solid #828D9A",
+                      borderRadius: "var(--brot-radius)",
+                      padding: "13px 14px",
                       transition: "border-color .15s, box-shadow .15s",
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "#C8851A"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(200,133,26,.16)"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(14,35,60,.13)"; e.currentTarget.style.boxShadow = "none"; }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "#0E233C"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(200,133,26,.35)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "#828D9A"; e.currentTarget.style.boxShadow = "none"; }}
                   />
                 </div>
               ))}
@@ -698,15 +697,15 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               <button
                 type="button"
                 onClick={() => onClose()}
-                className="flex-1 min-w-0 font-bold text-[12px] whitespace-nowrap overflow-hidden text-ellipsis"
+                className="flex-1 min-w-0 font-medium text-[16px] min-h-[52px] whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{
-                  border: "1.5px solid rgba(14,35,60,.14)",
+                  border: "1.5px solid #0E233C",
                   background: "#fff",
                   color: "#0E233C",
                   borderRadius: "var(--brot-radius)",
-                  padding: "10px 6px",
-                  textTransform: "uppercase",
-                  letterSpacing: ".02em",
+                  padding: "0 8px",
+                  textTransform: "none",
+                  letterSpacing: ".01em",
                   cursor: "pointer",
                   transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .15s",
                 }}
@@ -718,15 +717,15 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               <button
                 type="submit"
                 disabled={expired}
-                className="flex-1 min-w-0 font-bold text-[12px] whitespace-nowrap overflow-hidden text-ellipsis"
+                className="flex-1 min-w-0 font-medium text-[16px] min-h-[52px] whitespace-nowrap overflow-hidden text-ellipsis"
                 style={{
                   border: "none",
                   background: "#0E233C",
                   color: "#F4EEE2",
                   borderRadius: "var(--brot-radius)",
-                  padding: "10px 6px",
-                  textTransform: "uppercase",
-                  letterSpacing: ".02em",
+                  padding: "0 8px",
+                  textTransform: "none",
+                  letterSpacing: ".01em",
                   cursor: expired ? "not-allowed" : "pointer",
                   opacity: expired ? 0.4 : 1,
                   transition: ctaTransition,

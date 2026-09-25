@@ -6,16 +6,18 @@
   --color-amber:    #C8851A;
   --color-cream:    #F4EEE2;
   --color-paper:    #FFFFFF;
-  --color-stone:    #7C766A;
+  --color-stone:    #4A5463;
   --color-open:     #16C65A;
-  --color-open-ink: #3F8F5B;
-  --color-faint:    #A8A296;
+  --color-open-ink: #2F6B44;
+  --color-faint:    #6E7482;
+  --color-amber-ink: #8A5A0E;
+  --color-field:    #828D9A;
 
   /* Aliases para clases existentes en los componentes */
   --color-brown:       #0E233C;
   --color-brown-light: #2A3B52;
   --color-charcoal:    #0A1B2E;
-  --color-muted:       #7C766A;
+  --color-muted:       #4A5463;
   --color-border:      #C8B99A;
   --color-amber-light: #D9983D;
 
@@ -38,7 +40,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
-  font-weight: 300;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,7 +58,7 @@ body {
 
 /* ── OrderModal: tacho de la lista de productos, atenuado — se resalta con el hover de la fila ── */
 .brot-co-line .brot-co-del {
-  opacity: .4;
+  opacity: 1;
 }
 .brot-co-line:hover .brot-co-del {
   opacity: 1;
@@ -66,13 +68,14 @@ body {
 .btn-primary {
   background-color: #0E233C;
   color: #F4EEE2;
-  padding: 15px 18px;
+  min-height: 52px;
+  padding: 0 18px;
   border-radius: var(--brot-radius);
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  text-transform: none;
   border: none;
   cursor: pointer;
   display: flex;
@@ -83,7 +86,7 @@ body {
   transition: background-color 0.18s;
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: #C8851A;
+  background-color: #1B3656;
 }
 .btn-primary:disabled {
   opacity: 0.4;
@@ -95,6 +98,10 @@ body {
    así que acá se revierten específicamente para el subárbol del panel admin
    y del login, a los valores que tenían antes de esta entrega. ── */
 .admin-scope {
+  --color-stone: #7C766A;
+  --color-muted: #7C766A;
+  --color-faint: #A8A296;
+  --color-open-ink: #3F8F5B;
   --color-cream: #F9F5EC;
   --color-paper: #FBF7EF;
   --font-sans:  var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif);
@@ -118,39 +125,50 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 16px 30px -16px rgba(14,35,60,.55);
 }
+/* v40: /admin conserva la escala anterior */
+.admin-scope .btn-primary { min-height: 0; }
+.admin-scope .brot-mlabel { font-size: 10px; letter-spacing: .18em; color: #7C766A; }
+.admin-scope .brot-mlabel-amber { color: #C8851A; }
+.admin-scope .brot-input { font-size: 15px; min-height: 0; border: var(--brot-hair); }
+.admin-scope .brot-input::placeholder { color: #A8A296; font-weight: 300; }
+.admin-scope .brot-input:focus { box-shadow: none; }
 
 /* ── v37 · micro-label en versalitas (kickers, labels de formulario y de dato) ── */
 .brot-mlabel {
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: .18em;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: #7C766A;
+  color: #4A5463;
 }
-.brot-mlabel-amber { color: #C8851A; }
+.brot-mlabel-amber { color: #8A5A0E; }
+
+/* v40 · área de toque mínima (WCAG 2.5.8) */
+.brot-tap { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
 /* ── Input base ── */
 .brot-input {
   width: 100%;
   font-family: var(--font-jost, 'Jost'), system-ui, sans-serif;
   font-weight: 400;
-  font-size: 15px;
+  font-size: 16px;
+  min-height: 52px;
   color: #0E233C;
   background: #fff;
-  border: var(--brot-hair);
+  border: 1px solid #828D9A;
   border-radius: var(--brot-radius);
   padding: 13px 14px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .brot-input::placeholder {
-  color: #A8A296;
-  font-weight: 300;
+  color: #6E7482;
+  font-weight: 400;
 }
 .brot-input:focus {
   border-color: #0E233C;
-  box-shadow: none;
+  box-shadow: 0 0 0 3px rgba(200,133,26,.35);
 }
 textarea.brot-input {
   resize: none;

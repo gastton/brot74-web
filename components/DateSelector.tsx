@@ -76,7 +76,7 @@ function InfoRow({ icon, label, value, last }: InfoRowProps) {
         <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap">
           {label}
         </div>
-        <div className="font-semibold text-[16.5px] text-navy mt-[3px]">
+        <div className="font-medium text-[17px] text-navy mt-[3px]">
           {value}
         </div>
       </div>
@@ -146,7 +146,7 @@ function NoSlotsEmptyState() {
             <circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>
           </svg>
           <div className="font-bold text-[16px] text-navy">Listo, te avisamos</div>
-          <div className="font-medium text-[13.5px] leading-[1.45] text-stone text-center" style={{ maxWidth: "28ch" }}>
+          <div className="font-medium text-[15px] leading-[1.45] text-stone text-center" style={{ maxWidth: "28ch" }}>
             Apenas abramos la próxima tanda, sos de los primeros en enterarte.
           </div>
         </div>
@@ -162,20 +162,19 @@ function NoSlotsEmptyState() {
             onChange={(e) => setValue(e.target.value)}
             required
             className="brot-input"
-            style={{ fontSize: "15.5px", fontWeight: 500 }}
+            style={{ fontWeight: 500 }}
           />
           {error && (
-            <p className="text-[13px] text-center m-0" style={{ color: "#A6442E" }}>{error}</p>
+            <p className="text-[15px] text-center m-0" style={{ color: "#A6442E" }}>{error}</p>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full border-none cursor-pointer font-bold text-[15px] tracking-[.03em] py-4 rounded-[4px]"
+            className="w-full border-none cursor-pointer font-medium text-[16px] tracking-[.01em] py-4 rounded-[4px] min-h-[52px]"
             style={{
               background: "#0E233C",
               color: "#F4EEE2",
-              textTransform: "uppercase",
-              letterSpacing: ".08em",
+              textTransform: "none",
               transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
               opacity: loading ? 0.6 : 1,
             }}
@@ -184,7 +183,7 @@ function NoSlotsEmptyState() {
           >
             {loading ? "Enviando…" : "Avisame cuando abra"}
           </button>
-          <p className="font-medium text-[12px] leading-[1.4] text-center m-0" style={{ color: "#A8A296" }}>
+          <p className="font-medium text-[14px] leading-[1.4] text-center m-0" style={{ color: "#6E7482" }}>
             Te escribimos una sola vez, para la próxima fecha. Sin spam.
           </p>
         </form>
@@ -196,9 +195,9 @@ function NoSlotsEmptyState() {
           href="https://www.instagram.com/brot.74"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 no-underline font-semibold text-[13.5px] tracking-[.01em] text-stone"
+          className="inline-flex items-center gap-2 no-underline font-semibold text-[15px] tracking-[.01em] text-stone"
           style={{ transition: "color .16s" }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#C8851A"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "#8A5A0E"; }}
           onMouseLeave={(e) => { e.currentTarget.style.color = ""; }}
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -223,7 +222,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
       {visibleSlots.map((slot, i) => {
         const date = new Date(slot.date);
         const weekday = date.toLocaleDateString("es-AR", { weekday: "long" }).toUpperCase();
-        const month = date.toLocaleDateString("es-AR", { month: "short" }).toUpperCase().replace(".", "");
+        const month = date.toLocaleDateString("es-AR", { month: "long" }).toUpperCase();
         const day = date.getDate();
         const isOpen = slot.id !== null;
 
@@ -254,10 +253,10 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
                 priority={i === 0}
               />
 
-              {/* Scrim */}
+              {/* Scrim — v40: parejo al 50% (antes degradé con zona central casi transparente, ≈3:1) */}
               <div
                 className="absolute inset-0"
-                style={{ background: "linear-gradient(180deg,rgba(14,35,60,.36) 0%,rgba(14,35,60,.04) 34%,rgba(14,35,60,.5) 100%)" }}
+                style={{ background: "rgba(14,35,60,.5)" }}
               />
 
               {/* Fecha centrada */}
@@ -266,7 +265,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
                 style={{ color: "#F4EEE2", textShadow: "0 2px 18px rgba(14,35,60,.5)" }}
               >
                 <div className="font-bold text-[17px] tracking-[.3em] uppercase">{weekday}</div>
-                <div className="font-semibold text-[12px] tracking-[.3em] uppercase mt-0.5" style={{ opacity: 0.85 }}>
+                <div className="font-semibold text-[15px] tracking-[.2em] uppercase mt-0.5" style={{ opacity: 0.85 }}>
                   {month}
                 </div>
                 <div
@@ -297,12 +296,11 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
               <button
                 disabled={!isOpen}
                 onClick={() => { if (isOpen && slot.id !== null) onChange(slot.id); }}
-                className="group mt-[18px] w-full flex items-center justify-center gap-[10px] font-bold text-[15px] tracking-[.03em] py-[17px] rounded-[4px] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="group mt-[18px] w-full flex items-center justify-center gap-[10px] font-medium text-[16px] tracking-[.01em] py-[17px] rounded-[4px] disabled:opacity-40 disabled:cursor-not-allowed min-h-[52px]"
                 style={{
                   background: "#0E233C",
                   color: "#F4EEE2",
-                  textTransform: "uppercase",
-                  letterSpacing: ".08em",
+                  textTransform: "none",
                   transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
                 }}
                 onMouseEnter={(e) => { if (isOpen) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
