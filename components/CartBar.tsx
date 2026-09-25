@@ -1,6 +1,5 @@
 "use client";
 
-import { ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 interface CartBarProps {
@@ -25,10 +24,34 @@ const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s"
 // dos versiones están montadas siempre; CSS decide cuál se ve según el
 // ancho (md: 768px, mismo corte que ya usa la grilla de productos), así
 // no hay parpadeo al cargar. Desktop no cambia.
+function CountPill({ count, reserving }: { count: number; reserving: boolean }) {
+  return (
+    <span
+      className="flex-none flex items-center justify-center"
+      style={{
+        minWidth: "28px",
+        height: "28px",
+        padding: "0 7px",
+        borderRadius: "14px",
+        background: "#C8851A",
+        color: "#0E233C",
+        fontSize: "15px",
+        fontWeight: 600,
+      }}
+    >
+      {reserving ? "…" : count}
+    </span>
+  );
+}
+
+// v40: la barra pasa a "Ver mi pedido" + total en ambos breakpoints (antes
+// desktop mostraba "N productos" en versalitas y mobile era un botón
+// flotante circular sin texto — ninguno de los dos comunicaba el total
+// de un vistazo). Referencia: pantallas 2 y 7 de pedidos-estandares.html.
 export default function CartBar({ count, total, reserving, error, onCheckout }: CartBarProps) {
   return (
     <>
-      {/* Desktop (md: 768px+) — barra de ancho completo, sin cambios */}
+      {/* Desktop (md: 768px+) — barra de ancho completo */}
       <div
         className="hidden md:block fixed bottom-0 left-0 right-0 z-[60] p-4"
         style={{
@@ -47,11 +70,14 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           <button
             onClick={onCheckout}
             disabled={reserving}
-            className="w-full flex items-center gap-3 rounded-[4px] border-none"
+            aria-label={`Ver mi pedido, ${count} producto${count !== 1 ? "s" : ""}, ${formatCurrency(total)}`}
+            className="w-full flex items-center gap-3 rounded-[4px] border-none font-medium text-[16px]"
             style={{
               background: "#0E233C",
               color: "#F4EEE2",
-              padding: "14px 18px",
+              minHeight: "56px",
+              padding: "0 18px",
+              letterSpacing: ".01em",
               cursor: "pointer",
               boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
               transition: ctaTransition,
@@ -59,31 +85,23 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
             onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
           >
-            <span className="w-9 h-9 flex-none rounded-full flex items-center justify-center" style={{ border: "1px solid rgba(249,245,236,.38)" }}>
-              <ShoppingCart size={18} color="#F4EEE2" strokeWidth={1.7} />
-            </span>
-            <span className="font-semibold text-[16px] whitespace-nowrap" style={{ textTransform: "uppercase", letterSpacing: ".06em" }}>
-              {reserving ? "Reservando…" : `${count} producto${count !== 1 ? "s" : ""}`}
-            </span>
-            <span className="font-bold text-[18px] ml-auto whitespace-nowrap">{formatCurrency(total)}</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 6l6 6-6 6"/>
-            </svg>
+            <CountPill count={count} reserving={reserving} />
+            <span className="whitespace-nowrap">Ver mi pedido</span>
+            <span className="ml-auto whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(total)}</span>
           </button>
         </div>
       </div>
 
-      {/* Mobile (< 768px) — botón flotante circular con badge (BRT-92) */}
+      {/* Mobile (< 768px) — v40: barra de ancho completo (antes botón flotante circular sin texto) */}
       <div
-        className="md:hidden fixed z-[60]"
+        className="md:hidden fixed left-0 right-0 z-[60] px-4"
         style={{
-          right: "18px",
-          bottom: "calc(41px + env(safe-area-inset-bottom))",
+          bottom: "calc(20px + env(safe-area-inset-bottom))",
         }}
       >
         {error && (
-          <div className="absolute bottom-full right-0 mb-2 w-[220px]">
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-[4px] px-3 py-2 text-xs text-center">
+          <div className="mb-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-[4px] px-3 py-2 text-sm text-center">
               {error}
             </div>
           </div>
@@ -91,39 +109,27 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
         <button
           onClick={onCheckout}
           disabled={reserving}
-          aria-label={`Ver pedido, ${count} producto${count !== 1 ? "s" : ""}, ${formatCurrency(total)}`}
-          className="relative flex items-center justify-center rounded-full border-none"
+          aria-label={`Ver mi pedido, ${count} producto${count !== 1 ? "s" : ""}, ${formatCurrency(total)}`}
+          className="w-full flex items-center gap-3 rounded-[4px] border-none font-medium text-[16px]"
           style={{
-            width: "58px",
-            height: "58px",
             background: "#0E233C",
+            color: "#F4EEE2",
+            minHeight: "56px",
+            padding: "0 18px",
+            letterSpacing: ".01em",
             cursor: "pointer",
             boxShadow: "0 10px 24px -8px rgba(14,35,60,.55)",
             transition: ctaTransition,
           }}
-          onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.95)"; }}
+          onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.98)"; }}
           onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-          onTouchStart={(e) => { e.currentTarget.style.transform = "scale(.95)"; }}
+          onTouchStart={(e) => { e.currentTarget.style.transform = "scale(.98)"; }}
           onTouchEnd={(e) => { e.currentTarget.style.transform = ""; }}
         >
-          <ShoppingCart size={24} color="#F4EEE2" strokeWidth={1.7} />
-          <span
-            className="absolute flex items-center justify-center rounded-full font-bold"
-            style={{
-              top: "-4px",
-              right: "-4px",
-              minWidth: "22px",
-              height: "22px",
-              padding: "0 5px",
-              fontSize: "12px",
-              background: "#C8851A",
-              color: "#F4EEE2",
-              boxShadow: "0 2px 6px -1px rgba(14,35,60,.5)",
-            }}
-          >
-            {reserving ? "…" : count}
-          </span>
+          <CountPill count={count} reserving={reserving} />
+          <span className="whitespace-nowrap">Ver mi pedido</span>
+          <span className="ml-auto whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(total)}</span>
         </button>
       </div>
     </>

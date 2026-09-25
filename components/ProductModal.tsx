@@ -33,17 +33,6 @@ interface ProductModalProps {
   onCheckout: () => void;
 }
 
-function WheatIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C8851A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto" }}>
-      <path d="M12 21V8"/>
-      <path d="M12 8c0-2 1.4-3.4 3-4-.2 2-1.2 3.4-3 4Zm0 0c0-2-1.4-3.4-3-4 .2 2 1.2 3.4 3 4Z"/>
-      <path d="M12 13c0-1.8 1.3-3 2.8-3.6-.2 1.8-1.1 3-2.8 3.6Zm0 0c0-1.8-1.3-3-2.8-3.6.2 1.8 1.1 3 2.8 3.6Z"/>
-      <path d="M12 18c0-1.8 1.3-3 2.8-3.6-.2 1.8-1.1 3-2.8 3.6Zm0 0c0-1.8-1.3-3-2.8-3.6.2 1.8 1.1 3 2.8 3.6Z"/>
-    </svg>
-  );
-}
-
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
 export default function ProductModal({
@@ -73,10 +62,10 @@ export default function ProductModal({
   const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0);
 
   const stockColor =
-    isOutOfStock          ? "#7C766A"
-    : remaining === null  ? "#3F8F5B"
-    : remaining >= 3      ? "#3F8F5B"
-    : remaining > 0       ? "#C8851A"
+    isOutOfStock          ? "#4A5463"
+    : remaining === null  ? "#2F6B44"
+    : remaining >= 3      ? "#2F6B44"
+    : remaining > 0       ? "#8A5A0E"
     :                       "#D94F4F";
 
   const stockText = !slotSelected
@@ -95,10 +84,10 @@ export default function ProductModal({
   const mobileCanConfirm = slotSelected && !mobileOutOfStock;
 
   const mobileStockColor =
-    mobileOutOfStock        ? "#7C766A"
-    : product.stock === null ? "#3F8F5B"
-    : product.stock >= 3     ? "#3F8F5B"
-    : product.stock > 0      ? "#C8851A"
+    mobileOutOfStock        ? "#4A5463"
+    : product.stock === null ? "#2F6B44"
+    : product.stock >= 3     ? "#2F6B44"
+    : product.stock > 0      ? "#8A5A0E"
     :                          "#D94F4F";
 
   const mobileStockText = !slotSelected
@@ -138,7 +127,7 @@ export default function ProductModal({
         <button
           onClick={onClose}
           aria-label="Volver"
-          className="brot-modal-back-desktop absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full items-center justify-center"
+          className="brot-modal-back-desktop brot-tap absolute top-[14px] left-[14px] z-10 rounded-full items-center justify-center"
           style={{
             background: "rgba(248,243,234,.85)",
             backdropFilter: "blur(6px)",
@@ -158,7 +147,7 @@ export default function ProductModal({
         <button
           onClick={onClose}
           aria-label="Cerrar"
-          className="brot-modal-back-mobile absolute top-[14px] left-[14px] z-10 w-[34px] h-[34px] rounded-full items-center justify-center"
+          className="brot-modal-back-mobile brot-tap absolute top-[14px] left-[14px] z-10 rounded-full items-center justify-center"
           style={{
             background: "#FBF7EF",
             border: "none",
@@ -208,17 +197,17 @@ export default function ProductModal({
         {/* Cuerpo */}
         <div className="brot-modal-body px-6 pb-6 pt-[22px]">
           {/* Overline */}
-          <div className="brot-modal-kicker flex items-center gap-[9px] mb-[14px]" style={{ fontSize: "11px", fontWeight: 700, letterSpacing: ".22em", textTransform: "uppercase", color: "#C8851A" }}>
+          <div className="brot-modal-kicker flex items-center gap-[9px] mb-[14px]" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#8A5A0E" }}>
             <span>Masa madre · Fermentación 18 h</span>
             <span style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, rgba(200,133,26,.4), rgba(200,133,26,0))" }} />
           </div>
 
           {/* Nombre + precio */}
           <div className="flex items-baseline justify-between gap-[14px]">
-            <h3 className="font-extrabold text-[27px] text-navy m-0" style={{ letterSpacing: "-.015em", lineHeight: 1.1 }}>
+            <h3 className="font-normal text-[28px] text-navy m-0" style={{ letterSpacing: "-.015em", lineHeight: 1.08 }}>
               {product.name}
             </h3>
-            <div className="font-bold text-[22px] whitespace-nowrap" style={{ color: "#C8851A" }}>
+            <div className="font-medium text-[20px] whitespace-nowrap" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(product.price)}
             </div>
           </div>
@@ -249,8 +238,8 @@ export default function ProductModal({
                 type="button"
                 aria-expanded={!descCollapsed}
                 onClick={() => setDescCollapsed((c) => !c)}
-                className="brot-modal-more inline-flex items-center gap-[6px] mt-[11px] border-none bg-transparent p-0 cursor-pointer font-bold text-[13.5px]"
-                style={{ color: "#C8851A", letterSpacing: ".01em", alignSelf: "flex-start" }}
+                className="brot-modal-more inline-flex items-center gap-[6px] mt-[11px] border-none bg-transparent p-0 cursor-pointer font-medium text-[15px]"
+                style={{ color: "#8A5A0E", letterSpacing: ".01em", alignSelf: "flex-start" }}
               >
                 <span>{descCollapsed ? "Seguir leyendo" : "Ver menos"}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "transform .2s ease", transform: descCollapsed ? "" : "rotate(180deg)" }}>
@@ -260,21 +249,16 @@ export default function ProductModal({
             </div>
           )}
 
-          {/* Ingredientes */}
+          {/* Ingredientes — v40: texto con rótulo, no línea gris al lado de un ícono */}
           {product.ingredients && (
-            <div className="flex items-center gap-2 mt-4">
-              <WheatIcon />
-              <span
-                className="text-[13.5px] text-stone"
-                style={{ fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)", fontStyle: "italic" }}
-              >
-                {product.ingredients}
-              </span>
-            </div>
+            <p className="text-[15px] text-stone mt-4 mb-0" style={{ lineHeight: 1.45 }}>
+              <span className="font-medium text-navy">Ingredientes: </span>
+              {product.ingredients}
+            </p>
           )}
 
           {!slotSelected && (
-            <p className="mt-4 text-[13px] font-medium text-stone bg-[#F4EEE2] rounded-[4px] px-4 py-3">
+            <p className="mt-4 text-[15px] font-medium text-stone bg-[#F4EEE2] rounded-[4px] px-4 py-3">
               Elegí una fecha de entrega para agregar al pedido
             </p>
           )}
@@ -291,7 +275,7 @@ export default function ProductModal({
               {!isOutOfStock && (
                 <span className="w-2 h-2 rounded-full flex-none" style={{ background: stockColor }} />
               )}
-              <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: stockColor }}>
+              <span className="font-medium text-[16px] whitespace-nowrap" style={{ color: stockColor }}>
                 {stockText}
               </span>
             </div>
@@ -306,12 +290,12 @@ export default function ProductModal({
                 <button
                   onClick={onAdd}
                   disabled={!canAdd}
-                  className="brot-modal-cta w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[4px] border-none"
+                  className="brot-modal-cta w-full font-medium text-[16px] tracking-[.01em] py-4 rounded-[4px] border-none min-h-[52px]"
                   style={{
                     background: "#0E233C",
                     color: "#F4EEE2",
-                    textTransform: "uppercase",
-                    letterSpacing: ".08em",
+                    textTransform: "none",
+                    letterSpacing: ".01em",
                     opacity: canAdd ? 1 : 0.4,
                     cursor: canAdd ? "pointer" : "not-allowed",
                     transition: ctaTransition,
@@ -392,11 +376,10 @@ export default function ProductModal({
              referencia (sin copiar su estilo). */}
           {slotSelected && (
             <div className="brot-modal-controls-mobile flex-1 flex-col gap-[14px]">
-              {/* v37: el stepper pierde el recuadro — círculos de 34px con
-                 hairline, en la misma fila que "N disponibles" (BRT-181). */}
+              {/* v40: stepper a 44px con borde navy (antes 34px y hairline) */}
               <div className="w-full flex items-center justify-between">
                 {mobileStockText && (
-                  <span className="font-semibold text-[13.5px] whitespace-nowrap" style={{ color: mobileStockColor }}>
+                  <span className="font-medium text-[16px] whitespace-nowrap" style={{ color: mobileStockColor }}>
                     {mobileStockText}
                   </span>
                 )}
@@ -420,10 +403,10 @@ export default function ProductModal({
                     aria-label="Restar cantidad"
                     className="flex items-center justify-center rounded-full"
                     style={{
-                      width: "34px",
-                      height: "34px",
+                      width: "44px",
+                      height: "44px",
                       background: "transparent",
-                      border: "var(--brot-hair)",
+                      border: "1.5px solid #0E233C",
                       color: "#0E233C",
                       cursor: mobileQty <= 1 && quantity === 0 ? "not-allowed" : "pointer",
                       opacity: mobileQty <= 1 && quantity === 0 ? 0.4 : 1,
@@ -435,7 +418,7 @@ export default function ProductModal({
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
                   </button>
-                  <span className="font-bold text-[16px] text-navy text-center" style={{ minWidth: "24px" }}>
+                  <span className="font-medium text-[22px] text-navy text-center" style={{ minWidth: "16px" }}>
                     {mobileQty}
                   </span>
                   <button
@@ -445,8 +428,8 @@ export default function ProductModal({
                     aria-label="Sumar cantidad"
                     className="flex items-center justify-center rounded-full border-none"
                     style={{
-                      width: "34px",
-                      height: "34px",
+                      width: "44px",
+                      height: "44px",
                       background: "#0E233C",
                       color: "#F4EEE2",
                       cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
@@ -467,12 +450,12 @@ export default function ProductModal({
                 type="button"
                 onClick={() => { onConfirmQuantity(mobileQty); onClose(); }}
                 disabled={!mobileCanConfirm}
-                className="w-full font-bold text-[15.5px] tracking-[.01em] py-4 rounded-[4px] border-none mt-auto"
+                className="w-full font-medium text-[16px] tracking-[.01em] py-4 rounded-[4px] border-none mt-auto min-h-[52px]"
                 style={{
                   background: "#0E233C",
                   color: "#F4EEE2",
-                  textTransform: "uppercase",
-                  letterSpacing: ".08em",
+                  textTransform: "none",
+                  letterSpacing: ".01em",
                   opacity: mobileCanConfirm ? 1 : 0.4,
                   cursor: mobileCanConfirm ? "pointer" : "not-allowed",
                   transition: ctaTransition,

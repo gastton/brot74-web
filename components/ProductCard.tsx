@@ -80,7 +80,8 @@ export default function ProductCard({
               transform: `scale(${imageScale})`,
               transformOrigin: `${focalX}% ${focalY}%`,
               transition: "transform .3s cubic-bezier(.2,.7,.3,1)",
-              filter: outOfStock ? "grayscale(.85) brightness(1.04)" : "none",
+              filter: outOfStock ? "grayscale(.9)" : "none",
+              opacity: outOfStock ? 0.55 : 1,
             }}
             onMouseEnter={(e) => {
               if (!isDisabled) e.currentTarget.style.transform = `scale(${Math.max(imageScale, 1) * 1.04})`;
@@ -93,21 +94,19 @@ export default function ProductCard({
           <div className="absolute inset-0 bg-[#ddd6c8]" />
         )}
 
-        {/* Velo sin stock */}
-        {outOfStock && (
-          <div className="absolute inset-0" style={{ background: "rgba(249,245,236,.5)" }} />
-        )}
-
-        {/* Badge sin stock */}
+        {/* Badge sin stock — v40: fondo blanco, texto tinta 2, borde hairline (antes cápsula crema translúcida) */}
         {outOfStock && (
           <span
-            className="absolute top-3 left-3 font-bold text-[11.5px] tracking-[.04em] px-3 py-1.5 rounded-full whitespace-nowrap"
+            className="absolute top-3 left-3 whitespace-nowrap"
             style={{
-              background: "rgba(248,243,234,.78)",
-              backdropFilter: "blur(5px)",
-              WebkitBackdropFilter: "blur(5px)",
-              color: "#7C766A",
-              boxShadow: "0 3px 10px -5px rgba(0,0,0,.35)",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: ".06em",
+              padding: "3px 8px",
+              borderRadius: "2px",
+              background: "#fff",
+              color: "#4A5463",
+              border: "1px solid rgba(14,35,60,.16)",
             }}
           >
             Sin stock
@@ -124,11 +123,19 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Badge últimas unidades */}
+        {/* Badge últimas unidades — v40: texto navy sobre ámbar (antes crema, 2,7:1) */}
         {slotSelected && remaining !== null && remaining <= 2 && remaining > 0 && (
           <div
-            className="absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full"
-            style={{ background: "#C8851A", color: "#F4EEE2" }}
+            className="absolute top-2 left-2 whitespace-nowrap"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: ".06em",
+              padding: "3px 8px",
+              borderRadius: "2px",
+              background: "#C8851A",
+              color: "#0E233C",
+            }}
           >
             Últimos {remaining}
           </div>
@@ -146,7 +153,7 @@ export default function ProductCard({
             aria-disabled={limitReached}
             disabled={limitReached}
             onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
-            className="absolute bottom-2 right-2 w-9 h-9 rounded-full flex items-center justify-center border-none"
+            className="brot-tap absolute bottom-2 right-2 rounded-full flex items-center justify-center border-none"
             style={{
               background: "rgba(248,243,234,.9)",
               backdropFilter: "blur(6px)",
@@ -167,12 +174,15 @@ export default function ProductCard({
         )}
       </div>
 
-      {/* Texto */}
-      <div
-        className="pt-3 px-0.5 flex-1 min-w-0 md:pt-3"
-        style={{ opacity: outOfStock ? 0.5 : 1 }}
-      >
-        <div className="font-semibold text-[16.5px] text-navy leading-snug">{name}</div>
+      {/* Texto — v40: la atenuación de "agotado" queda solo en la foto; acá
+         nombre y precio pasan a tinta 2 (antes se apagaba todo el bloque al 50%). */}
+      <div className="pt-3 px-0.5 flex-1 min-w-0 md:pt-3">
+        <div
+          className="font-medium text-[18px] leading-snug"
+          style={{ color: outOfStock ? "#4A5463" : "#0E233C" }}
+        >
+          {name}
+        </div>
 
         {/* Peso — solo desktop, como siempre (BRT-92: mobile no lo muestra,
            en su lugar va la descripción). */}
@@ -180,7 +190,10 @@ export default function ProductCard({
           <div className="hidden md:block brot-mlabel mt-0.5">{weight}</div>
         )}
 
-        <div className="font-bold text-[15.5px] mt-2" style={{ color: "#C8851A" }}>
+        <div
+          className="font-medium text-[17px] mt-2"
+          style={{ color: outOfStock ? "#4A5463" : "#8A5A0E", fontVariantNumeric: "tabular-nums" }}
+        >
           {formatCurrency(price)}
         </div>
 
@@ -192,7 +205,7 @@ export default function ProductCard({
         {description && (
           <div className="md:hidden">
             <p
-              className="text-[13px] text-stone mt-1.5 leading-snug"
+              className="text-[15px] text-stone mt-1.5 leading-snug"
               style={{
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
