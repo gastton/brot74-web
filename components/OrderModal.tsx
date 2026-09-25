@@ -368,11 +368,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
           <div>
             <h3
               className="text-navy m-0"
-              style={
-                step === "payment"
-                  ? { fontWeight: 400, fontSize: "30px", letterSpacing: "-.015em", lineHeight: 1.08 }
-                  : { fontWeight: 400, fontSize: "30px", letterSpacing: "-.015em", lineHeight: 1.08 }
-              }
+              style={{ fontWeight: 400, fontSize: "30px", letterSpacing: "-.015em", lineHeight: 1.08 }}
             >
               {step === "payment" ? "Pagá por transferencia" : "Tu pedido"}
             </h3>
