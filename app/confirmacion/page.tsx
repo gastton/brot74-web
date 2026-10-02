@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
-import BrotWordmark from "@/components/BrotWordmark";
+import Image from "next/image";
 
 function WheatIcon() {
   return (
@@ -36,31 +36,16 @@ function ConfirmacionContent() {
           padding: "44px 36px 36px",
         }}
       >
-        {/* Sello — armado en vivo (disco navy + aro + ramillete monolínea + wordmark),
-            mismo patrón que el sello del hero en home */}
-        <div
-          className="brot-ok-seal mx-auto"
-          style={{
-            position: "relative",
-            boxSizing: "border-box",
-            width: "116px",
-            height: "116px",
-            fontSize: "116px",
-            borderRadius: "50%",
-            background: "#0E233C",
-            filter: "drop-shadow(0 14px 26px rgba(14,35,60,.28))",
-          }}
-        >
-          <svg
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
-            viewBox="0 0 100 100"
-            aria-hidden="true"
-          >
-            <circle cx="50" cy="50" r="48" fill="none" stroke="#F4EEE2" strokeWidth="0.7" opacity="0.85" />
-            <circle cx="50" cy="50" r="43.6" fill="none" stroke="#F4EEE2" strokeWidth="0.32" opacity="0.45" />
-          </svg>
-          <BrotWordmark variant="cream" />
-        </div>
+        {/* Sello — mismo logo que el footer de la landing */}
+        <Image
+          src="/assets/logo-sello-mono-navy-transparente.png"
+          alt="BROT 74"
+          width={2400}
+          height={2400}
+          priority
+          className="brot-ok-seal mx-auto block"
+          style={{ width: "132px", height: "auto" }}
+        />
 
         {/* Título */}
         <h1 className="font-bold text-[33px] tracking-[-0.01em] text-navy mt-[26px] mb-0">
