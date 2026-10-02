@@ -612,12 +612,16 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                   {items.map((item, i) => (
                     <div
                       key={item.id}
-                      className="brot-co-line flex items-center justify-between gap-3"
-                      style={{ padding: "5px 0", borderBottom: i < items.length - 1 ? "1px solid rgba(14,35,60,.10)" : "none" }}
+                      className="brot-co-line flex items-center justify-between gap-3 min-h-[64px]"
+                      style={{ padding: "6px 0", borderBottom: i < items.length - 1 ? "1px solid rgba(14,35,60,.10)" : "none" }}
                     >
-                      <span className="font-normal text-[16px] text-navy whitespace-nowrap">
-                        {item.name}
-                        <i className="text-stone" style={{ fontStyle: "normal", fontWeight: 400, fontSize: "16px", marginLeft: "6px" }}>×{item.quantity}</i>
+                      <span>
+                        <span className="text-[16px] text-navy whitespace-nowrap">
+                          {item.name} <span style={{ color: "#4A5463", marginLeft: "6px" }}>× {item.quantity}</span>
+                        </span>
+                        <span className="block text-[12px] sm:text-[13px]" style={{ color: "#4A5463", fontVariantNumeric: "tabular-nums" }}>
+                          {formatCurrency(item.price)} c/u
+                        </span>
                       </span>
                       <span className="flex items-center gap-[10px] flex-none">
                         <span className="font-normal text-[16px] text-navy whitespace-nowrap">
@@ -639,8 +643,8 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                   ))}
                 </div>
                 <div
-                  className="flex items-baseline justify-between gap-3"
-                  style={{ padding: "12px 2px 4px", marginTop: "2px", borderTop: "1.5px solid #0E233C" }}
+                  className="brot-co-total flex items-baseline justify-between gap-3"
+                  style={{ borderTop: "1.5px solid #0E233C" }}
                 >
                   <span className="font-medium text-[17px] text-navy">Total</span>
                   <span className="font-semibold text-[26px] whitespace-nowrap" style={{ color: "#8A5A0E" }}>

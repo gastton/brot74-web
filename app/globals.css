@@ -144,6 +144,11 @@ body {
 }
 .brot-mlabel-amber { color: #8A5A0E; }
 
+/* v43 · stepper − / +: círculo visible de 36px; el ::after mantiene el área táctil en 44px */
+.brot-step { position: relative; width: 36px; height: 36px; border-radius: 50%; }
+.brot-step::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; }
+.brot-step svg { width: 16px; height: 16px; }
+
 /* v40 · área de toque mínima (WCAG 2.5.8) */
 .brot-tap { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
@@ -345,6 +350,12 @@ textarea.brot-input {
   align-items: flex-end;
   padding: 0;
 }
+/* v43 · fila Total: en mobile más compacta (8px, line-height 1.1); en 900px+ vuelve al padding original */
+.brot-co-total {
+  padding: 8px 10px 8px 0;
+  margin-top: 2px;
+  line-height: 1.1;
+}
 .brot-co-modal {
   border-radius: 4px 4px 0 0 !important;
   height: 100vh;
@@ -387,13 +398,26 @@ textarea.brot-input {
   .brot-co-form {
     order: 2;
   }
+  /* v43 · la columna de productos ocupa el alto completo de la grilla (filas
+     de campos + botones) y el Total queda a ras del borde inferior de los
+     botones aunque haya pocos ítems. */
   .brot-co-order-col {
     order: 1;
-    position: sticky;
-    top: 0;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
   }
   .brot-co-summary {
     margin-top: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .brot-co-total {
+    margin-top: auto;
+    padding: 12px 2px 4px;
+    line-height: normal;
   }
   .brot-co-actions {
     grid-column: 2;

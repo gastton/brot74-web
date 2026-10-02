@@ -313,10 +313,8 @@ export default function ProductModal({
                     <button
                       onClick={onRemove}
                       aria-label="Restar"
-                      className="flex items-center justify-center rounded-full"
+                      className="brot-step flex items-center justify-center rounded-full"
                       style={{
-                        width: "44px",
-                        height: "44px",
                         background: "transparent",
                         border: "var(--brot-hair)",
                         color: "#0E233C",
@@ -339,10 +337,8 @@ export default function ProductModal({
                       onClick={onAdd}
                       disabled={!canAdd}
                       aria-label="Sumar"
-                      className="flex items-center justify-center rounded-full border-none"
+                      className="brot-step flex items-center justify-center rounded-full border-none"
                       style={{
-                        width: "44px",
-                        height: "44px",
                         background: "#0E233C",
                         color: "#F4EEE2",
                         cursor: canAdd ? "pointer" : "not-allowed",
@@ -401,10 +397,8 @@ export default function ProductModal({
                     }}
                     disabled={mobileQty <= 1 && quantity === 0}
                     aria-label="Restar cantidad"
-                    className="flex items-center justify-center rounded-full"
+                    className="brot-step flex items-center justify-center rounded-full"
                     style={{
-                      width: "44px",
-                      height: "44px",
                       background: "transparent",
                       border: "1.5px solid #0E233C",
                       color: "#0E233C",
@@ -426,10 +420,8 @@ export default function ProductModal({
                     onClick={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
                     disabled={mobileOutOfStock || mobileMaxReached}
                     aria-label="Sumar cantidad"
-                    className="flex items-center justify-center rounded-full border-none"
+                    className="brot-step flex items-center justify-center rounded-full border-none"
                     style={{
-                      width: "44px",
-                      height: "44px",
                       background: "#0E233C",
                       color: "#F4EEE2",
                       cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
