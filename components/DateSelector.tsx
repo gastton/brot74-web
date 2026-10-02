@@ -76,7 +76,7 @@ function InfoRow({ icon, label, value, last }: InfoRowProps) {
         <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap">
           {label}
         </div>
-        <div className="font-medium text-[17px] text-navy mt-[3px]">
+        <div className="font-medium text-[17px] text-navy mt-0 leading-[1.2]">
           {value}
         </div>
       </div>
