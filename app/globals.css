@@ -152,6 +152,127 @@ body {
 /* v40 · área de toque mínima (WCAG 2.5.8) */
 .brot-tap { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
+/* ── v45 · Pedidos editorial: lenguaje de la landing en el flujo de compra ──
+   Fondo blanco, filetes en vez de tarjetas, botones en píldora, íconos de línea
+   en círculo y campos con rótulo interno. Solo aplica al flujo de pedidos:
+   /admin conserva .btn-primary y .brot-input. */
+.brot-rule { height: 1px; background: #0E233C; opacity: .85; }
+.brot-h {
+  font-weight: 400;
+  font-size: 40px;
+  line-height: .98;
+  letter-spacing: -.02em;
+  margin: 0;
+  color: #0E233C;
+}
+@media (min-width: 768px) { .brot-h--web { font-size: 48px; } }
+.brot-h--modal { font-size: 36px; }
+@media (min-width: 900px) { .brot-h--modal { font-size: 40px; } }
+.brot-co-datos-title {
+  font-size: 18px;
+  font-weight: 500;
+  padding-top: 14px;
+  border-top: 1px solid rgba(14,35,60,.10);
+}
+@media (min-width: 900px) {
+  .brot-co-datos-title { border-top: 0; padding-top: 0; }
+}
+/* primer ítem de la lista de panes (mobile): filete navy en vez del hairline */
+.brot-menu > .brot-card:first-child { border-top-color: #0E233C; }
+@media (min-width: 768px) { .brot-menu > .brot-card:first-child { border-top-color: transparent; } }
+.brot-kick {
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #4A5463;
+}
+.brot-tag {
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #8A5A0E;
+}
+.brot-ring {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(14,35,60,.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brot-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  border: none;
+  border-radius: 999px;
+  background: #0E233C;
+  color: #F4EEE2;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 0 22px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.brot-pill:hover:not(:disabled) { background: #1B3656; }
+.brot-pill:disabled { opacity: .4; cursor: not-allowed; }
+.brot-pill--ghost { background: transparent; color: #0E233C; border: 1px solid #0E233C; }
+.brot-pill--ghost:hover:not(:disabled) { background: #F4EEE2; }
+.brot-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid #0E233C;
+  background: transparent;
+  color: #0E233C;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.brot-ghost:hover:not(:disabled) { background: #0E233C; color: #F4EEE2; }
+.brot-ghost--on { background: #0E233C; color: #F4EEE2; }
+.brot-ghost:disabled { opacity: .45; cursor: default; }
+
+/* Campo con rótulo interno: solo subrayado, foco navy 2px */
+.brot-fl {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  border-bottom: 1px solid #4A5463;
+  cursor: text;
+}
+.brot-fl:focus-within { border-bottom: 2px solid #0E233C; }
+.brot-fl > span { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 500; color: #4A5463; }
+.brot-fl:focus-within > span { color: #0E233C; }
+.brot-fl > input {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: 16px;
+  color: #0E233C;
+  height: 24px;
+  outline: none;
+}
+.brot-fl > input::placeholder { color: #6E7482; }
+
 /* ── Input base ── */
 .brot-input {
   width: 100%;
@@ -224,7 +345,7 @@ textarea.brot-input {
   padding: 0;
 }
 .brot-modal-inner {
-  border-radius: 4px 4px 0 0;
+  border-radius: 0;
   height: 100vh;
   height: 100dvh;
   max-height: 100vh;
@@ -233,7 +354,7 @@ textarea.brot-input {
 .brot-modal-body {
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - 340px);
+  min-height: calc(100dvh - 330px);
   padding-bottom: calc(42px + env(safe-area-inset-bottom));
 }
 /* v37: el foot se estira para ocupar el resto del alto disponible en mobile,
@@ -281,7 +402,7 @@ textarea.brot-input {
     max-width: 760px !important;
     height: auto !important;
     max-height: 88vh !important;
-    border-radius: var(--brot-radius) !important;
+    border-radius: 0 !important;
     overflow: hidden !important;
   }
   .brot-modal-photo {
@@ -350,14 +471,22 @@ textarea.brot-input {
   align-items: flex-end;
   padding: 0;
 }
-/* v43 · fila Total: en mobile más compacta (8px, line-height 1.1); en 900px+ vuelve al padding original */
+/* v45 · lista de productos con scroll vertical propio (sin scroll horizontal) */
+.brot-co-lines {
+  max-height: 226px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(14,35,60,.16) transparent;
+}
+
+/* v45 · fila Total: filete navy arriba, sin padding lateral */
 .brot-co-total {
-  padding: 8px 10px 8px 0;
-  margin-top: 2px;
-  line-height: 1.1;
+  padding: 12px 0;
+  border-top: 1px solid #0E233C;
 }
 .brot-co-modal {
-  border-radius: 4px 4px 0 0 !important;
+  border-radius: 0 !important;
   height: 100vh;
   height: 100dvh;
   max-height: 100vh;
@@ -376,15 +505,11 @@ textarea.brot-input {
     padding: 19px;
   }
   .brot-co-modal {
-    max-width: 720px !important;
+    max-width: 760px !important;
     height: auto !important;
     max-height: 90vh !important;
-    border-radius: var(--brot-radius) !important;
+    border-radius: 0 !important;
     padding-bottom: 0;
-  }
-  .brot-co-lines {
-    max-height: 220px;
-    overflow-y: auto;
   }
   .brot-co-body {
     display: grid !important;
@@ -416,8 +541,6 @@ textarea.brot-input {
   }
   .brot-co-total {
     margin-top: auto;
-    padding: 12px 2px 4px;
-    line-height: normal;
   }
   .brot-co-actions {
     grid-column: 2;
@@ -451,16 +574,5 @@ textarea.brot-input {
   .brot-cf-cta {
     grid-area: cta;
     align-self: start;
-  }
-}
-
-/* ── Confirmacion page: desktop card ── */
-@media (min-width: 1024px) {
-  .brot-ok-card {
-    max-width: 480px !important;
-    padding: 54px 48px 44px !important;
-  }
-  .brot-ok-seal {
-    width: 150px !important;
   }
 }

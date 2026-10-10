@@ -5,14 +5,31 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-function WheatIcon() {
+function ClockIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C8851A" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto" }}>
-      <path d="M12 21V8"/>
-      <path d="M12 8c0-2 1.4-3.4 3-4-.2 2-1.2 3.4-3 4Zm0 0c0-2-1.4-3.4-3-4 .2 2 1.2 3.4 3 4Z"/>
-      <path d="M12 13c0-1.8 1.3-3 2.8-3.6-.2 1.8-1.1 3-2.8 3.6Zm0 0c0-1.8-1.3-3-2.8-3.6.2 1.8 1.1 3 2.8 3.6Z"/>
-      <path d="M12 18c0-1.8 1.3-3 2.8-3.6-.2 1.8-1.1 3-2.8 3.6Zm0 0c0-1.8-1.3-3-2.8-3.6.2 1.8 1.1 3 2.8 3.6Z"/>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="1.6" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
     </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="1.6" strokeLinecap="round">
+      <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>
+    </svg>
+  );
+}
+
+function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; label: string; value: string; last?: boolean }) {
+  return (
+    <div className="flex items-center gap-3" style={{ padding: "14px 0", borderBottom: last ? "none" : "1px solid rgba(14,35,60,.10)" }}>
+      <span className="brot-ring">{icon}</span>
+      <div>
+        <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>{label}</div>
+        <div className="text-[16px] leading-[1.25] text-navy">{value}</div>
+      </div>
+    </div>
   );
 }
 
@@ -20,101 +37,59 @@ function ConfirmacionContent() {
   const params  = useSearchParams();
   const status  = params.get("status");
   const orderId = params.get("order");
+  const pickup  = params.get("pickup");
+  const place   = params.get("place");
 
   const isSuccess = status === "success" || status === "approved";
 
+  // v45 editorial: sin tarjeta, composición a la izquierda, un solo filete
+  // navy arriba y el CTA anclado abajo.
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-10 bg-cream">
-      <div
-        className="brot-ok-card w-full text-center"
-        style={{
-          maxWidth: "420px",
-          background: "#fff",
-          border: "1px solid rgba(14,35,60,.07)",
-          borderRadius: "var(--brot-radius)",
-          boxShadow: "0 36px 70px -30px rgba(14,35,60,.42)",
-          padding: "44px 36px 36px",
-        }}
-      >
-        {/* Sello — mismo logo que el footer de la landing */}
-        <Image
-          src="/assets/logo-sello-mono-navy-transparente.png"
-          alt="BROT 74"
-          width={2400}
-          height={2400}
-          priority
-          className="brot-ok-seal mx-auto block"
-          style={{ width: "132px", height: "auto" }}
-        />
+    <div className="min-h-screen bg-white flex justify-center">
+      <div className="w-full max-w-[480px] px-5 pt-[18px] pb-[30px] flex flex-col min-h-screen">
+        <div className="brot-rule" />
 
-        {/* Título */}
-        <h1 className="font-bold text-[33px] tracking-[-0.01em] text-navy mt-[26px] mb-0">
-          Tu BROT está reservado
-        </h1>
+        <div className="flex-1 flex flex-col justify-center py-10">
+          {/* Sello — mismo logo que el footer de la landing */}
+          <Image
+            src="/assets/logo-sello-mono-navy-transparente.png"
+            alt="BROT 74"
+            width={2400}
+            height={2400}
+            priority
+            style={{ width: "88px", height: "auto", display: "block" }}
+          />
 
-        {/* Descripción */}
-        <p className="font-medium text-[16.5px] leading-[1.5] text-stone mt-[14px] mx-auto" style={{ maxWidth: "30ch" }}>
-          {isSuccess
-            ? "Tu pago fue procesado con éxito."
-            : "Recibimos tu pedido. El pago está siendo procesado."}
-        </p>
+          {orderId && (
+            <div className="brot-mlabel brot-mlabel-amber mt-[22px]" style={{ fontWeight: 500 }}>
+              Pedido #{orderId}
+            </div>
+          )}
 
-        {/* Número de pedido */}
-        {orderId && (
-          <div className="brot-mlabel brot-mlabel-amber mt-[14px]" style={{ textAlign: "center" }}>
-            Pedido #{orderId}
-          </div>
-        )}
+          <h1 className="brot-h mt-[10px]" style={{ fontSize: "44px" }}>
+            Tu <span style={{ color: "#C8851A" }}>BROT</span><br />está reservado
+          </h1>
 
-        {/* Pill WhatsApp */}
-        <div
-          className="mt-[26px] flex items-start justify-center gap-[8px] font-semibold text-[16px] leading-[1.45] text-navy"
-          style={{ background: "#FBF1DF", borderRadius: "var(--brot-radius)", padding: "18px 22px" }}
-        >
-          <span className="mt-[3px] flex-none">
-            <WheatIcon />
-          </span>
-          <span>Una vez acreditado tu pago, recibirás un mensaje de WhatsApp de confirmación.</span>
+          <p className="text-[16px] leading-[1.5] text-stone mt-[14px] mb-0" style={{ maxWidth: "34ch" }}>
+            {isSuccess
+              ? "Tu pago fue procesado con éxito."
+              : "Recibimos tu pedido. El pago está siendo procesado."}
+          </p>
+          <p className="text-[16px] leading-[1.5] text-stone mt-2 mb-0" style={{ maxWidth: "34ch" }}>
+            Una vez acreditado tu pago, recibirás un mensaje de WhatsApp de confirmación.
+          </p>
+
+          {(pickup || place) && (
+            <div className="mt-[18px]">
+              {pickup && <InfoRow icon={<ClockIcon />} label="Retiro" value={pickup} last={!place} />}
+              {place && <InfoRow icon={<PinIcon />} label="Lugar" value={place} last />}
+            </div>
+          )}
         </div>
 
-        {/* CTA Volver */}
-        <Link
-          href="/"
-          className="mt-6 block w-full font-bold text-[16.5px] tracking-[.01em] py-[17px] rounded-[4px] no-underline flex items-center justify-center"
-          style={{
-            background: "#0E233C",
-            color: "#F4EEE2",
-            textTransform: "uppercase",
-            letterSpacing: ".08em",
-            transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.transform = "";
-            (e.currentTarget as HTMLElement).style.boxShadow = "";
-          }}
-        >
+        <Link href="/" className="brot-pill no-underline">
           Volver al inicio
         </Link>
-
-        {/* Instagram — v40: caja normal 16px/500, min-height 44px */}
-        <a
-          href="https://www.instagram.com/brot.74"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center justify-center gap-2 no-underline font-medium text-[16px] text-stone"
-          style={{ minHeight: "44px", transition: "color .16s" }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#8A5A0E"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = ""; }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-          </svg>
-          Seguinos en Instagram · @brot.74
-        </a>
       </div>
     </div>
   );

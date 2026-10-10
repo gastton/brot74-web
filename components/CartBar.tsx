@@ -53,9 +53,9 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
     <>
       {/* Desktop (md: 768px+) — barra de ancho completo */}
       <div
-        className="hidden md:block fixed bottom-0 left-0 right-0 z-[60] p-4"
+        className="hidden md:block fixed bottom-0 left-0 right-0 z-[60] px-10 pt-4 bg-white"
         style={{
-          background: "linear-gradient(to top, #F4EEE2 60%, transparent)",
+          borderTop: "1px solid rgba(14,35,60,.16)",
           paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
         }}
       >
@@ -66,24 +66,13 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
             </div>
           </div>
         )}
-        <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto">
+        <div className="max-w-[420px] ml-auto lg:mr-[max(0px,calc((100%-1024px)/2))]">
           <button
             onClick={onCheckout}
             disabled={reserving}
             aria-label={`Ver mi pedido, ${count} producto${count !== 1 ? "s" : ""}, ${formatCurrency(total)}`}
-            className="w-full flex items-center gap-3 rounded-[4px] border-none font-medium text-[16px]"
-            style={{
-              background: "#0E233C",
-              color: "#F4EEE2",
-              minHeight: "56px",
-              padding: "0 18px",
-              letterSpacing: ".01em",
-              cursor: "pointer",
-              boxShadow: "0 8px 24px -8px rgba(14,35,60,.5)",
-              transition: ctaTransition,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+            className="brot-pill"
+            style={{ justifyContent: "flex-start" }}
           >
             <CountPill count={count} reserving={reserving} />
             <span className="whitespace-nowrap">Ver mi pedido</span>
@@ -110,15 +99,10 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           onClick={onCheckout}
           disabled={reserving}
           aria-label={`Ver mi pedido, ${count} producto${count !== 1 ? "s" : ""}, ${formatCurrency(total)}`}
-          className="w-full flex items-center gap-3 rounded-[4px] border-none font-medium text-[16px]"
+          className="brot-pill"
           style={{
-            background: "#0E233C",
-            color: "#F4EEE2",
-            minHeight: "56px",
-            padding: "0 18px",
-            letterSpacing: ".01em",
-            cursor: "pointer",
-            boxShadow: "0 10px 24px -8px rgba(14,35,60,.55)",
+            justifyContent: "flex-start",
+            boxShadow: "0 6px 18px rgba(14,35,60,.28)",
             transition: ctaTransition,
           }}
           onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.98)"; }}
