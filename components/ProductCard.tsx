@@ -45,31 +45,22 @@ export default function ProductCard({
   // que ya usa el "+" del modal de detalle (ver ProductModal canAdd).
   const limitReached = remaining !== null && remaining <= 0;
 
+  const textColor = outOfStock ? "#4A5463" : "#0E233C";
+  const priceColor = outOfStock ? "#4A5463" : "#8A5A0E";
+
+  // v45 · editorial: sin tarjeta ni radio. Mobile: foto 4:5 a la izquierda e
+  // info a la derecha, separadas por filetes. Desktop: foto 4:3 arriba con
+  // filete navy debajo y nombre + precio en una fila.
   return (
     <div
       onClick={() => { if (!isDisabled) onClick(); }}
-      className="flex flex-row-reverse gap-3 pb-4 mb-3 border-b border-[rgba(14,35,60,.10)] md:flex-col md:gap-0 md:pb-0 md:mb-0 md:border-none"
-      style={{
-        cursor: isDisabled ? "default" : "pointer",
-        transition: "transform .18s cubic-bezier(.2,.7,.3,1)",
-      }}
-      onMouseEnter={(e) => {
-        if (!isDisabled) e.currentTarget.style.transform = "translateY(-3px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "";
-      }}
+      className="brot-card grid grid-cols-[104px_minmax(0,1fr)] gap-4 py-[14px] border-t border-[rgba(14,35,60,.16)] md:block md:py-0 md:border-t-0"
+      style={{ cursor: isDisabled ? "default" : "pointer" }}
     >
-      {/* Foto — mobile: miniatura fija a la derecha (BRT-92). Desktop: sin
-         cambios, cuadrada a todo el ancho de la card. */}
+      {/* Foto — la atenuación de "agotado" queda solo en la foto */}
       <div
-        className="relative overflow-hidden flex-none w-[104px] h-[104px] md:w-full md:h-auto md:aspect-square"
-        style={{
-          borderRadius: "var(--brot-radius)",
-          background: "#ddd6c8",
-          border: "1px solid rgba(14,35,60,.08)",
-          boxShadow: isDisabled ? "none" : "0 16px 28px -22px rgba(14,35,60,.45)",
-        }}
+        className="relative overflow-hidden aspect-[4/5] md:aspect-[4/3]"
+        style={{ background: "#ddd6c8" }}
       >
         {imageUrl ? (
           <div
@@ -79,133 +70,53 @@ export default function ProductCard({
               backgroundPosition: `${focalX}% ${focalY}%`,
               transform: `scale(${imageScale})`,
               transformOrigin: `${focalX}% ${focalY}%`,
-              transition: "transform .3s cubic-bezier(.2,.7,.3,1)",
               filter: outOfStock ? "grayscale(.9)" : "none",
-              opacity: outOfStock ? 0.55 : 1,
-            }}
-            onMouseEnter={(e) => {
-              if (!isDisabled) e.currentTarget.style.transform = `scale(${Math.max(imageScale, 1) * 1.04})`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = `scale(${imageScale})`;
+              opacity: outOfStock ? 0.5 : 1,
             }}
           />
         ) : (
           <div className="absolute inset-0 bg-[#ddd6c8]" />
         )}
 
-        {/* Badge sin stock — v40: fondo blanco, texto tinta 2, borde hairline (antes cápsula crema translúcida) */}
-        {outOfStock && (
-          <span
-            className="absolute top-3 left-3 whitespace-nowrap"
-            style={{
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: ".06em",
-              padding: "3px 8px",
-              borderRadius: "2px",
-              background: "#fff",
-              color: "#4A5463",
-              border: "1px solid rgba(14,35,60,.16)",
-            }}
-          >
-            Sin stock
-          </span>
-        )}
-
-        {/* Badge cantidad en carrito */}
-        {quantity > 0 && !outOfStock && (
-          <div
-            className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-            style={{ background: "#0E233C", color: "#F4EEE2" }}
-          >
-            {quantity}
-          </div>
-        )}
-
-        {/* Badge últimas unidades — v40: texto navy sobre ámbar (antes crema, 2,7:1) */}
+        {/* Escasez: rótulo recto, centrado en el borde inferior de la foto */}
         {slotSelected && remaining !== null && remaining <= 2 && remaining > 0 && (
-          <div
-            className="absolute top-2 left-2 whitespace-nowrap"
-            style={{
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: ".06em",
-              padding: "3px 8px",
-              borderRadius: "2px",
-              background: "#C8851A",
-              color: "#0E233C",
-            }}
+          <span
+            className="brot-tag absolute left-1/2 bottom-0 -translate-x-1/2 whitespace-nowrap"
+            style={{ background: "#C8851A", color: "#0E233C", padding: "5px 8px 4px" }}
           >
             Últimos {remaining}
-          </div>
-        )}
-
-        {/* Quick-add (BRT-89): suma 1 unidad sin abrir el modal de producto.
-           Mismo lenguaje visual que el botón "Volver" de ProductModal. Sigue
-           visible cuando se llega al límite (BRT-117) —igual que el modal—
-           pero deshabilitado, para que quede claro que ya no se puede sumar
-           más sin tener que abrir el modal para verlo. */}
-        {!isDisabled && (
-          <button
-            type="button"
-            aria-label={`Agregar ${name}`}
-            aria-disabled={limitReached}
-            disabled={limitReached}
-            onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
-            className="brot-tap absolute bottom-2 right-2 rounded-full flex items-center justify-center border-none"
-            style={{
-              background: "rgba(248,243,234,.9)",
-              backdropFilter: "blur(6px)",
-              WebkitBackdropFilter: "blur(6px)",
-              boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
-              cursor: limitReached ? "not-allowed" : "pointer",
-              opacity: limitReached ? 0.45 : 1,
-              transition: "transform .15s, opacity .15s",
-            }}
-            onMouseDown={(e) => { if (!limitReached) e.currentTarget.style.transform = "scale(.9)"; }}
-            onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.4" strokeLinecap="round">
-              <path d="M5 12h14M12 5v14"/>
-            </svg>
-          </button>
+          </span>
         )}
       </div>
 
-      {/* Texto — v40: la atenuación de "agotado" queda solo en la foto; acá
-         nombre y precio pasan a tinta 2 (antes se apagaba todo el bloque al 50%). */}
-      <div className="pt-3 px-0.5 flex-1 min-w-0 md:pt-3">
-        <div
-          className="font-medium text-[18px] leading-snug"
-          style={{ color: outOfStock ? "#4A5463" : "#0E233C" }}
-        >
-          {name}
+      {/* Texto */}
+      <div className="min-w-0 md:border-t md:border-navy md:mt-[14px] md:pt-3">
+        <div className="md:flex md:items-baseline md:justify-between md:gap-3">
+          <div className="text-[20px] font-medium leading-[1.2]" style={{ letterSpacing: "-.01em", color: textColor }}>
+            {name}
+          </div>
+          <span
+            className="hidden md:block text-[18px] font-medium flex-none"
+            style={{ color: priceColor, fontVariantNumeric: "tabular-nums" }}
+          >
+            {formatCurrency(price)}
+          </span>
         </div>
 
-        {/* Peso — solo desktop, como siempre (BRT-92: mobile no lo muestra,
-           en su lugar va la descripción). */}
-        {weight && (
-          <div className="hidden md:block brot-mlabel mt-0.5">{weight}</div>
-        )}
-
-        <div
-          className="font-medium text-[17px] mt-2"
-          style={{ color: outOfStock ? "#4A5463" : "#8A5A0E", fontVariantNumeric: "tabular-nums" }}
-        >
-          {formatCurrency(price)}
+        {/* Precio + gramos (mobile) */}
+        <div className="flex items-baseline gap-[10px] mt-[3px] md:hidden">
+          <span className="text-[17px] font-medium" style={{ color: priceColor, fontVariantNumeric: "tabular-nums" }}>
+            {formatCurrency(price)}
+          </span>
+          {weight && <span className="text-[15px] text-stone">{weight}</span>}
         </div>
+        {weight && <div className="hidden md:block text-[15px] text-stone mt-1">{weight}</div>}
 
-        {/* Descripción — solo mobile, recortada a 3 líneas (BRT-92). El
-           contenedor controla mostrar/ocultar por breakpoint; el <p> de
-           adentro tiene su propio "display" fijo (line-clamp), así que no
-           puede ser el mismo elemento el que se oculta con una clase —
-           un style inline siempre le gana a una clase de Tailwind. */}
+        {/* Descripción — solo mobile, recortada a 3 líneas (BRT-92) */}
         {description && (
           <div className="md:hidden">
             <p
-              className="text-[15px] text-stone mt-1.5 leading-snug"
+              className="text-[15px] text-stone mt-1 leading-[1.4]"
               style={{
                 display: "-webkit-box",
                 WebkitLineClamp: 3,
@@ -216,6 +127,35 @@ export default function ProductCard({
               {description}
             </p>
           </div>
+        )}
+
+        {outOfStock && (
+          <div className="brot-kick mt-3">Sin stock esta fecha</div>
+        )}
+
+        {/* Agregar (BRT-89/117): suma 1 unidad sin abrir el modal. Deshabilitado
+           al llegar al límite de stock; con cantidad > 0 pasa a píldora llena. */}
+        {!isDisabled && (
+          <button
+            type="button"
+            aria-label={`Agregar ${name}`}
+            aria-disabled={limitReached}
+            disabled={limitReached}
+            onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
+            className={`brot-ghost mt-[10px]${quantity > 0 ? " brot-ghost--on" : ""}`}
+          >
+            {quantity > 0 ? (
+              <>En tu pedido · {quantity}</>
+            ) : (
+              <>
+                <span className="md:hidden">Agregar</span>
+                <span className="hidden md:inline">Sumar</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <path d="M5 12h14M12 5v14"/>
+                </svg>
+              </>
+            )}
+          </button>
         )}
       </div>
     </div>

@@ -63,20 +63,15 @@ interface InfoRowProps {
 function InfoRow({ icon, label, value, last }: InfoRowProps) {
   return (
     <div
-      className="flex items-center gap-[14px] py-[14px]"
-      style={{ borderBottom: last ? "none" : "1px solid rgba(14,35,60,.09)" }}
+      className="flex items-center gap-3 py-2"
+      style={{ borderBottom: last ? "none" : "1px solid rgba(14,35,60,.10)" }}
     >
-      <span
-        className="flex-none w-[42px] h-[42px] rounded-full flex items-center justify-center"
-        style={{ background: "#F4EEE2", border: "1px solid rgba(14,35,60,.10)" }}
-      >
-        {icon}
-      </span>
+      <span className="brot-ring">{icon}</span>
       <div>
-        <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap">
+        <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap" style={{ fontWeight: 500 }}>
           {label}
         </div>
-        <div className="font-medium text-[17px] text-navy mt-0 leading-[1.2]">
+        <div className="text-[16px] text-navy mt-0 leading-[1.25]">
           {value}
         </div>
       </div>
@@ -115,13 +110,8 @@ function NoSlotsEmptyState() {
 
   return (
     <article
-      className="rounded-[4px] text-center"
-      style={{
-        background: "#FBF7EF",
-        border: "1px solid rgba(14,35,60,.10)",
-        boxShadow: "0 26px 48px -28px rgba(14,35,60,.4)",
-        padding: "38px 30px 32px",
-      }}
+      className="text-center"
+      style={{ background: "#fff", borderTop: "1px solid #0E233C", padding: "38px 6px 32px" }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/ramillete-mono-navy.png" alt="" style={{ width: "74px", height: "auto", display: "block", margin: "0 auto", opacity: 0.92 }} />
@@ -170,16 +160,8 @@ function NoSlotsEmptyState() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full border-none cursor-pointer font-medium text-[16px] tracking-[.01em] py-4 rounded-[4px] min-h-[52px]"
-            style={{
-              background: "#0E233C",
-              color: "#F4EEE2",
-              textTransform: "none",
-              transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
-              opacity: loading ? 0.6 : 1,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+            className="brot-pill"
+            style={{ opacity: loading ? 0.6 : 1 }}
           >
             {loading ? "Enviando…" : "Avisame cuando abra"}
           </button>
@@ -218,7 +200,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
   }
 
   return (
-    <div className="space-y-6 w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto">
+    <div className="space-y-10 w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto">
       {visibleSlots.map((slot, i) => {
         const date = new Date(slot.date);
         const weekday = date.toLocaleDateString("es-AR", { weekday: "long" }).toUpperCase();
@@ -231,59 +213,38 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
           : formatCutoff(slot.date);
 
         return (
-          <article
-            key={slot.id ?? `slot-${i}`}
-            className="brot-card-article rounded-[4px] overflow-hidden"
-            style={{
-              background: "#FBF7EF",
-              border: "1px solid rgba(14,35,60,.10)",
-              boxShadow: "0 26px 48px -28px rgba(14,35,60,.4)",
-            }}
-          >
-            {/* ── Media: foto + fecha + badge ── */}
-            <div className="brot-card-media relative h-[290px]">
-              <Image
-                src={slot.imageUrl || FALLBACK_IMAGE}
-                alt="Pan artesanal"
-                fill
-                style={slot.imageScale < 1
-                  ? { objectFit: "contain" }
-                  : { objectFit: "cover", objectPosition: `${slot.imageFocalX}% ${slot.imageFocalY}%`, transform: `scale(${slot.imageScale})`, transformOrigin: `${slot.imageFocalX}% ${slot.imageFocalY}%` }}
-                sizes="(min-width: 900px) 344px, 430px"
-                priority={i === 0}
-              />
+          <article key={slot.id ?? `slot-${i}`} className="brot-card-article">
+            {/* ── Foto a sangre SIN velo + pieza blanca con la fecha ── */}
+            <div className="brot-card-media relative h-[330px] -mx-6 min-[900px]:mx-0">
+              <div className="absolute inset-0 overflow-hidden">
+                <Image
+                  src={slot.imageUrl || FALLBACK_IMAGE}
+                  alt="Pan artesanal"
+                  fill
+                  style={slot.imageScale < 1
+                    ? { objectFit: "contain" }
+                    : { objectFit: "cover", objectPosition: `${slot.imageFocalX}% ${slot.imageFocalY}%`, transform: `scale(${slot.imageScale})`, transformOrigin: `${slot.imageFocalX}% ${slot.imageFocalY}%` }}
+                  sizes="(min-width: 900px) 780px, 430px"
+                  priority={i === 0}
+                />
+              </div>
 
-              {/* Scrim — v40: parejo al 50% (antes degradé con zona central casi transparente, ≈3:1) */}
               <div
-                className="absolute inset-0"
-                style={{ background: "rgba(14,35,60,.5)" }}
-              />
-
-              {/* Fecha centrada */}
-              <div
-                className="absolute inset-0 flex flex-col items-center justify-center text-center select-none"
-                style={{ color: "#F4EEE2", textShadow: "0 2px 18px rgba(14,35,60,.5)" }}
+                className="absolute left-6 min-[900px]:left-0 select-none"
+                style={{ bottom: "-34px", width: "190px", background: "#fff", padding: "16px 18px 14px" }}
               >
-                <div className="font-bold text-[17px] tracking-[.3em] uppercase">{weekday}</div>
-                <div className="font-semibold text-[15px] tracking-[.2em] uppercase mt-0.5" style={{ opacity: 0.85 }}>
-                  {month}
-                </div>
-                <div
-                  className="leading-[.96] tracking-[-0.02em] mt-0.5"
-                  style={{
-                    fontFamily: "var(--font-hanken, 'Hanken Grotesk', system-ui, sans-serif)",
-                    fontWeight: 600,
-                    fontSize: "88px",
-                    letterSpacing: "-.03em",
-                  }}
-                >
+                <div className="brot-rule" />
+                <div className="mt-3" style={{ fontSize: "84px", fontWeight: 300, lineHeight: 0.9, letterSpacing: "-.03em", color: "#0E233C" }}>
                   {day}
+                </div>
+                <div className="brot-kick mt-2" style={{ color: "#0E233C" }}>
+                  {weekday} · {month}
                 </div>
               </div>
             </div>
 
-            {/* ── Cuerpo ── */}
-            <div className="brot-card-body px-6 pb-[42px] pt-2">
+            {/* ── Datos ── */}
+            <div className="brot-card-body pt-[52px]">
               {slot.pickupTime && (
                 <InfoRow icon={<ClockIcon />} label="Horario de retiro" value={slot.pickupTime} />
               )}
@@ -292,34 +253,28 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
               )}
               <InfoRow icon={<CalIcon />} label="Pedidos hasta" value={cutoffLabel} last />
 
-              {/* CTA */}
-              <button
-                disabled={!isOpen}
-                onClick={() => { if (isOpen && slot.id !== null) onChange(slot.id); }}
-                className="group mt-[18px] w-full flex items-center justify-center gap-[10px] font-medium text-[16px] tracking-[.01em] py-[17px] rounded-[4px] disabled:opacity-40 disabled:cursor-not-allowed min-h-[52px]"
-                style={{
-                  background: "#0E233C",
-                  color: "#F4EEE2",
-                  textTransform: "none",
-                  transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s",
-                }}
-                onMouseEnter={(e) => { if (isOpen) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-              >
-                Panes del día{" "}
-                <span
-                  className="inline-block"
-                  style={{ transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}
-                  ref={(el) => {
-                    if (!el) return;
-                    const btn = el.closest("button")!;
-                    btn.addEventListener("mouseenter", () => { el.style.transform = "translateX(5px)"; });
-                    btn.addEventListener("mouseleave", () => { el.style.transform = ""; });
-                  }}
+              {/* CTA fija abajo */}
+              <div className="sticky bottom-0 bg-white pt-[18px] pb-[30px]">
+                <button
+                  disabled={!isOpen}
+                  onClick={() => { if (isOpen && slot.id !== null) onChange(slot.id); }}
+                  className="brot-pill group"
                 >
-                  →
-                </span>
-              </button>
+                  Panes del día
+                  <span
+                    className="inline-block"
+                    style={{ transition: "transform .2s cubic-bezier(.2,.7,.3,1)" }}
+                    ref={(el) => {
+                      if (!el) return;
+                      const btn = el.closest("button")!;
+                      btn.addEventListener("mouseenter", () => { el.style.transform = "translateX(5px)"; });
+                      btn.addEventListener("mouseleave", () => { el.style.transform = ""; });
+                    }}
+                  >
+                    →
+                  </span>
+                </button>
+              </div>
             </div>
           </article>
         );

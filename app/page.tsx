@@ -352,18 +352,23 @@ function HomeContent() {
     // productos de atrás. Dejamos el modal montado hasta que la página
     // completa se reemplace sola.
     clearSavedCart();
-    window.location.href = `/confirmacion?order=${orderId}&status=pending`;
+    const retiro = [selectedSlot?.dayLabel, selectedSlot?.pickupTime].filter(Boolean).join(" · ");
+    const extra =
+      (retiro ? `&pickup=${encodeURIComponent(retiro)}` : "") +
+      (selectedSlot?.location ? `&place=${encodeURIComponent(selectedSlot.location)}` : "");
+    window.location.href = `/confirmacion?order=${orderId}&status=pending${extra}`;
   }
 
   /* ─── SLOTS VIEW ────────────────────────────────────────── */
   if (view === "slots") {
     return (
-      <div className="min-h-screen" style={{ background: "#F4EEE2" }}>
-        <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 py-10">
-          {/* Título */}
-          <header className="mb-5 text-center">
-            <h2 className="font-bold text-[37px] leading-[1.05] tracking-[-0.01em] text-navy m-0">
-              Tu próximo <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
+      <div className="min-h-screen bg-white">
+        <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 pt-5 pb-10">
+          {/* Título — v45 editorial: filete navy + título a la izquierda */}
+          <header className="mb-6">
+            <div className="brot-rule" />
+            <h2 className="brot-h mt-[22px]">
+              Tu próximo<br /><span style={{ color: "#C8851A" }}>BROT</span>
             </h2>
           </header>
 
@@ -396,31 +401,32 @@ function HomeContent() {
   /* ─── MENU VIEW ─────────────────────────────────────────── */
   if (view === "menu") {
     return (
-      <div className="min-h-screen bg-cream">
-        <main className="w-full max-w-[430px] md:max-w-none lg:max-w-[1120px] mx-auto px-4 py-8 md:px-10 md:pt-9 md:pb-14 lg:px-12 lg:pt-12 lg:pb-[72px]">
-          {/* Cabecera: columna en mobile, fila en tablet+ */}
-          <div className="flex flex-col md:flex-row md:items-baseline md:justify-between gap-3 md:gap-6 mb-[22px] md:mb-[28px]">
-            <button
-              onClick={() => router.push(buildFlowUrl({ step: "slots" }))}
-              className="inline-flex items-center gap-[6px] font-semibold text-[14.5px] text-navy hover:text-amber transition-colors"
-              style={{ opacity: 0.85 }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 5l-7 7 7 7"/>
-              </svg>
-              {selectedSlot?.dayLabel ?? "Cambiar fecha"}
-            </button>
-
-            <h2 className="font-bold text-[30px] tracking-[-0.01em] text-navy m-0">
-              Elegí tu <em className="not-italic" style={{ color: "#C8851A" }}>BROT</em>
-            </h2>
+      <div className="min-h-screen bg-white">
+        <main className="w-full max-w-[430px] md:max-w-none lg:max-w-[1120px] mx-auto px-5 pt-[18px] pb-8 md:px-10 md:pt-8 md:pb-14 lg:px-12 lg:pb-[72px]">
+          {/* Cabecera — v45 editorial. En desktop abre con filete navy. */}
+          <div className="hidden md:block brot-rule mb-[22px]" />
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 md:gap-6 mb-5 md:mb-7">
+            <div>
+              <button
+                onClick={() => router.push(buildFlowUrl({ step: "slots" }))}
+                className="brot-kick inline-flex items-center gap-[6px] min-h-[44px] -ml-1 bg-transparent border-none cursor-pointer hover:text-navy transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 5l-7 7 7 7"/>
+                </svg>
+                {selectedSlot?.dayLabel ?? "Cambiar fecha"}
+              </button>
+              <h2 className="brot-h brot-h--web mt-[2px]">
+                Elegí tu <span style={{ color: "#C8851A" }}>BROT</span>
+              </h2>
+            </div>
           </div>
 
           {loadingProducts ? (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-0 md:gap-[22px] lg:gap-[26px]">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="aspect-square rounded-[16px] bg-stone/20" />
+                  <div className="aspect-[4/5] md:aspect-[4/3] bg-stone/20" />
                   <div className="pt-3 space-y-2">
                     <div className="h-4 rounded bg-stone/10" />
                     <div className="h-3 rounded bg-stone/10 w-2/3" />
@@ -429,7 +435,7 @@ function HomeContent() {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-0 md:gap-[22px] lg:gap-[26px]">
+            <div className="brot-menu grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-9">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}

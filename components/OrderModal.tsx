@@ -30,12 +30,10 @@ interface OrderModalProps {
 }
 
 const MODAL_STYLE = {
-  background: "#FBF7EF",
-  borderRadius: "var(--brot-radius)",
+  background: "#fff",
+  borderRadius: 0,
   boxShadow: "0 40px 80px -24px rgba(14,35,60,.6)",
 } as const;
-
-const HAIR = { height: "1px", background: "rgba(14,35,60,.10)" } as const;
 
 const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
@@ -52,9 +50,21 @@ function BagIcon({ stroke = "#F4EEE2" }: { stroke?: string }) {
   return <ShoppingCart size={20} color={stroke} strokeWidth={1.8} />;
 }
 
+function HourglassIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 2.5h14M5 21.5h14"/>
+      <path d="M7 2.5v3.2c0 2 1.6 3.6 3.6 5.1L12 12l1.4-1.2C15.4 9.3 17 7.7 17 5.7V2.5"/>
+      <path d="M7 21.5v-3.2c0-2 1.6-3.6 3.6-5.1L12 12l1.4 1.2c2 1.5 3.6 3.1 3.6 5.1v3.2"/>
+      <path d="M9.2 19.5h5.6L12 17.2Z" fill="#0E233C" stroke="none"/>
+      <path d="M9.6 6.8h4.8" strokeWidth="1.4"/>
+    </svg>
+  );
+}
+
 function TrashIcon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
       <path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10 11v5M14 11v5"/>
     </svg>
@@ -310,9 +320,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
     }
   }
 
-  const TOTAL_SECONDS = 15 * 60;
   const isUrgent = secondsLeft <= 120;
-  const fillPct = ((secondsLeft / TOTAL_SECONDS) * 100).toFixed(2);
 
   // Botón X (BRT-88): si hay productos en el carrito, confirma antes de
   // cerrar — en cualquiera de los dos pasos. Si el diálogo de expiración ya
@@ -360,152 +368,88 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
         className="brot-co-modal relative w-full overflow-y-auto"
         style={MODAL_STYLE}
       >
-        {/* Header */}
-        <div
-          className="flex items-start justify-between gap-[14px]"
-          style={step === "payment" ? { padding: "24px 26px 18px" } : { padding: "26px 22px 12px" }}
-        >
+        {/* Header — v45: sin filete ni subtítulo de fecha en Tu pedido */}
+        <div className="flex items-start justify-between gap-[14px] px-5 min-[900px]:px-[30px] pt-[26px]">
           <div>
-            <h3
-              className="text-navy m-0"
-              style={{ fontWeight: 400, fontSize: "30px", letterSpacing: "-.015em", lineHeight: 1.08 }}
-            >
+            <h3 className="brot-h brot-h--modal">
               {step === "payment" ? "Pagá por transferencia" : "Tu pedido"}
             </h3>
-            {(step === "payment" || items.length > 0) && (
-              <div
-                className="text-[15px] text-stone flex items-center gap-[7px]"
-                style={{ fontStyle: "italic", marginTop: "6px", whiteSpace: "nowrap" }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "0 0 auto", opacity: 0.75 }}>
-                  <rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>
-                </svg>
-                {slotLabel}
-              </div>
+            {step === "payment" && (
+              <div className="text-[15px] text-stone mt-2">{slotLabel}</div>
             )}
           </div>
           <button
             onClick={handleCloseClick}
             aria-label="Cerrar"
             className="flex-none -mt-2 -mr-3 w-11 h-11 flex items-center justify-center border-none bg-transparent p-0"
-            style={{ cursor: "pointer", transition: "transform .15s, opacity .15s", opacity: 1 }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.opacity = "1"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.opacity = "1"; }}
+            style={{ cursor: "pointer" }}
           >
             <CloseIcon />
           </button>
         </div>
 
-        <div style={HAIR} />
-
         {/* ── Pantalla de pago (step = payment) ── */}
         {step === "payment" ? (
-          <div className="brot-cf-body px-[26px] py-[24px] space-y-[22px]">
-            {/* Total */}
-            <div className="brot-cf-tot text-center">
-              <div className="font-semibold text-[12px] text-stone" style={{ textTransform: "uppercase", letterSpacing: ".12em" }}>Total a transferir</div>
-              <div className="brot-cf-tot-amount font-normal leading-none mt-[8px]" style={{ fontSize: "48px", letterSpacing: "-.02em", color: "#C8851A" }}>
+          <div className="brot-cf-body flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[6px] pb-6">
+            {/* Total — filete navy solo abajo */}
+            <div className="brot-cf-tot text-center" style={{ marginTop: "16px", padding: "22px 0 20px", borderBottom: "1px solid #0E233C" }}>
+              <div className="brot-mlabel" style={{ fontWeight: 500 }}>Total a transferir</div>
+              <div className="brot-cf-tot-amount leading-none mt-[10px]" style={{ fontSize: "56px", fontWeight: 300, letterSpacing: "-.03em", color: "#C8851A", fontVariantNumeric: "tabular-nums" }}>
                 {formatCurrency(total)}
               </div>
             </div>
 
-            {/* Datos bancarios */}
-            <div
-              className="brot-cf-data overflow-hidden"
-              style={{ background: "#fff", border: "1px solid rgba(14,35,60,.08)", borderRadius: "var(--brot-radius)", boxShadow: "0 14px 26px -20px rgba(14,35,60,.4)" }}
-            >
-              {TITULAR && (
-                <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
+            {/* Datos bancarios — lista abierta con divisores claros */}
+            <div className="brot-cf-data" style={{ marginTop: "6px" }}>
+              {ALIAS && (
+                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
                   <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel">Titular</div>
-                    <div className="font-normal text-[16px] text-navy mt-[2px] break-all" style={{ letterSpacing: ".005em" }}>{TITULAR}</div>
+                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Alias</div>
+                    <div className="text-[18px] text-navy mt-[2px] break-all">{ALIAS}</div>
+                  </div>
+                  <button type="button" onClick={handleCopyAlias} disabled={expired} className="brot-ghost">
+                    {aliasCopied ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+              )}
+              {TITULAR && (
+                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Titular</div>
+                    <div className="text-[16px] text-navy mt-[2px] break-all">{TITULAR}</div>
                   </div>
                 </div>
               )}
               {CUIT && (
-                <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
+                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
                   <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel">CUIT / CUIL</div>
-                    <div className="font-normal text-[16px] text-navy mt-[2px] break-all" style={{ letterSpacing: ".005em" }}>{CUIT}</div>
-                  </div>
-                </div>
-              )}
-              {ALIAS && (
-                <div className="flex items-center gap-[10px] px-[14px] py-[9px]" style={{ borderBottom: "1px solid rgba(14,35,60,.08)" }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel">Alias</div>
-                    <div className="font-medium text-[18px] text-navy mt-[2px] break-all" style={{ letterSpacing: ".005em" }}>{ALIAS}</div>
+                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CUIT / CUIL</div>
+                    <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums" }}>{CUIT}</div>
                   </div>
                 </div>
               )}
               {CVU && (
-                <div className="flex items-center gap-[10px] px-[14px] py-[9px]">
+                <div className="flex items-center gap-2" style={{ padding: "10px 0" }}>
                   <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel">CVU</div>
-                    <div className="font-normal text-[16px] text-navy mt-[2px] break-all tracking-wide">{CVU}</div>
+                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CVU</div>
+                    <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".03em" }}>{CVU}</div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Copiar alias + Ya pagué: agrupados para compartir el grid-area "cta" en desktop.
+            {/* Indicación + Ya pagué: agrupados para compartir el grid-area "cta" en desktop.
                Si la reserva expira quedan cubiertos por el diálogo de expiración (BRT-88). */}
-            <div className="brot-cf-cta">
-              <div>
-                <button
-                  type="button"
-                  onClick={handleCopyAlias}
-                  disabled={expired}
-                  className="w-full font-medium text-[16px] min-h-[52px]"
-                  style={{
-                    border: aliasCopied ? "1.5px solid rgba(14,35,60,.16)" : "none",
-                    background: aliasCopied ? "rgba(63,143,91,.08)" : "#0E233C",
-                    color: aliasCopied ? "#2F6B44" : "#F4EEE2",
-                    borderRadius: "var(--brot-radius)",
-                    padding: "0 18px",
-                    textTransform: "none",
-                    letterSpacing: ".01em",
-                    cursor: expired ? "not-allowed" : "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    transition: "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s, background .2s, color .2s, border-color .2s",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; if (!aliasCopied) e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-                >
-                  {aliasCopied ? "✓ Alias copiado" : "Copiar alias"}
-                </button>
-                <div className="text-center text-[15px] text-stone" style={{ marginTop: "10px" }}>
-                  Pagá desde tu app o home banking con el alias
-                </div>
-              </div>
+            <div className="brot-cf-cta mt-auto">
+              <p className="text-[15px] text-stone m-0" style={{ margin: "14px 0 22px" }}>
+                Pagá desde tu app o home banking con el alias
+              </p>
 
               <button
                 type="button"
                 onClick={handleYaPague}
                 disabled={loading || expired}
-                className="w-full font-medium text-[16px] min-h-[52px] tracking-[.01em]"
-                style={{
-                  marginTop: "22px",
-                  border: "none",
-                  background: "#0E233C",
-                  color: "#F4EEE2",
-                  borderRadius: "var(--brot-radius)",
-                  padding: "0 18px",
-                  textTransform: "none",
-                  letterSpacing: ".01em",
-                  cursor: (loading || expired) ? "not-allowed" : "pointer",
-                  opacity: (loading || expired) ? 0.4 : 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "11px",
-                  transition: ctaTransition,
-                }}
-                onMouseEnter={(e) => { if (!loading && !expired) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                className="brot-pill"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
               </button>
@@ -520,47 +464,22 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
         ) : (
 
         /* ── Formulario (step = form) ── */
-        <form onSubmit={handleSubmit} style={{ padding: "14px 22px 24px", display: "flex", flexDirection: "column", flex: 1 }}>
-          {/* Banda de reserva */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[10px] pb-6">
+          {/* Reserva — v45: reloj de arena en círculo + cuenta regresiva, sin caja ni barra */}
           {items.length > 0 && (
-            <div
-              style={{
-                position: "relative",
-                background: (expired || isUrgent) ? "rgba(166,68,46,.10)" : "rgba(200,133,26,.10)",
-                border: `1px solid ${(expired || isUrgent) ? "rgba(166,68,46,.28)" : "rgba(200,133,26,.22)"}`,
-                borderRadius: "var(--brot-radius)",
-                padding: "11px 14px 12px",
-                marginBottom: "18px",
-                transition: "background .4s, border-color .4s",
-              }}
-            >
-              <div className="flex items-baseline justify-between gap-[10px]" style={{ flexWrap: "nowrap" }}>
-                <span
-                  className="font-medium text-[15px] whitespace-nowrap"
-                  style={{ color: (expired || isUrgent) ? "#A6442E" : "#0E233C", textTransform: "none", letterSpacing: 0 }}
-                >
-                  {expired ? "Tu reserva expiró" : "Te guardamos tu pedido por"}
-                </span>
-                <span
-                  className="font-semibold text-[18px] flex-none"
-                  style={{ fontVariantNumeric: "tabular-nums", color: (expired || isUrgent) ? "#A6442E" : "#0E233C" }}
-                >
-                  {formatCountdown(secondsLeft)}
-                </span>
-              </div>
-              <div
-                className="relative rounded-full overflow-hidden"
-                style={{ height: "3px", background: "rgba(14,35,60,.09)", marginTop: "8px" }}
+            <div className="flex items-center gap-3" style={{ padding: "10px 0", marginBottom: "14px" }}>
+              <span className="brot-ring">
+                <HourglassIcon />
+              </span>
+              <span className="flex-1 text-[16px]" style={{ color: (expired || isUrgent) ? "#A6442E" : "#0E233C" }}>
+                {expired ? "Tu reserva expiró" : "Te guardamos el pedido"}
+              </span>
+              <span
+                className="flex-none"
+                style={{ fontSize: "18px", fontWeight: 500, fontVariantNumeric: "tabular-nums", color: (expired || isUrgent) ? "#A6442E" : "#8A5A0E" }}
               >
-                <span
-                  className="absolute inset-y-0 left-0 rounded-full"
-                  style={{
-                    width: `${fillPct}%`,
-                    background: (expired || isUrgent) ? "#A6442E" : "#8A5A0E",
-                    transition: "width .25s linear, background .4s",
-                  }}
-                />
-              </div>
+                {formatCountdown(secondsLeft)}
+              </span>
             </div>
           )}
 
@@ -582,7 +501,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               <button
                 type="button"
                 onClick={() => onClose()}
-                className="btn-primary mb-3"
+                className="brot-pill mb-3"
                 style={{ maxWidth: "300px" }}
               >
                 <BagIcon />
@@ -599,40 +518,34 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             </div>
           ) : (
           <div className="brot-co-body flex flex-col gap-[18px] flex-1">
-            {/* Resumen */}
+            {/* Resumen — v45: sin tarjeta, lista con filetes; el Total cierra con filete navy */}
             <div className="brot-co-order-col">
-              <div className="brot-mlabel" style={{ marginBottom: "8px" }}>
-                Productos
-              </div>
-              <div
-                className="brot-co-summary overflow-hidden"
-                style={{ background: "#fff", borderRadius: "var(--brot-radius)", border: "1px solid rgba(14,35,60,.16)", padding: "2px 4px 6px 14px" }}
-              >
-                <div className="brot-co-lines">
-                  {items.map((item, i) => (
+              <div className="brot-co-summary">
+                <div className="brot-co-lines" style={{ borderTop: "1px solid rgba(14,35,60,.10)" }}>
+                  {items.map((item) => (
                     <div
                       key={item.id}
-                      className="brot-co-line flex items-center justify-between gap-3 min-h-[64px]"
-                      style={{ padding: "6px 0", borderBottom: i < items.length - 1 ? "1px solid rgba(14,35,60,.10)" : "none" }}
+                      className="brot-co-line flex items-center justify-between gap-2"
+                      style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}
                     >
-                      <span>
-                        <span className="text-[16px] text-navy whitespace-nowrap">
-                          {item.name} <span style={{ color: "#4A5463", marginLeft: "6px" }}>× {item.quantity}</span>
+                      <span className="flex-1 min-w-0">
+                        <span className="text-[16px] text-navy">
+                          {item.name} <span className="whitespace-nowrap" style={{ color: "#4A5463", marginLeft: "6px" }}>× {item.quantity}</span>
                         </span>
-                        <span className="block text-[12px] sm:text-[13px]" style={{ color: "#4A5463", fontVariantNumeric: "tabular-nums" }}>
+                        <span className="block whitespace-nowrap text-[12px] sm:text-[13px]" style={{ color: "#4A5463", fontVariantNumeric: "tabular-nums" }}>
                           {formatCurrency(item.price)} c/u
                         </span>
                       </span>
-                      <span className="flex items-center gap-[10px] flex-none">
-                        <span className="font-normal text-[16px] text-navy whitespace-nowrap">
+                      <span className="flex-none flex items-center -mr-[6px]">
+                        <span className="text-[16px] text-navy whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>
                           {formatCurrency(item.price * item.quantity)}
                         </span>
                         <button
                           type="button"
                           aria-label={`Quitar ${item.name}`}
                           onClick={() => onRemoveItem(item.id)}
-                          className="brot-co-del w-11 h-11 inline-flex items-center justify-center rounded-[4px] border-none bg-transparent cursor-pointer text-stone"
-                          style={{ transition: "background .15s, color .15s, opacity .15s" }}
+                          className="brot-co-del w-11 h-11 inline-flex items-center justify-center rounded-full border-none bg-transparent cursor-pointer text-stone"
+                          style={{ transition: "background .15s, color .15s" }}
                           onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(166,68,46,.10)"; e.currentTarget.style.color = "#A6442E"; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = ""; }}
                         >
@@ -642,98 +555,61 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                     </div>
                   ))}
                 </div>
-                <div
-                  className="brot-co-total flex items-baseline justify-between gap-3"
-                  style={{ borderTop: "1.5px solid #0E233C" }}
-                >
-                  <span className="font-medium text-[17px] text-navy">Total</span>
-                  <span className="font-semibold text-[26px] whitespace-nowrap" style={{ color: "#8A5A0E" }}>
+                <div className="brot-co-total flex items-baseline justify-between gap-3">
+                  <span className="brot-mlabel" style={{ color: "#0E233C", fontWeight: 500 }}>Total</span>
+                  <span className="text-[26px] font-medium whitespace-nowrap" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
                     {formatCurrency(total)}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Campos */}
-            <div className="brot-co-form space-y-[16px]">
-              {[
-                { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },
-                { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
-              ].map((field) => (
-                <div key={field.id}>
-                  <label className="block brot-mlabel" style={{ marginBottom: "6px", color: "#0E233C" }}>
-                    {field.label}
+            {/* Tus datos — campos con rótulo interno (solo subrayado) */}
+            <div className="brot-co-form" style={{ marginTop: "auto" }}>
+              <div className="brot-co-datos-title">Tus datos</div>
+              <div className="flex flex-col gap-[6px]" style={{ marginTop: "10px" }}>
+                {[
+                  { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },
+                  { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
+                ].map((field) => (
+                  <label key={field.id} className="brot-fl">
+                    <span>{field.label}</span>
+                    <input
+                      type={field.type}
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      placeholder={field.placeholder}
+                      required={field.required}
+                    />
                   </label>
-                  <input
-                    type={field.type}
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    placeholder={field.placeholder}
-                    required={field.required}
-                    className="w-full text-navy bg-white outline-none"
-                    style={{
-                      fontSize: "16px",
-                      minHeight: "52px",
-                      border: "1px solid #828D9A",
-                      borderRadius: "var(--brot-radius)",
-                      padding: "13px 14px",
-                      transition: "border-color .15s, box-shadow .15s",
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "#0E233C"; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(200,133,26,.35)"; }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = "#828D9A"; e.currentTarget.style.boxShadow = "none"; }}
-                  />
-                </div>
-              ))}
+                ))}
+              </div>
 
               {error && (
-                <div className="text-center text-[13px]" style={{ color: "#C0392B" }}>
+                <div className="text-center text-[13px]" style={{ color: "#C0392B", marginTop: "10px" }}>
                   {error}
                 </div>
               )}
             </div>
 
             {/* Acciones */}
-            <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "8px", marginTop: "auto" }}>
+            <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "10px", marginTop: "18px" }}>
               <button
                 type="button"
                 onClick={() => onClose()}
-                className="flex-1 min-w-0 font-medium text-[16px] min-h-[52px] whitespace-nowrap overflow-hidden text-ellipsis"
-                style={{
-                  border: "1.5px solid #0E233C",
-                  background: "#fff",
-                  color: "#0E233C",
-                  borderRadius: "var(--brot-radius)",
-                  padding: "0 8px",
-                  textTransform: "none",
-                  letterSpacing: ".01em",
-                  cursor: "pointer",
-                  transition: "transform .18s cubic-bezier(.2,.7,.3,1), background .15s",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = "#F4EEE2"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = ""; }}
+                className="brot-pill brot-pill--ghost"
+                style={{ flex: 1, minWidth: 0, padding: "0 14px" }}
               >
                 Seguir comprando
               </button>
               <button
                 type="submit"
                 disabled={expired}
-                className="flex-1 min-w-0 font-medium text-[16px] min-h-[52px] whitespace-nowrap overflow-hidden text-ellipsis"
-                style={{
-                  border: "none",
-                  background: "#0E233C",
-                  color: "#F4EEE2",
-                  borderRadius: "var(--brot-radius)",
-                  padding: "0 8px",
-                  textTransform: "none",
-                  letterSpacing: ".01em",
-                  cursor: expired ? "not-allowed" : "pointer",
-                  opacity: expired ? 0.4 : 1,
-                  transition: ctaTransition,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                className="brot-pill"
+                style={{ flex: 1, minWidth: 0, padding: "0 14px", gap: "6px", whiteSpace: "nowrap" }}
               >
                 Pagar
+                <span style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{formatCurrency(total)}</span>
               </button>
             </div>
           </div>
@@ -754,7 +630,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             fontWeight: 600,
             fontSize: "14px",
             padding: "11px 20px",
-            borderRadius: "12px",
+            borderRadius: "999px",
             boxShadow: "0 14px 30px -10px rgba(14,35,60,.5)",
             opacity: toastVisible ? 1 : 0,
             pointerEvents: "none",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ShoppingCart, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import ImageZoomModal from "./ImageZoomModal";
 
@@ -32,8 +32,6 @@ interface ProductModalProps {
   onClose: () => void;
   onCheckout: () => void;
 }
-
-const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s";
 
 export default function ProductModal({
   product,
@@ -114,7 +112,7 @@ export default function ProductModal({
       <div
         className="brot-modal-inner relative w-full overflow-hidden"
         style={{
-          background: "#FBF7EF",
+          background: "#fff",
           boxShadow: "0 40px 80px -24px rgba(14,35,60,.6)",
           overflowY: "auto",
         }}
@@ -149,7 +147,7 @@ export default function ProductModal({
           aria-label="Cerrar"
           className="brot-modal-back-mobile brot-tap absolute top-[14px] left-[14px] z-10 rounded-full items-center justify-center"
           style={{
-            background: "#FBF7EF",
+            background: "#fff",
             border: "none",
             boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
             cursor: "pointer",
@@ -169,7 +167,7 @@ export default function ProductModal({
         {product.imageUrl && (
           <div
             className="brot-modal-photo relative w-full overflow-hidden"
-            style={{ height: "340px", cursor: "pointer" }}
+            style={{ height: "330px", cursor: "pointer" }}
             onClick={() => setShowZoom(true)}
           >
             <Image
@@ -197,14 +195,13 @@ export default function ProductModal({
         {/* Cuerpo */}
         <div className="brot-modal-body px-6 pb-6 pt-[22px]">
           {/* Overline */}
-          <div className="brot-modal-kicker flex items-center gap-[9px] mb-[14px]" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: ".12em", textTransform: "uppercase", color: "#8A5A0E" }}>
-            <span>Masa madre · Fermentación 18 h</span>
-            <span style={{ flex: 1, height: "1px", background: "linear-gradient(90deg, rgba(200,133,26,.4), rgba(200,133,26,0))" }} />
+          <div className="brot-modal-kicker mb-[10px]" style={{ fontSize: "12px", fontWeight: 500, letterSpacing: ".12em", textTransform: "uppercase", color: "#8A5A0E" }}>
+            Masa madre · Fermentación 18 h
           </div>
 
           {/* Nombre + precio */}
           <div className="flex items-baseline justify-between gap-[14px]">
-            <h3 className="font-normal text-[28px] text-navy m-0" style={{ letterSpacing: "-.015em", lineHeight: 1.08 }}>
+            <h3 className="font-normal text-[32px] text-navy m-0" style={{ letterSpacing: "-.02em", lineHeight: 1.02 }}>
               {product.name}
             </h3>
             <div className="font-medium text-[20px] whitespace-nowrap" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
@@ -264,10 +261,10 @@ export default function ProductModal({
           )}
 
           {/* Divisor */}
-          <div className="brot-modal-rule" style={{ height: "1px", background: "rgba(14,35,60,.10)", marginTop: "22px" }} />
+          <div className="brot-modal-rule" style={{ height: "1px", background: "#0E233C", marginTop: "16px" }} />
 
           {/* Pie: stock + controles */}
-          <div className="brot-modal-foot flex flex-col gap-[14px] mt-[30px]">
+          <div className="brot-modal-foot flex flex-col gap-[14px] mt-[14px]">
 
           {/* Stock — desktop (sin cambios) */}
           {stockText && (
@@ -290,18 +287,7 @@ export default function ProductModal({
                 <button
                   onClick={onAdd}
                   disabled={!canAdd}
-                  className="brot-modal-cta w-full font-medium text-[16px] tracking-[.01em] py-4 rounded-[4px] border-none min-h-[52px]"
-                  style={{
-                    background: "#0E233C",
-                    color: "#F4EEE2",
-                    textTransform: "none",
-                    letterSpacing: ".01em",
-                    opacity: canAdd ? 1 : 0.4,
-                    cursor: canAdd ? "pointer" : "not-allowed",
-                    transition: ctaTransition,
-                  }}
-                  onMouseEnter={(e) => { if (canAdd) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                  className="brot-modal-cta brot-pill"
                 >
                   {canAdd ? "Sumar este BROT" : "No disponible"}
                 </button>
@@ -412,7 +398,7 @@ export default function ProductModal({
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
                   </button>
-                  <span className="font-medium text-[22px] text-navy text-center" style={{ minWidth: "16px" }}>
+                  <span className="font-normal text-[22px] text-navy text-center" style={{ minWidth: "16px" }}>
                     {mobileQty}
                   </span>
                   <button
@@ -442,18 +428,7 @@ export default function ProductModal({
                 type="button"
                 onClick={() => { onConfirmQuantity(mobileQty); onClose(); }}
                 disabled={!mobileCanConfirm}
-                className="w-full font-medium text-[16px] tracking-[.01em] py-4 rounded-[4px] border-none mt-auto min-h-[52px]"
-                style={{
-                  background: "#0E233C",
-                  color: "#F4EEE2",
-                  textTransform: "none",
-                  letterSpacing: ".01em",
-                  opacity: mobileCanConfirm ? 1 : 0.4,
-                  cursor: mobileCanConfirm ? "pointer" : "not-allowed",
-                  transition: ctaTransition,
-                }}
-                onMouseEnter={(e) => { if (mobileCanConfirm) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; } }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                className="brot-pill mt-auto"
               >
                 {mobileCanConfirm ? `Sumar ${mobileQty} · ${formatCurrency(product.price * mobileQty)}` : "No disponible"}
               </button>
@@ -469,30 +444,19 @@ export default function ProductModal({
           {cartCount > 0 && (
             <button
               onClick={onCheckout}
-              className="brot-modal-desktop-bar flex items-center gap-3 w-full mt-5 rounded-[4px] border-none"
-              style={{
-                background: "#0E233C",
-                color: "#F4EEE2",
-                padding: "14px 18px",
-                cursor: "pointer",
-                transition: ctaTransition,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
+              className="brot-modal-desktop-bar brot-pill mt-5"
+              style={{ justifyContent: "flex-start" }}
             >
               <span
-                className="w-9 h-9 flex-none rounded-full flex items-center justify-center"
-                style={{ border: "1px solid rgba(249,245,236,.38)" }}
+                className="flex-none flex items-center justify-center"
+                style={{ minWidth: "28px", height: "28px", padding: "0 7px", borderRadius: "14px", background: "#C8851A", color: "#0E233C", fontSize: "15px", fontWeight: 600 }}
               >
-                <ShoppingCart size={18} color="#F4EEE2" strokeWidth={1.7} />
+                {cartCount}
               </span>
-              <span className="font-semibold text-[16px] whitespace-nowrap" style={{ textTransform: "uppercase", letterSpacing: ".06em" }}>
-                {cartCount} producto{cartCount !== 1 ? "s" : ""}
-              </span>
-              <span className="font-bold text-[18px] ml-auto whitespace-nowrap">
+              <span className="whitespace-nowrap">Ver mi pedido</span>
+              <span className="ml-auto whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>
                 {formatCurrency(cartTotal)}
               </span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F4EEE2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </button>
           )}
         </div>
