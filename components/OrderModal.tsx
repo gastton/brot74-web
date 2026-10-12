@@ -25,7 +25,6 @@ interface OrderModalProps {
   // en vez de cerrar todo el checkout.
   step: "form" | "payment";
   sessionToken: string;
-  expiresAt: string;
   onRemoveItem: (productId: number) => void;
   onChangeQuantity: (productId: number, newQuantity: number) => void;
   onAdvanceToPayment: () => void;
@@ -54,31 +53,17 @@ function BagIcon({ stroke = "#F4EEE2" }: { stroke?: string }) {
   return <ShoppingCart size={20} color={stroke} strokeWidth={1.8} />;
 }
 
-function HourglassIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C8851A" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M5 2.5h14M5 21.5h14"/>
-      <path d="M7 2.5v3.2c0 2 1.6 3.6 3.6 5.1L12 12l1.4-1.2C15.4 9.3 17 7.7 17 5.7V2.5"/>
-      <path d="M7 21.5v-3.2c0-2 1.6-3.6 3.6-5.1L12 12l1.4 1.2c2 1.5 3.6 3.1 3.6 5.1v3.2"/>
-      <path d="M9.2 19.5h5.6L12 17.2Z" fill="#C8851A" stroke="none"/>
-      <path d="M9.6 6.8h4.8" strokeWidth="1.4"/>
-    </svg>
-  );
-}
-
 // Diálogo de aviso/confirmación propio (BRT-88): reemplaza a window.confirm/
 // alert nativos, que no permiten personalizar el texto de los botones.
 // Con un solo botón (sin cancelLabel) funciona como alerta ("OK"); con dos,
 // como confirmación (cancelar / confirmar).
 function ConfirmDialog({
-  icon,
   message,
   confirmLabel,
   cancelLabel,
   onConfirm,
   onCancel,
 }: {
-  icon: "clock" | "warning";
   message: string;
   confirmLabel: string;
   cancelLabel?: string;
@@ -109,15 +94,9 @@ function ConfirmDialog({
             marginBottom: "14px",
           }}
         >
-          {icon === "clock" ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 8v4.5"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="9.2"/>
-            </svg>
-          )}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 8v4.5"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="9.2"/>
+          </svg>
         </div>
         <p className="font-bold text-[15.5px] text-navy" style={{ lineHeight: 1.4, margin: 0 }}>
           {message}
@@ -167,12 +146,6 @@ function ConfirmDialog({
   );
 }
 
-function formatCountdown(seconds: number): string {
-  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
 // BRT-182: recordar nombre y teléfono entre pedidos. Envuelto en try/catch
 // porque localStorage puede tirar (modo incógnito, navegador que lo
 // bloquea) — ante cualquier falla, se degrada a formulario vacío sin romper
@@ -201,16 +174,12 @@ function saveContact(name: string, phone: string) {
   }
 }
 
-export default function OrderModal({ items, slotId, slotLabel, step, sessionToken, expiresAt, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotLabel, step, sessionToken, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState(() => loadSavedContact().name);
   const [phone, setPhone]     = useState(() => loadSavedContact().phone);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(() =>
-    Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
-  );
-  const [expired, setExpired] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
   const [cvuCopied, setCvuCopied] = useState(false);
@@ -231,24 +200,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // Countdown timer — sigue corriendo en la pantalla de pago (no solo en el
-  // form) para detectar la expiración en vivo y no depender de que el POST
-  // a /api/orders falle recién cuando el usuario toca "Ya pagué". Al llegar
-  // a 0 se muestra el diálogo de expiración (BRT-88) y se espera a que el
-  // usuario toque "OK" — no se cierra solo.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const left = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-      setSecondsLeft(left);
-      if (left === 0) {
-        clearInterval(interval);
-        setExpired(true);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [expiresAt]);
-
   // Release reservation if user closes the tab/navigates away mid-checkout
   useEffect(() => {
     function handleBeforeUnload() {
@@ -267,7 +218,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (expired) return; // el diálogo de expiración ya está cubriendo la pantalla
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
@@ -277,7 +227,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   // Crea el pedido recién cuando el usuario confirma que ya pagó.
   // Si ya se creó (o se está creando) por un click anterior, no repite el POST.
   async function createOrder(): Promise<number | null> {
-    if (expired) return null; // ya se detectó el vencimiento del lado del cliente
     if (orderId) return orderId;
     if (orderDoneRef.current) return null; // ya hay un POST en curso
     orderDoneRef.current = true;
@@ -299,13 +248,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
       const data = await res.json();
       if (!res.ok) {
         orderDoneRef.current = false;
-        if (res.status === 409) {
-          // Reserva vencida: mostramos el panel dedicado, no el cartel
-          // genérico de error (que da a entender que falló el pago/alias).
-          setExpired(true);
-        } else {
-          setError(data.error ?? "Error al procesar el pedido");
-        }
+        setError(data.error ?? "Error al procesar el pedido");
         return null;
       }
       setOrderId(data.orderId);
@@ -320,13 +263,9 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
     }
   }
 
-  const isUrgent = secondsLeft <= 120;
-
   // Botón X (BRT-88): si hay productos en el carrito, confirma antes de
-  // cerrar — en cualquiera de los dos pasos. Si el diálogo de expiración ya
-  // está cubriendo la pantalla, no hace falta preguntar dos veces.
+  // cerrar — en cualquiera de los dos pasos.
   function handleCloseClick() {
-    if (expired) { onClose(true); return; }
     if (items.length > 0) { setShowCloseConfirm(true); return; }
     onClose();
   }
@@ -434,7 +373,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                     <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Alias</div>
                     <div className="text-[18px] text-navy mt-[2px] break-all">{ALIAS}</div>
                   </div>
-                  <button type="button" onClick={handleCopyAlias} disabled={expired} className="brot-ghost brot-ghost--xs">
+                  <button type="button" onClick={handleCopyAlias} className="brot-ghost brot-ghost--xs">
                     {aliasCopied ? "Copiado" : "Copiar"}
                   </button>
                 </div>
@@ -445,7 +384,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                     <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CVU</div>
                     <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".03em" }}>{CVU}</div>
                   </div>
-                  <button type="button" onClick={handleCopyCvu} disabled={expired} className="brot-ghost brot-ghost--xs">
+                  <button type="button" onClick={handleCopyCvu} className="brot-ghost brot-ghost--xs">
                     {cvuCopied ? "Copiado" : "Copiar"}
                   </button>
                 </div>
@@ -461,7 +400,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               <button
                 type="button"
                 onClick={handleYaPague}
-                disabled={loading || expired}
+                disabled={loading}
                 className="brot-pill"
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya transferí"}
@@ -478,7 +417,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
 
         /* ── Formulario (step = form) ── */
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[10px] pb-6">
-          {/* Retiro (fijo bajo el título) + reserva — v46 */}
+          {/* Retiro (fijo bajo el título) — v46; v47: sin aviso de reserva */}
           {items.length > 0 && (
             <div style={{ marginTop: "4px", marginBottom: "18px" }}>
               <div className="flex items-center gap-2" style={{ padding: "10px 0", borderTop: "1px solid rgba(14,35,60,.16)", borderBottom: "1px solid rgba(14,35,60,.16)" }}>
@@ -487,18 +426,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                   <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Retiro</div>
                   <div className="text-[16px] leading-[1.25] text-navy whitespace-nowrap overflow-hidden text-ellipsis">{slotLabel}</div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2" style={{ padding: "8px 0" }}>
-                <span className="flex-none flex"><HourglassIcon /></span>
-                <span className="flex-1 text-[15px]" style={{ color: (expired || isUrgent) ? "#A6442E" : "#0E233C" }}>
-                  {expired ? "Tu reserva expiró" : "Te guardamos el pedido"}
-                </span>
-                <span
-                  className="flex-none"
-                  style={{ fontSize: "18px", fontWeight: 500, fontVariantNumeric: "tabular-nums", color: (expired || isUrgent) ? "#A6442E" : "#8A5A0E" }}
-                >
-                  {formatCountdown(secondsLeft)}
-                </span>
               </div>
             </div>
           )}
@@ -541,7 +468,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             {/* Resumen — v46: nombre + c/u | cápsula − cantidad + | subtotal */}
             <div className="brot-co-order-col">
               <div className="brot-co-summary">
-                <div className="brot-co-lines" style={{ borderTop: "1px solid rgba(14,35,60,.10)" }}>
+                <div className="brot-co-lines">
                   {items.map((item) => (
                     <div
                       key={item.id}
@@ -622,7 +549,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
               </button>
               <button
                 type="submit"
-                disabled={expired}
                 className="brot-pill"
                 style={{ flex: 1, minWidth: 0, padding: "0 14px", gap: "6px", whiteSpace: "nowrap" }}
               >
@@ -659,20 +585,9 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
         </div>
       )}
 
-      {/* Diálogo de expiración (BRT-88) — unificado para los dos pasos */}
-      {expired && (
-        <ConfirmDialog
-          icon="clock"
-          message="Se ha terminado el tiempo para completar el pago del carrito."
-          confirmLabel="OK"
-          onConfirm={() => onClose(true)}
-        />
-      )}
-
       {/* Diálogo de confirmación al cerrar con la X (BRT-88) */}
       {showCloseConfirm && (
         <ConfirmDialog
-          icon="warning"
           message="Al cerrar esta pantalla se perderán los productos seleccionados. ¿Cerrar de todos modos?"
           confirmLabel="SÍ"
           cancelLabel="NO"
