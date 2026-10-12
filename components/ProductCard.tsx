@@ -92,7 +92,7 @@ export default function ProductCard({
       {/* Texto */}
       <div className="min-w-0 md:border-t md:border-navy md:mt-[14px] md:pt-3">
         <div className="md:flex md:items-baseline md:justify-between md:gap-3">
-          <div className="text-[20px] font-medium leading-[1.2]" style={{ letterSpacing: "-.01em", color: textColor }}>
+          <div className="text-[20px] font-medium leading-[1.15]" style={{ letterSpacing: "-.01em", color: textColor }}>
             {name}
           </div>
           <span
@@ -104,11 +104,11 @@ export default function ProductCard({
         </div>
 
         {/* Precio + gramos (mobile) */}
-        <div className="flex items-baseline gap-[10px] mt-[3px] md:hidden">
-          <span className="text-[17px] font-medium" style={{ color: priceColor, fontVariantNumeric: "tabular-nums" }}>
+        <div className="flex items-baseline gap-[10px] md:hidden">
+          <span className="text-[17px] font-medium whitespace-nowrap" style={{ color: priceColor, fontVariantNumeric: "tabular-nums" }}>
             {formatCurrency(price)}
           </span>
-          {weight && <span className="text-[15px] text-stone">{weight}</span>}
+          {weight && <span className="text-[15px] text-stone whitespace-nowrap">{weight}</span>}
         </div>
         {weight && <div className="hidden md:block text-[15px] text-stone mt-1">{weight}</div>}
 
@@ -142,7 +142,7 @@ export default function ProductCard({
             aria-disabled={limitReached}
             disabled={limitReached}
             onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
-            className={`brot-ghost mt-[10px]${quantity > 0 ? " brot-ghost--on" : ""}`}
+            className={`brot-ghost brot-ghost--sm mt-[10px]${quantity > 0 ? " brot-ghost--on" : ""}`}
           >
             {quantity > 0 ? (
               <>En tu pedido · {quantity}</>

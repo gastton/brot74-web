@@ -184,56 +184,28 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
          anteriores no lo necesitan porque la siguiente sección aporta
          el espacio con su paddingTop). Mismo bug de especificidad de
          siempre (.wrap le gana a section y pisa el padding vertical a
-         0) — sin esto la línea del footer queda pegada contra
-         "Horarios de entregas". */}
+         0). v46: los 3 pasos pasaron al panel "¿Cómo funciona?" del flujo
+         de pedido; acá quedan 2 párrafos + foto 1:1 abajo a la izquierda. */}
       <section className="wrap" style={{ paddingTop: "clamp(56px,8vh,110px)", paddingBottom: "clamp(56px,9vh,132px)" }}>
         <div className="grid">
-          <div>
+          <div className="pedis-col">
             <div className="rule block-rule"></div>
             <h2>
-              Pedís hoy, retirás cuando esté listo
+              Pedís hoy, <span style={{ color: "#C8851A" }}>retirás cuando esté listo</span>
             </h2>
-            <ol className="steps">
-              <li className="step">
-                <span className="step-n">0<b>1</b></span>
-                <h4 className="step-t">Elegí tu BROT</h4>
-                <p className="step-d">
-                  Elegís la fecha y armás tu pedido online, según lo que
-                  haya disponible para esa tanda.
-                </p>
-              </li>
-              <li className="step">
-                <span className="step-n">0<b>2</b></span>
-                <h4 className="step-t">Pagá por transferencia</h4>
-                <p className="step-d">
-                  Confirmás con una transferencia. Sin filas, sin efectivo,
-                  a tu ritmo.
-                </p>
-              </li>
-              <li className="step">
-                <span className="step-n">0<b>3</b></span>
-                <h4 className="step-t">Retirá en tu horario</h4>
-                <p className="step-d">
-                  Pasás a buscarlo en el lugar y la franja horaria de la
-                  fecha. Horneamos por tandas, no hay local abierto.
-                </p>
-              </li>
-            </ol>
-            {/* Pedido explícito: "Horarios de entregas" se movió acá desde
-               el footer, sin cambiar tamaño ni color — sigue siendo el
-               mismo bloque (className="foot-col", mismo style inline),
-               así que sigue matcheando la regla .foot-col h3 en CSS tal
-               cual estaba. Se sacaron los <br/> de relleno que tenía el
-               párrafo anterior (eran aire antes del footer; acá generaban
-               un salto raro antes de este bloque). */}
-            <div className="foot-col" style={{ marginTop: "clamp(28px,4.5vw,56px)", borderTop: "1px solid color-mix(in srgb, var(--navy) 28%, transparent)", paddingTop: "clamp(18px,2.4vw,30px)" }}>
-              <h3>
-                Horarios de <span style={{ color: "#C8851A" }}>entregas</span>
-              </h3>
-              <ul>
-                <li>Miércoles: desde las 18:00 horas</li>
-                <li>Sábados: desde las 18:00 horas</li>
-              </ul>
+            <p>Somos una micropanadería: horneamos pocos panes, por tandas y para fechas fijas.</p>
+            <p>Por eso trabajamos con pedidos anticipados. Así tu BROT, artesanal y natural, lo retirás recién hecho.</p>
+            <div className="pedis-extra">
+              <div className="rule"></div>
+              <div className="pedis-media">
+                <Image
+                  src="/assets/landing-pedis.webp"
+                  alt="Panes recién horneados"
+                  fill
+                  style={{ objectFit: "cover" }}
+                  sizes="(min-width: 820px) 440px, 72vw"
+                />
+              </div>
             </div>
           </div>
           <div className="retiro-col">

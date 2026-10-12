@@ -484,7 +484,8 @@ function HomeContent() {
           <OrderModal
             items={cartItems}
             slotId={selectedSlotId}
-            slotLabel={selectedSlot.dayLabel}
+            slotLabel={[selectedSlot.dayLabel, selectedSlot.pickupTime].filter(Boolean).join(" · ")}
+            canAddMore={products.some((p) => p.hasStock && !((cart[p.id] ?? 0) > 0))}
             step={checkoutParam === "payment" ? "payment" : "form"}
             sessionToken={sessionToken}
             expiresAt={reservationExpiresAt}

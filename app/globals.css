@@ -144,11 +144,6 @@ body {
 }
 .brot-mlabel-amber { color: #8A5A0E; }
 
-/* v43 · stepper − / +: círculo visible de 36px; el ::after mantiene el área táctil en 44px */
-.brot-step { position: relative; width: 36px; height: 36px; border-radius: 50%; }
-.brot-step::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; }
-.brot-step svg { width: 16px; height: 16px; }
-
 /* v40 · área de toque mínima (WCAG 2.5.8) */
 .brot-tap { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
@@ -169,14 +164,37 @@ body {
 .brot-h--modal { font-size: 36px; }
 @media (min-width: 900px) { .brot-h--modal { font-size: 40px; } }
 .brot-co-datos-title {
-  font-size: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(14,35,60,.16);
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
   font-weight: 500;
-  padding-top: 14px;
-  border-top: 1px solid rgba(14,35,60,.10);
+  color: #4A5463;
 }
-@media (min-width: 900px) {
-  .brot-co-datos-title { border-top: 0; padding-top: 0; }
+.brot-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: #0E233C;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(14,35,60,.16);
 }
+.brot-more:hover { text-decoration-color: #0E233C; }
+
 /* primer ítem de la lista de panes (mobile): filete navy en vez del hairline */
 .brot-menu > .brot-card:first-child { border-top-color: #0E233C; }
 @media (min-width: 768px) { .brot-menu > .brot-card:first-child { border-top-color: transparent; } }
@@ -220,6 +238,7 @@ body {
   font-weight: 500;
   padding: 0 22px;
   cursor: pointer;
+  white-space: nowrap;
   transition: background .15s;
 }
 .brot-pill:hover:not(:disabled) { background: #1B3656; }
@@ -249,6 +268,61 @@ body {
 .brot-ghost:disabled { opacity: .45; cursor: default; }
 
 /* Campo con rótulo interno: solo subrayado, foco navy 2px */
+/* v46 · cápsula − cantidad +, link de texto y botón ghost chico */
+.brot-capsule {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid rgba(14,35,60,.16);
+  border-radius: 999px;
+  padding: 2px 4px;
+  height: 32px;
+  flex: none;
+}
+.brot-capsule > button {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #0E233C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.brot-capsule > button::after { content: ""; position: absolute; inset: -8px; }
+.brot-capsule > button:disabled { opacity: .35; cursor: not-allowed; }
+.brot-capsule > button svg { width: 20px; height: 20px; flex: none; stroke-width: 1.8; }
+.brot-capsule > .brot-capsule-trash svg { width: 17px; height: 17px; stroke-width: 1.6; }
+.brot-capsule-q { min-width: 20px; text-align: center; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.brot-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: #0E233C;
+  text-decoration: underline;
+  text-decoration-color: #C8851A;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1.5px;
+  cursor: pointer;
+}
+.brot-link:hover { color: #8A5A0E; }
+.brot-ghost--xs { min-height: 30px; height: 30px; padding: 0 12px; font-size: 13px; position: relative; }
+.brot-ghost--xs::after { content: ""; position: absolute; inset: -7px -4px; }
+@media (max-width: 767px) {
+  .brot-ghost--sm { min-height: 34px; height: 34px; padding: 0 14px; gap: 6px; position: relative; }
+  .brot-ghost--sm::after { content: ""; position: absolute; inset: -5px 0; }
+}
 .brot-fl {
   display: flex;
   flex-direction: column;
@@ -367,16 +441,25 @@ textarea.brot-input {
 .brot-modal-desktop-bar {
   display: none;
 }
-/* El botón "Volver" flotando sobre la foto tenía contraste variable según
-   la foto de cada producto. En mobile queda en el mismo lugar pero con
-   fondo sólido (sin blur/transparencia) — contraste garantizado siempre.
-   Desktop sigue con el original (translúcido, sin cambios). */
-.brot-modal-back-desktop {
-  display: none;
+/* v46 · X de cierre arriba a la derecha: círculo blanco de 34px con área táctil de 44px */
+.brot-xclose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 10px -4px rgba(0,0,0,.4);
+  cursor: pointer;
 }
-.brot-modal-back-mobile {
-  display: inline-flex;
-}
+.brot-xclose::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; }
 
 /* Stock y controles: mobile elige la cantidad con un stepper siempre
    visible y confirma con un solo botón que suma y cierra (BRT-89, ver
@@ -410,12 +493,6 @@ textarea.brot-input {
     height: auto !important;
     min-height: 420px;
     align-self: stretch;
-  }
-  .brot-modal-back-desktop {
-    display: flex;
-  }
-  .brot-modal-back-mobile {
-    display: none;
   }
   .brot-modal-stock-desktop {
     display: flex;
@@ -473,7 +550,7 @@ textarea.brot-input {
 }
 /* v45 · lista de productos con scroll vertical propio (sin scroll horizontal) */
 .brot-co-lines {
-  max-height: 226px;
+  max-height: 200px;
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
