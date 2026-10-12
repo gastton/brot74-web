@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader2, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import QtyCapsule from "./QtyCapsule";
+import { CalendarIcon } from "./FlowIcons";
 
 interface CartItem {
   id: number;
@@ -16,12 +18,13 @@ interface OrderModalProps {
   items: CartItem[];
   slotId: number;
   slotLabel: string;
+  // v46: "Sumar más panes" se oculta cuando ya están todos los panes de la fecha en el pedido
+  canAddMore: boolean;
   // BRT-95: el paso ahora lo controla la URL (page.tsx) en vez de un
   // useState interno — así "atrás" desde el paso de pago vuelve al form
   // en vez de cerrar todo el checkout.
   step: "form" | "payment";
   sessionToken: string;
-  expiresAt: string;
   onRemoveItem: (productId: number) => void;
   onChangeQuantity: (productId: number, newQuantity: number) => void;
   onAdvanceToPayment: () => void;
@@ -50,40 +53,17 @@ function BagIcon({ stroke = "#F4EEE2" }: { stroke?: string }) {
   return <ShoppingCart size={20} color={stroke} strokeWidth={1.8} />;
 }
 
-function HourglassIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 2.5h14M5 21.5h14"/>
-      <path d="M7 2.5v3.2c0 2 1.6 3.6 3.6 5.1L12 12l1.4-1.2C15.4 9.3 17 7.7 17 5.7V2.5"/>
-      <path d="M7 21.5v-3.2c0-2 1.6-3.6 3.6-5.1L12 12l1.4 1.2c2 1.5 3.6 3.1 3.6 5.1v3.2"/>
-      <path d="M9.2 19.5h5.6L12 17.2Z" fill="#0E233C" stroke="none"/>
-      <path d="M9.6 6.8h4.8" strokeWidth="1.4"/>
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-      <path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10 11v5M14 11v5"/>
-    </svg>
-  );
-}
-
 // Diálogo de aviso/confirmación propio (BRT-88): reemplaza a window.confirm/
 // alert nativos, que no permiten personalizar el texto de los botones.
 // Con un solo botón (sin cancelLabel) funciona como alerta ("OK"); con dos,
 // como confirmación (cancelar / confirmar).
 function ConfirmDialog({
-  icon,
   message,
   confirmLabel,
   cancelLabel,
   onConfirm,
   onCancel,
 }: {
-  icon: "clock" | "warning";
   message: string;
   confirmLabel: string;
   cancelLabel?: string;
@@ -114,15 +94,9 @@ function ConfirmDialog({
             marginBottom: "14px",
           }}
         >
-          {icon === "clock" ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 8v4.5"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="9.2"/>
-            </svg>
-          )}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 8v4.5"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="9.2"/>
+          </svg>
         </div>
         <p className="font-bold text-[15.5px] text-navy" style={{ lineHeight: 1.4, margin: 0 }}>
           {message}
@@ -172,12 +146,6 @@ function ConfirmDialog({
   );
 }
 
-function formatCountdown(seconds: number): string {
-  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-  const s = (seconds % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
 // BRT-182: recordar nombre y teléfono entre pedidos. Envuelto en try/catch
 // porque localStorage puede tirar (modo incógnito, navegador que lo
 // bloquea) — ante cualquier falla, se degrada a formulario vacío sin romper
@@ -206,19 +174,20 @@ function saveContact(name: string, phone: string) {
   }
 }
 
-export default function OrderModal({ items, slotId, slotLabel, step, sessionToken, expiresAt, onRemoveItem, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotLabel, step, sessionToken, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState(() => loadSavedContact().name);
   const [phone, setPhone]     = useState(() => loadSavedContact().phone);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(() =>
-    Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
-  );
-  const [expired, setExpired] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
+  const [cvuCopied, setCvuCopied] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
+  const [toastText, setToastText] = useState("Alias copiado");
+  // La reserva (15 min) se hizo con estas cantidades: el "+" no puede pasarlas
+  // sin volver a reservar, o /api/orders devolvería "Tu reserva expiró".
+  const [reservedQty] = useState<Record<number, number>>(() => Object.fromEntries(items.map((i) => [i.id, i.quantity])));
 
   const orderDoneRef = useRef(false);
   const successScheduledRef = useRef(false);
@@ -230,24 +199,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   const CUIT    = process.env.NEXT_PUBLIC_CUIT    ?? "";
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-  // Countdown timer — sigue corriendo en la pantalla de pago (no solo en el
-  // form) para detectar la expiración en vivo y no depender de que el POST
-  // a /api/orders falle recién cuando el usuario toca "Ya pagué". Al llegar
-  // a 0 se muestra el diálogo de expiración (BRT-88) y se espera a que el
-  // usuario toque "OK" — no se cierra solo.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const left = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-      setSecondsLeft(left);
-      if (left === 0) {
-        clearInterval(interval);
-        setExpired(true);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [expiresAt]);
 
   // Release reservation if user closes the tab/navigates away mid-checkout
   useEffect(() => {
@@ -267,7 +218,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (expired) return; // el diálogo de expiración ya está cubriendo la pantalla
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
@@ -277,7 +227,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   // Crea el pedido recién cuando el usuario confirma que ya pagó.
   // Si ya se creó (o se está creando) por un click anterior, no repite el POST.
   async function createOrder(): Promise<number | null> {
-    if (expired) return null; // ya se detectó el vencimiento del lado del cliente
     if (orderId) return orderId;
     if (orderDoneRef.current) return null; // ya hay un POST en curso
     orderDoneRef.current = true;
@@ -299,13 +248,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
       const data = await res.json();
       if (!res.ok) {
         orderDoneRef.current = false;
-        if (res.status === 409) {
-          // Reserva vencida: mostramos el panel dedicado, no el cartel
-          // genérico de error (que da a entender que falló el pago/alias).
-          setExpired(true);
-        } else {
-          setError(data.error ?? "Error al procesar el pedido");
-        }
+        setError(data.error ?? "Error al procesar el pedido");
         return null;
       }
       setOrderId(data.orderId);
@@ -320,29 +263,37 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
     }
   }
 
-  const isUrgent = secondsLeft <= 120;
-
   // Botón X (BRT-88): si hay productos en el carrito, confirma antes de
-  // cerrar — en cualquiera de los dos pasos. Si el diálogo de expiración ya
-  // está cubriendo la pantalla, no hace falta preguntar dos veces.
+  // cerrar — en cualquiera de los dos pasos.
   function handleCloseClick() {
-    if (expired) { onClose(true); return; }
     if (items.length > 0) { setShowCloseConfirm(true); return; }
     onClose();
   }
 
   // Copia el alias — acción pasiva, no crea el pedido. El usuario se va
   // a pagar por su cuenta (app, home banking, lo que use) y vuelve.
-  function handleCopyAlias() {
-    navigator.clipboard?.writeText(ALIAS).catch(() => {});
-    setAliasCopied(true);
-    setTimeout(() => setAliasCopied(false), 1400);
+  function showToast(text: string) {
+    setToastText(text);
     setToastVisible(true);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 1600);
   }
 
-  // "Ya pagué": único gesto real de que el usuario transfirió — recién acá
+  function handleCopyAlias() {
+    navigator.clipboard?.writeText(ALIAS).catch(() => {});
+    setAliasCopied(true);
+    setTimeout(() => setAliasCopied(false), 1400);
+    showToast("Alias copiado");
+  }
+
+  function handleCopyCvu() {
+    navigator.clipboard?.writeText(CVU).catch(() => {});
+    setCvuCopied(true);
+    setTimeout(() => setCvuCopied(false), 1400);
+    showToast("CVU copiado");
+  }
+
+  // "Ya transferí": único gesto real de que el usuario transfirió — recién acá
   // se crea el pedido y se avisa por WhatsApp.
   async function handleYaPague() {
     const newOrderId = await createOrder();
@@ -368,16 +319,15 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
         className="brot-co-modal relative w-full overflow-y-auto"
         style={MODAL_STYLE}
       >
-        {/* Header — v45: sin filete ni subtítulo de fecha en Tu pedido */}
+        {/* Header — v46: "pedido" y "transferencia" en ámbar; sin fecha en el pago */}
         <div className="flex items-start justify-between gap-[14px] px-5 min-[900px]:px-[30px] pt-[26px]">
-          <div>
-            <h3 className="brot-h brot-h--modal">
-              {step === "payment" ? "Pagá por transferencia" : "Tu pedido"}
-            </h3>
-            {step === "payment" && (
-              <div className="text-[15px] text-stone mt-2">{slotLabel}</div>
+          <h3 className="brot-h brot-h--modal">
+            {step === "payment" ? (
+              <>Pagá por<br /><span style={{ color: "#C8851A" }}>transferencia</span></>
+            ) : (
+              <span className="whitespace-nowrap">Tu <span style={{ color: "#C8851A" }}>pedido</span></span>
             )}
-          </div>
+          </h3>
           <button
             onClick={handleCloseClick}
             aria-label="Cerrar"
@@ -391,32 +341,21 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
         {/* ── Pantalla de pago (step = payment) ── */}
         {step === "payment" ? (
           <div className="brot-cf-body flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[6px] pb-6">
-            {/* Total — filete navy solo abajo */}
-            <div className="brot-cf-tot text-center" style={{ marginTop: "16px", padding: "22px 0 20px", borderBottom: "1px solid #0E233C" }}>
+            {/* Total a transferir — ámbar, 56px/500, filete navy abajo */}
+            <div className="brot-cf-tot text-center" style={{ marginTop: "auto", padding: "22px 0 20px", borderBottom: "1px solid #0E233C" }}>
               <div className="brot-mlabel" style={{ fontWeight: 500 }}>Total a transferir</div>
-              <div className="brot-cf-tot-amount leading-none mt-[10px]" style={{ fontSize: "56px", fontWeight: 300, letterSpacing: "-.03em", color: "#C8851A", fontVariantNumeric: "tabular-nums" }}>
+              <div className="brot-cf-tot-amount leading-none mt-[10px]" style={{ fontSize: "56px", fontWeight: 500, letterSpacing: "-.03em", color: "#C8851A", fontVariantNumeric: "tabular-nums" }}>
                 {formatCurrency(total)}
               </div>
             </div>
 
-            {/* Datos bancarios — lista abierta con divisores claros */}
+            {/* Datos bancarios — orden: Titular, CUIT/CUIL, Alias, CVU. Copiar solo en Alias y CVU. */}
             <div className="brot-cf-data" style={{ marginTop: "6px" }}>
-              {ALIAS && (
-                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Alias</div>
-                    <div className="text-[18px] text-navy mt-[2px] break-all">{ALIAS}</div>
-                  </div>
-                  <button type="button" onClick={handleCopyAlias} disabled={expired} className="brot-ghost">
-                    {aliasCopied ? "Copiado" : "Copiar"}
-                  </button>
-                </div>
-              )}
               {TITULAR && (
                 <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Titular</div>
-                    <div className="text-[16px] text-navy mt-[2px] break-all">{TITULAR}</div>
+                    <div className="text-[16px] text-navy mt-[2px] break-words">{TITULAR}</div>
                   </div>
                 </div>
               )}
@@ -428,30 +367,43 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                   </div>
                 </div>
               )}
+              {ALIAS && (
+                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: CVU ? "1px solid rgba(14,35,60,.10)" : "none" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Alias</div>
+                    <div className="text-[18px] text-navy mt-[2px] break-all">{ALIAS}</div>
+                  </div>
+                  <button type="button" onClick={handleCopyAlias} className="brot-ghost brot-ghost--xs">
+                    {aliasCopied ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+              )}
               {CVU && (
                 <div className="flex items-center gap-2" style={{ padding: "10px 0" }}>
                   <div className="flex-1 min-w-0">
                     <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CVU</div>
                     <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".03em" }}>{CVU}</div>
                   </div>
+                  <button type="button" onClick={handleCopyCvu} className="brot-ghost brot-ghost--xs">
+                    {cvuCopied ? "Copiado" : "Copiar"}
+                  </button>
                 </div>
               )}
+              <p className="text-[15px] text-stone m-0 italic" style={{ marginTop: "14px" }}>
+                Transferí desde tu banco o billetera y avisanos con el botón de abajo.
+              </p>
             </div>
 
-            {/* Indicación + Ya pagué: agrupados para compartir el grid-area "cta" en desktop.
-               Si la reserva expira quedan cubiertos por el diálogo de expiración (BRT-88). */}
-            <div className="brot-cf-cta mt-auto">
-              <p className="text-[15px] text-stone m-0" style={{ margin: "14px 0 22px" }}>
-                Pagá desde tu app o home banking con el alias
-              </p>
-
+            {/* Ya transferí: lleva directo a la confirmación. Si la reserva expira
+               queda cubierto por el diálogo de expiración (BRT-88). */}
+            <div className="brot-cf-cta" style={{ marginTop: "auto", paddingTop: "22px" }}>
               <button
                 type="button"
                 onClick={handleYaPague}
-                disabled={loading || expired}
+                disabled={loading}
                 className="brot-pill"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya pagué"}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya transferí"}
               </button>
 
               {error && (
@@ -465,21 +417,16 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
 
         /* ── Formulario (step = form) ── */
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[10px] pb-6">
-          {/* Reserva — v45: reloj de arena en círculo + cuenta regresiva, sin caja ni barra */}
+          {/* Retiro (fijo bajo el título) — v46; v47: sin aviso de reserva */}
           {items.length > 0 && (
-            <div className="flex items-center gap-3" style={{ padding: "10px 0", marginBottom: "14px" }}>
-              <span className="brot-ring">
-                <HourglassIcon />
-              </span>
-              <span className="flex-1 text-[16px]" style={{ color: (expired || isUrgent) ? "#A6442E" : "#0E233C" }}>
-                {expired ? "Tu reserva expiró" : "Te guardamos el pedido"}
-              </span>
-              <span
-                className="flex-none"
-                style={{ fontSize: "18px", fontWeight: 500, fontVariantNumeric: "tabular-nums", color: (expired || isUrgent) ? "#A6442E" : "#8A5A0E" }}
-              >
-                {formatCountdown(secondsLeft)}
-              </span>
+            <div style={{ marginTop: "4px", marginBottom: "18px" }}>
+              <div className="flex items-center gap-2" style={{ padding: "10px 0", borderTop: "1px solid rgba(14,35,60,.16)", borderBottom: "1px solid rgba(14,35,60,.16)" }}>
+                <span className="flex-none flex"><CalendarIcon /></span>
+                <div className="flex-1 min-w-0">
+                  <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Retiro</div>
+                  <div className="text-[16px] leading-[1.25] text-navy whitespace-nowrap overflow-hidden text-ellipsis">{slotLabel}</div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -518,49 +465,47 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             </div>
           ) : (
           <div className="brot-co-body flex flex-col gap-[18px] flex-1">
-            {/* Resumen — v45: sin tarjeta, lista con filetes; el Total cierra con filete navy */}
+            {/* Resumen — v46: nombre + c/u | cápsula − cantidad + | subtotal */}
             <div className="brot-co-order-col">
               <div className="brot-co-summary">
-                <div className="brot-co-lines" style={{ borderTop: "1px solid rgba(14,35,60,.10)" }}>
+                <div className="brot-co-lines">
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="brot-co-line flex items-center justify-between gap-2"
-                      style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}
+                      className="brot-co-line"
+                      style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) auto 84px", alignItems: "center", gap: "10px", padding: "8px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}
                     >
-                      <span className="flex-1 min-w-0">
-                        <span className="text-[16px] text-navy">
-                          {item.name} <span className="whitespace-nowrap" style={{ color: "#4A5463", marginLeft: "6px" }}>× {item.quantity}</span>
-                        </span>
-                        <span className="block whitespace-nowrap text-[12px] sm:text-[13px]" style={{ color: "#4A5463", fontVariantNumeric: "tabular-nums" }}>
+                      <div className="min-w-0">
+                        <div className="text-[16px] text-navy">{item.name}</div>
+                        <div className="whitespace-nowrap text-[12px] sm:text-[13px]" style={{ color: "#4A5463", fontVariantNumeric: "tabular-nums" }}>
                           {formatCurrency(item.price)} c/u
-                        </span>
-                      </span>
-                      <span className="flex-none flex items-center -mr-[6px]">
-                        <span className="text-[16px] text-navy whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>
-                          {formatCurrency(item.price * item.quantity)}
-                        </span>
-                        <button
-                          type="button"
-                          aria-label={`Quitar ${item.name}`}
-                          onClick={() => onRemoveItem(item.id)}
-                          className="brot-co-del w-11 h-11 inline-flex items-center justify-center rounded-full border-none bg-transparent cursor-pointer text-stone"
-                          style={{ transition: "background .15s, color .15s" }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(166,68,46,.10)"; e.currentTarget.style.color = "#A6442E"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = ""; }}
-                        >
-                          <TrashIcon />
-                        </button>
+                        </div>
+                      </div>
+                      <QtyCapsule
+                        value={item.quantity}
+                        minusIsTrash={item.quantity === 1}
+                        onMinus={() => (item.quantity === 1 ? onRemoveItem(item.id) : onChangeQuantity(item.id, item.quantity - 1))}
+                        onPlus={() => onChangeQuantity(item.id, item.quantity + 1)}
+                        plusDisabled={item.quantity >= (reservedQty[item.id] ?? item.quantity) || (item.stock !== null && item.quantity >= item.stock)}
+                      />
+                      <span className="text-[16px] text-navy whitespace-nowrap text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {formatCurrency(item.price * item.quantity)}
                       </span>
                     </div>
                   ))}
                 </div>
                 <div className="brot-co-total flex items-baseline justify-between gap-3">
                   <span className="brot-mlabel" style={{ color: "#0E233C", fontWeight: 500 }}>Total</span>
-                  <span className="text-[26px] font-medium whitespace-nowrap" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
+                  <span className="text-[22px] font-medium whitespace-nowrap" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
                     {formatCurrency(total)}
                   </span>
                 </div>
+                {canAddMore && (
+                  <button type="button" onClick={() => onClose()} className="brot-more">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14M12 5v14"/></svg>
+                    Sumar más panes
+                  </button>
+                )}
               </div>
             </div>
 
@@ -595,16 +540,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             {/* Acciones */}
             <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "10px", marginTop: "18px" }}>
               <button
-                type="button"
-                onClick={() => onClose()}
-                className="brot-pill brot-pill--ghost"
-                style={{ flex: 1, minWidth: 0, padding: "0 14px" }}
-              >
-                Seguir comprando
-              </button>
-              <button
                 type="submit"
-                disabled={expired}
                 className="brot-pill"
                 style={{ flex: 1, minWidth: 0, padding: "0 14px", gap: "6px", whiteSpace: "nowrap" }}
               >
@@ -637,24 +573,13 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             transition: "opacity .2s, transform .2s",
           }}
         >
-          Alias copiado
+          {toastText}
         </div>
-      )}
-
-      {/* Diálogo de expiración (BRT-88) — unificado para los dos pasos */}
-      {expired && (
-        <ConfirmDialog
-          icon="clock"
-          message="Se ha terminado el tiempo para completar el pago del carrito."
-          confirmLabel="OK"
-          onConfirm={() => onClose(true)}
-        />
       )}
 
       {/* Diálogo de confirmación al cerrar con la X (BRT-88) */}
       {showCloseConfirm && (
         <ConfirmDialog
-          icon="warning"
           message="Al cerrar esta pantalla se perderán los productos seleccionados. ¿Cerrar de todos modos?"
           confirmLabel="SÍ"
           cancelLabel="NO"

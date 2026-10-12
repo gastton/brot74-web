@@ -108,7 +108,6 @@ function HomeContent() {
   const [reserving, setReserving]             = useState(false);
   const [reserveError, setReserveError]       = useState("");
   const [sessionToken, setSessionToken]       = useState("");
-  const [reservationExpiresAt, setReservationExpiresAt] = useState("");
   const cartRestoredRef = useRef(false);
   // Marca si el modal de producto abierto ACTUALMENTE fue empujado por
   // nosotros en esta sesión (vs. llegado por link directo/refresh) — decide
@@ -195,7 +194,6 @@ function HomeContent() {
         }).catch(() => {});
       }
       setSessionToken("");
-      setReservationExpiresAt("");
       if (selectedSlotId) fetchProducts(selectedSlotId);
     }
     wasCheckoutOpenRef.current = isCheckoutOpen;
@@ -302,7 +300,6 @@ function HomeContent() {
         return;
       }
       setSessionToken(data.sessionToken);
-      setReservationExpiresAt(data.expiresAt);
       router.push(buildFlowUrl({ slot: selectedSlotId, checkout: "form" }));
     } catch {
       setReserveError("Error de conexión. Intentá de nuevo.");
@@ -480,14 +477,14 @@ function HomeContent() {
           />
         )}
 
-        {isCheckoutOpen && selectedSlotId && selectedSlot && sessionToken && reservationExpiresAt && (
+        {isCheckoutOpen && selectedSlotId && selectedSlot && sessionToken && (
           <OrderModal
             items={cartItems}
             slotId={selectedSlotId}
-            slotLabel={selectedSlot.dayLabel}
+            slotLabel={[selectedSlot.dayLabel, selectedSlot.pickupTime].filter(Boolean).join(" · ")}
+            canAddMore={products.some((p) => p.hasStock && !((cart[p.id] ?? 0) > 0))}
             step={checkoutParam === "payment" ? "payment" : "form"}
             sessionToken={sessionToken}
-            expiresAt={reservationExpiresAt}
             onRemoveItem={removeItemFromCart}
             onChangeQuantity={changeCartQuantity}
             onAdvanceToPayment={advanceToPaymentStep}

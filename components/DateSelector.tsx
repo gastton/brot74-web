@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { ClockIcon, PinIcon, CalendarIcon } from "./FlowIcons";
+import HowItWorksSheet from "./HowItWorksSheet";
 
 interface Slot {
   id: number | null;
@@ -31,29 +33,6 @@ function formatCutoff(dateStr: string): string {
   return cutoff.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
 }
 
-// SVG icons inline (stroke navy, 1.7px)
-function ClockIcon() {
-  return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-    </svg>
-  );
-}
-function PinIcon() {
-  return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/>
-    </svg>
-  );
-}
-function CalIcon() {
-  return (
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>
-    </svg>
-  );
-}
-
 interface InfoRowProps {
   icon: React.ReactNode;
   label: string;
@@ -63,15 +42,15 @@ interface InfoRowProps {
 function InfoRow({ icon, label, value, last }: InfoRowProps) {
   return (
     <div
-      className="flex items-center gap-3 py-2"
+      className="flex items-center gap-2 py-2"
       style={{ borderBottom: last ? "none" : "1px solid rgba(14,35,60,.10)" }}
     >
-      <span className="brot-ring">{icon}</span>
-      <div>
+      <span className="flex-none flex">{icon}</span>
+      <div className="flex-1 min-w-0">
         <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap" style={{ fontWeight: 500 }}>
           {label}
         </div>
-        <div className="text-[16px] text-navy mt-0 leading-[1.25]">
+        <div className="text-[16px] text-navy mt-0 leading-[1.25] whitespace-nowrap">
           {value}
         </div>
       </div>
@@ -193,6 +172,7 @@ function NoSlotsEmptyState() {
 }
 
 export default function DateSelector({ slots, onChange }: DateSelectorProps) {
+  const [showHow, setShowHow] = useState(false);
   const visibleSlots = slots.filter((s) => !s.disabled);
 
   if (visibleSlots.length === 0) {
@@ -215,7 +195,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
         return (
           <article key={slot.id ?? `slot-${i}`} className="brot-card-article">
             {/* ── Foto a sangre SIN velo + pieza blanca con la fecha ── */}
-            <div className="brot-card-media relative h-[330px] -mx-6 min-[900px]:mx-0">
+            <div className="brot-card-media relative h-[300px] -mx-6 min-[900px]:mx-0">
               <div className="absolute inset-0 overflow-hidden">
                 <Image
                   src={slot.imageUrl || FALLBACK_IMAGE}
@@ -251,10 +231,10 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
               {slot.location && (
                 <InfoRow icon={<PinIcon />} label="Lugar de retiro" value={slot.location} />
               )}
-              <InfoRow icon={<CalIcon />} label="Pedidos hasta" value={cutoffLabel} last />
+              <InfoRow icon={<CalendarIcon />} label="Pedidos hasta" value={cutoffLabel} last />
 
-              {/* CTA fija abajo */}
-              <div className="sticky bottom-0 bg-white pt-[18px] pb-[30px]">
+              {/* CTA fija abajo, con el link "¿Cómo funciona?" debajo */}
+              <div className="sticky bottom-0 bg-white pt-[18px] pb-[14px] flex flex-col gap-[2px]">
                 <button
                   disabled={!isOpen}
                   onClick={() => { if (isOpen && slot.id !== null) onChange(slot.id); }}
@@ -274,11 +254,15 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
                     →
                   </span>
                 </button>
+                <button type="button" onClick={() => setShowHow(true)} className="brot-link">
+                  ¿Cómo funciona?
+                </button>
               </div>
             </div>
           </article>
         );
       })}
+      {showHow && <HowItWorksSheet onClose={() => setShowHow(false)} />}
     </div>
   );
 }

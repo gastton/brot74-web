@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import ImageZoomModal from "./ImageZoomModal";
+import QtyCapsule from "./QtyCapsule";
 
 interface Product {
   id: number;
@@ -117,48 +118,11 @@ export default function ProductModal({
           overflowY: "auto",
         }}
       >
-        {/* Volver — desktop: flotando sobre la foto, sin cambios. Mobile:
-           mismo lugar pero sólido/opaco (sin blur) — contraste garantizado
-           sin importar la foto del producto (BRT-89). Las dos versiones
-           están montadas siempre; CSS decide cuál se ve según el ancho,
-           así no hay ningún parpadeo al abrir el modal. */}
-        <button
-          onClick={onClose}
-          aria-label="Volver"
-          className="brot-modal-back-desktop brot-tap absolute top-[14px] left-[14px] z-10 rounded-full items-center justify-center"
-          style={{
-            background: "rgba(248,243,234,.85)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-            border: "none",
-            boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
-            cursor: "pointer",
-            transition: "transform .15s",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
-        </button>
-        <button
-          onClick={onClose}
-          aria-label="Cerrar"
-          className="brot-modal-back-mobile brot-tap absolute top-[14px] left-[14px] z-10 rounded-full items-center justify-center"
-          style={{
-            background: "#fff",
-            border: "none",
-            boxShadow: "0 3px 10px -4px rgba(0,0,0,.4)",
-            cursor: "pointer",
-            transition: "transform .15s",
-          }}
-          onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.92)"; }}
-          onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
+        {/* Cerrar (v46): X arriba a la derecha en círculo blanco de 34px, área
+           táctil de 44px (reemplaza al "volver" ‹ de la izquierda). */}
+        <button onClick={onClose} aria-label="Cerrar" className="brot-xclose">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0E233C" strokeWidth="3.4" strokeLinecap="round" style={{ display: "block" }}>
+            <path d="M6 6l12 12M18 6L6 18"/>
           </svg>
         </button>
 
@@ -201,10 +165,10 @@ export default function ProductModal({
 
           {/* Nombre + precio */}
           <div className="flex items-baseline justify-between gap-[14px]">
-            <h3 className="font-normal text-[32px] text-navy m-0" style={{ letterSpacing: "-.02em", lineHeight: 1.02 }}>
+            <h3 className="font-normal text-[32px] text-navy m-0 min-w-0 whitespace-nowrap overflow-hidden text-ellipsis" style={{ letterSpacing: "-.02em", lineHeight: 1.02 }}>
               {product.name}
             </h3>
-            <div className="font-medium text-[20px] whitespace-nowrap" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
+            <div className="font-medium text-[20px] whitespace-nowrap flex-none" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
               {formatCurrency(product.price)}
             </div>
           </div>
@@ -294,50 +258,14 @@ export default function ProductModal({
               ) : (
                 /* Stepper + subtotal — v37: sin recuadro, "−" con hairline (BRT-181) */
                 <div className="flex items-center justify-between gap-[14px]">
-                  {/* Stepper */}
-                  <div className="inline-flex items-center gap-2">
-                    <button
-                      onClick={onRemove}
-                      aria-label="Restar"
-                      className="brot-step flex items-center justify-center rounded-full"
-                      style={{
-                        background: "transparent",
-                        border: "var(--brot-hair)",
-                        color: "#0E233C",
-                        cursor: "pointer",
-                        transition: "transform .12s",
-                      }}
-                      onMouseDown={(e) => { e.currentTarget.style.transform = "scale(.9)"; }}
-                      onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
-                    </button>
-                    <span
-                      className="font-bold text-[20px] text-navy text-center"
-                      style={{ minWidth: "40px" }}
-                    >
-                      {quantity}
-                    </span>
-                    <button
-                      onClick={onAdd}
-                      disabled={!canAdd}
-                      aria-label="Sumar"
-                      className="brot-step flex items-center justify-center rounded-full border-none"
-                      style={{
-                        background: "#0E233C",
-                        color: "#F4EEE2",
-                        cursor: canAdd ? "pointer" : "not-allowed",
-                        opacity: canAdd ? 1 : 0.35,
-                        transition: "transform .12s, opacity .15s",
-                      }}
-                      onMouseDown={(e) => { if (canAdd) e.currentTarget.style.transform = "scale(.9)"; }}
-                      onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M12 5v14"/></svg>
-                    </button>
-                  </div>
+                  <QtyCapsule
+                    value={quantity}
+                    onMinus={onRemove}
+                    onPlus={onAdd}
+                    plusDisabled={!canAdd}
+                    minusLabel="Restar"
+                    plusLabel="Sumar"
+                  />
 
                   {/* Subtotal */}
                   <div className="text-right">
@@ -365,61 +293,16 @@ export default function ProductModal({
                     {mobileStockText}
                   </span>
                 )}
-                <div className="inline-flex items-center gap-2 ml-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // BRT-96: en cantidad 1, "−" ya no se limita a clampear el
-                      // stepper local — si el producto YA está en el carrito
-                      // (quantity > 0), lo saca del carrito de una, igual que
-                      // hace el "−" de desktop con onRemove. Si nunca se agregó
-                      // (quantity === 0, mobileQty arranca en 1 igual) no hay
-                      // nada que sacar, así que ahí el botón sigue deshabilitado.
-                      if (mobileQty <= 1) {
-                        if (quantity > 0) { onRemove(); onClose(); }
-                        return;
-                      }
-                      setMobileQty((q) => q - 1);
-                    }}
-                    disabled={mobileQty <= 1 && quantity === 0}
-                    aria-label="Restar cantidad"
-                    className="brot-step flex items-center justify-center rounded-full"
-                    style={{
-                      background: "transparent",
-                      border: "1.5px solid #0E233C",
-                      color: "#0E233C",
-                      cursor: mobileQty <= 1 && quantity === 0 ? "not-allowed" : "pointer",
-                      opacity: mobileQty <= 1 && quantity === 0 ? 0.4 : 1,
-                      transition: "transform .12s, opacity .15s",
-                    }}
-                    onMouseDown={(e) => { if (mobileQty > 1 || quantity > 0) e.currentTarget.style.transform = "scale(.9)"; }}
-                    onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14"/></svg>
-                  </button>
-                  <span className="font-normal text-[22px] text-navy text-center" style={{ minWidth: "16px" }}>
-                    {mobileQty}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
-                    disabled={mobileOutOfStock || mobileMaxReached}
-                    aria-label="Sumar cantidad"
-                    className="brot-step flex items-center justify-center rounded-full border-none"
-                    style={{
-                      background: "#0E233C",
-                      color: "#F4EEE2",
-                      cursor: (mobileOutOfStock || mobileMaxReached) ? "not-allowed" : "pointer",
-                      opacity: (mobileOutOfStock || mobileMaxReached) ? 0.35 : 1,
-                      transition: "transform .12s, opacity .15s",
-                    }}
-                    onMouseDown={(e) => { if (!mobileOutOfStock && !mobileMaxReached) e.currentTarget.style.transform = "scale(.9)"; }}
-                    onMouseUp={(e) => { e.currentTarget.style.transform = ""; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M5 12h14M12 5v14"/></svg>
-                  </button>
+                <div className="ml-auto">
+                  <QtyCapsule
+                    value={mobileQty}
+                    onMinus={() => setMobileQty((q) => Math.max(1, q - 1))}
+                    onPlus={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
+                    minusDisabled={mobileQty <= 1}
+                    plusDisabled={mobileOutOfStock || mobileMaxReached}
+                    minusLabel="Restar cantidad"
+                    plusLabel="Sumar cantidad"
+                  />
                 </div>
               </div>
 
