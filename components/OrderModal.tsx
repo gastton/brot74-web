@@ -540,14 +540,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
             {/* Acciones */}
             <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "10px", marginTop: "18px" }}>
               <button
-                type="button"
-                onClick={() => onClose()}
-                className="brot-pill brot-pill--ghost"
-                style={{ flex: 1, minWidth: 0, padding: "0 14px" }}
-              >
-                Seguir comprando
-              </button>
-              <button
                 type="submit"
                 className="brot-pill"
                 style={{ flex: 1, minWidth: 0, padding: "0 14px", gap: "6px", whiteSpace: "nowrap" }}
