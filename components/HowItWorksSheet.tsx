@@ -1,11 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // v46 · 1b "¿Cómo funciona?": panel desde abajo sobre la pantalla de fecha.
 // Los 3 pasos son los mismos que antes estaban en la landing ("Pedís hoy,
 // retirás cuando esté listo"). Cierra con "Entendido", la X, tocando afuera,
 // Escape o deslizando hacia abajo.
+//
+// v48: abre subiendo (320 ms, ease-out) con fade del scrim; cierra bajando
+// (200 ms, ease-in) y se desmonta recién al terminar la salida. Con "reducir
+// movimiento" no hay transición.
+const OPEN_MS = 320;
+const CLOSE_MS = 200;
+const SCRIM_IN_MS = 240;
+
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 const STEPS = [
   { n: "1", t: "Elegí tu BROT", d: "Elegís la fecha y armás tu pedido online, según lo que haya disponible para esa tanda." },
   { n: "2", t: "Pagá por transferencia", d: "Confirmás con una transferencia. Sin filas, sin efectivo, a tu ritmo." },
@@ -21,18 +32,46 @@ export default function HowItWorksSheet({ onClose }: HowItWorksSheetProps) {
   const startY = useRef<number | null>(null);
   const dyRef = useRef(0);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [entered, setEntered] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  // Cierre animado: primero baja el panel, después se desmonta.
+  const requestClose = useCallback(() => {
+    if (closeTimerRef.current) return;
+    if (prefersReducedMotion()) { onClose(); return; }
+    setClosing(true);
+    closeTimerRef.current = setTimeout(onClose, CLOSE_MS);
+  }, [onClose]);
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
+    // Un frame con el panel abajo para que la entrada sea una transición.
+    const raf = requestAnimationFrame(() => setEntered(true));
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", onKey);
+      cancelAnimationFrame(raf);
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     };
-  }, [onClose]);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") requestClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [requestClose]);
+
+  const reduced = prefersReducedMotion();
+  const shown = entered && !closing;
+  const panelTransition = reduced || dragY !== 0
+    ? "none"
+    : closing
+      ? `transform ${CLOSE_MS}ms cubic-bezier(.4,0,1,1)`
+      : entered
+        ? `transform ${dragY === 0 ? OPEN_MS : 0}ms cubic-bezier(.2,.8,.2,1)`
+        : "none";
 
   function onTouchStart(e: React.TouchEvent) { startY.current = e.touches[0].clientY; }
   function onTouchMove(e: React.TouchEvent) {
@@ -41,7 +80,7 @@ export default function HowItWorksSheet({ onClose }: HowItWorksSheetProps) {
     setDragY(dyRef.current);
   }
   function onTouchEnd() {
-    if (dyRef.current > 80) onClose();
+    if (dyRef.current > 80) requestClose();
     dyRef.current = 0;
     setDragY(0);
     startY.current = null;
@@ -49,15 +88,23 @@ export default function HowItWorksSheet({ onClose }: HowItWorksSheetProps) {
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center" role="dialog" aria-modal="true" aria-labelledby="how-title">
-      <div className="absolute inset-0" style={{ background: "rgba(14,35,60,.55)" }} onClick={onClose} />
+      <div
+        className="absolute inset-0"
+        style={{
+          background: "rgba(14,35,60,.55)",
+          opacity: shown ? 1 : 0,
+          transition: reduced ? "none" : `opacity ${closing ? CLOSE_MS : SCRIM_IN_MS}ms ${closing ? "ease-in" : "ease-out"}`,
+        }}
+        onClick={requestClose}
+      />
       <div
         className="relative w-full bg-white"
         style={{
           maxWidth: "520px",
           borderRadius: "22px 22px 0 0",
           padding: "10px 20px calc(30px + env(safe-area-inset-bottom))",
-          transform: `translateY(${dragY}px)`,
-          transition: dragY === 0 ? "transform .2s" : "none",
+          transform: shown || reduced ? `translateY(${dragY}px)` : "translateY(100%)",
+          transition: panelTransition,
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
@@ -71,7 +118,7 @@ export default function HowItWorksSheet({ onClose }: HowItWorksSheetProps) {
           <button
             ref={closeRef}
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Cerrar"
             className="flex-none w-11 h-11 flex items-center justify-center border-none bg-transparent cursor-pointer"
             style={{ margin: "-8px -10px 0 0" }}
@@ -96,7 +143,7 @@ export default function HowItWorksSheet({ onClose }: HowItWorksSheetProps) {
           ))}
         </ol>
 
-        <button type="button" onClick={onClose} className="brot-pill" style={{ marginTop: "18px" }}>
+        <button type="button" onClick={requestClose} className="brot-pill" style={{ marginTop: "18px" }}>
           Entendido
         </button>
       </div>

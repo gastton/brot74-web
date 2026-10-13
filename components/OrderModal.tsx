@@ -5,7 +5,7 @@ import { Loader2, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import QtyCapsule from "./QtyCapsule";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
-import { CalendarIcon } from "./FlowIcons";
+import PickupDateRow from "./PickupDateRow";
 
 interface CartItem {
   id: number;
@@ -18,7 +18,8 @@ interface CartItem {
 interface OrderModalProps {
   items: CartItem[];
   slotId: number;
-  slotLabel: string;
+  slotDate: string;
+  pickupTime: string;
   // v46: "Sumar más panes" se oculta cuando ya están todos los panes de la fecha en el pedido
   canAddMore: boolean;
   // BRT-95: el paso ahora lo controla la URL (page.tsx) en vez de un
@@ -174,7 +175,7 @@ function saveContact(name: string, phone: string) {
   }
 }
 
-export default function OrderModal({ items, slotId, slotLabel, step, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotDate, pickupTime, step, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState(() => loadSavedContact().name);
   const [phone, setPhone]     = useState(() => loadSavedContact().phone);
   const [loading, setLoading] = useState(false);
@@ -194,6 +195,9 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
   const ALIAS   = process.env.NEXT_PUBLIC_ALIAS   ?? "";
   const TITULAR = process.env.NEXT_PUBLIC_TITULAR ?? "";
   const CUIT    = process.env.NEXT_PUBLIC_CUIT    ?? "";
+
+  // v49: la fecha de retiro se muestra solo en "Tu pedido" con productos.
+  const showDateRow = step === "form" && items.length > 0;
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
@@ -313,23 +317,28 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
         className="brot-co-modal relative w-full overflow-y-auto"
         style={MODAL_STYLE}
       >
-        {/* Header — v46: "pedido" y "transferencia" en ámbar; sin fecha en el pago */}
-        <div className="flex items-start justify-between gap-[14px] px-5 min-[900px]:px-[30px] pt-[26px]">
-          <h3 className="brot-h brot-h--modal">
-            {step === "payment" ? (
-              <>Pagá por<br /><span style={{ color: "#C8851A" }}>transferencia</span></>
-            ) : (
-              <span className="whitespace-nowrap">Tu <span style={{ color: "#C8851A" }}>pedido</span></span>
-            )}
-          </h3>
-          <button
-            onClick={handleCloseClick}
-            aria-label="Cerrar"
-            className="flex-none -mt-2 -mr-3 w-11 h-11 flex items-center justify-center border-none bg-transparent p-0"
-            style={{ cursor: "pointer" }}
-          >
-            <CloseIcon />
-          </button>
+        {/* Header — v46: "pedido" y "transferencia" en ámbar. v49: en "Tu pedido"
+           la fila de fecha va arriba del título y un filete navy lo separa de la lista. */}
+        <div className="px-5 min-[900px]:px-[30px]" style={{ paddingTop: showDateRow ? "14px" : "26px" }}>
+          {showDateRow && <PickupDateRow date={slotDate} pickupTime={pickupTime} />}
+          <div className="flex items-start justify-between gap-[14px]" style={{ marginTop: showDateRow ? "16px" : 0 }}>
+            <h3 className="brot-h brot-h--modal">
+              {step === "payment" ? (
+                <>Pagá por<br /><span style={{ color: "#C8851A" }}>transferencia</span></>
+              ) : (
+                <span className="whitespace-nowrap">Tu <span style={{ color: "#C8851A" }}>pedido</span></span>
+              )}
+            </h3>
+            <button
+              onClick={handleCloseClick}
+              aria-label="Cerrar"
+              className="flex-none -mt-2 -mr-3 w-11 h-11 flex items-center justify-center border-none bg-transparent p-0"
+              style={{ cursor: "pointer" }}
+            >
+              <CloseIcon />
+            </button>
+          </div>
+          {showDateRow && <div className="brot-rule" style={{ marginTop: "18px" }} />}
         </div>
 
         {/* ── Pantalla de pago (step = payment) ── */}
@@ -411,20 +420,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
         ) : (
 
         /* ── Formulario (step = form) ── */
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[10px] pb-6">
-          {/* Retiro (fijo bajo el título) — v46; v47: sin aviso de reserva */}
-          {items.length > 0 && (
-            <div style={{ marginTop: "4px", marginBottom: "18px" }}>
-              <div className="flex items-center gap-2" style={{ padding: "10px 0", borderTop: "1px solid rgba(14,35,60,.16)", borderBottom: "1px solid rgba(14,35,60,.16)" }}>
-                <span className="flex-none flex"><CalendarIcon /></span>
-                <div className="flex-1 min-w-0">
-                  <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Retiro</div>
-                  <div className="text-[16px] leading-[1.25] text-navy whitespace-nowrap overflow-hidden text-ellipsis">{slotLabel}</div>
-                </div>
-              </div>
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[2px] pb-6">
           {/* ── Estado vacío ── */}
           {items.length === 0 ? (
             <div className="flex flex-col items-center text-center py-4 gap-0">

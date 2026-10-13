@@ -24,13 +24,11 @@ function ConfirmacionContent() {
   const pickup  = params.get("pickup");
   const place   = params.get("place");
 
-  // v45 editorial: sin tarjeta, composición a la izquierda, un solo filete
-  // navy arriba y el CTA anclado abajo.
+  // v45 editorial: sin tarjeta, composición a la izquierda y el CTA anclado
+  // abajo; v48: sin el filete suelto de arriba.
   return (
     <div className="min-h-screen bg-white flex justify-center">
       <div className="w-full max-w-[480px] px-5 pt-[18px] pb-[30px] flex flex-col min-h-screen">
-        <div className="brot-rule" />
-
         <div className="flex-1 flex flex-col justify-center py-10">
           {/* Sello — mismo logo que el footer de la landing */}
           <Image
@@ -39,7 +37,7 @@ function ConfirmacionContent() {
             width={2400}
             height={2400}
             priority
-            style={{ width: "88px", height: "auto", display: "block" }}
+            style={{ width: "96px", height: "auto", display: "block" }}
           />
 
           {orderId && (
@@ -49,7 +47,7 @@ function ConfirmacionContent() {
           )}
 
           <h1 className="brot-h mt-[10px]" style={{ fontSize: "44px" }}>
-            Tu <span style={{ color: "#C8851A" }}>BROT</span><br />ya está en lista
+            Ya pediste<br />tu <span style={{ color: "#C8851A" }}>BROT</span>
           </h1>
 
           <p className="text-[16px] leading-[1.5] text-stone mt-[14px] mb-0" style={{ maxWidth: "34ch" }}>
