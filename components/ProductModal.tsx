@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import ImageZoomModal from "./ImageZoomModal";
 import QtyCapsule from "./QtyCapsule";
+import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface Product {
   id: number;
@@ -58,44 +59,20 @@ export default function ProductModal({
   // ── Desktop: stock/controles sin cambios (BRT-89 es mobile-only) ──
   const remaining = product.stock !== null ? product.stock - quantity : null;
   const isOutOfStock = !product.hasStock || (remaining !== null && remaining <= 0 && quantity === 0);
-  const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0);
+  const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0) && quantity < MAX_PER_PRODUCT;
 
-  const stockColor =
-    isOutOfStock          ? "#4A5463"
-    : remaining === null  ? "#2F6B44"
-    : remaining >= 3      ? "#2F6B44"
-    : remaining > 0       ? "#8A5A0E"
-    :                       "#D94F4F";
-
-  const stockText = !slotSelected
-    ? null
-    : isOutOfStock
-    ? "Sin stock"
-    : remaining !== null
-    ? `${remaining} disponible${remaining !== 1 ? "s" : ""}`
-    : null;
+  // Sin contadores de stock: los panes disponibles se ofrecen sin límite
+  // visible. Solo se avisa cuando un pan no se ofrece en esta fecha.
+  const stockText = slotSelected && isOutOfStock ? "Sin stock esta fecha" : null;
 
   // ── Mobile: nada se descontó todavía (se elige antes de confirmar), así
   // que el stock se muestra contra el total disponible, no contra lo que
   // ya había en el carrito. ──
   const mobileOutOfStock = !product.hasStock || (product.stock !== null && product.stock <= 0);
-  const mobileMaxReached = product.stock !== null && mobileQty >= product.stock;
+  const mobileMaxReached = mobileQty >= MAX_PER_PRODUCT || (product.stock !== null && mobileQty >= product.stock);
   const mobileCanConfirm = slotSelected && !mobileOutOfStock;
 
-  const mobileStockColor =
-    mobileOutOfStock        ? "#4A5463"
-    : product.stock === null ? "#2F6B44"
-    : product.stock >= 3     ? "#2F6B44"
-    : product.stock > 0      ? "#8A5A0E"
-    :                          "#D94F4F";
-
-  const mobileStockText = !slotSelected
-    ? null
-    : mobileOutOfStock
-    ? "Sin stock"
-    : product.stock !== null
-    ? `${product.stock} disponible${product.stock !== 1 ? "s" : ""}`
-    : null;
+  const mobileStockText = slotSelected && mobileOutOfStock ? "Sin stock esta fecha" : null;
 
   return (
     <>
@@ -227,16 +204,13 @@ export default function ProductModal({
           {/* Divisor */}
           <div className="brot-modal-rule" style={{ height: "1px", background: "#0E233C", marginTop: "16px" }} />
 
-          {/* Pie: stock + controles */}
+          {/* Pie: aviso de sin stock + controles */}
           <div className="brot-modal-foot flex flex-col gap-[14px] mt-[14px]">
 
-          {/* Stock — desktop (sin cambios) */}
+          {/* Aviso de "sin stock" — desktop */}
           {stockText && (
             <div className="brot-modal-stock-desktop items-center gap-2">
-              {!isOutOfStock && (
-                <span className="w-2 h-2 rounded-full flex-none" style={{ background: stockColor }} />
-              )}
-              <span className="font-medium text-[16px] whitespace-nowrap" style={{ color: stockColor }}>
+              <span className="font-medium text-[16px] whitespace-nowrap" style={{ color: "#4A5463" }}>
                 {stockText}
               </span>
             </div>
@@ -276,6 +250,9 @@ export default function ProductModal({
                   </div>
                 </div>
               )}
+              {quantity >= MAX_PER_PRODUCT && (
+                <p className="m-0 mt-2 text-[13px] text-stone">Máximo {MAX_PER_PRODUCT} por pan</p>
+              )}
             </div>
           )}
 
@@ -289,7 +266,7 @@ export default function ProductModal({
               {/* v40: stepper a 44px con borde navy (antes 34px y hairline) */}
               <div className="w-full flex items-center justify-between">
                 {mobileStockText && (
-                  <span className="font-medium text-[16px] whitespace-nowrap" style={{ color: mobileStockColor }}>
+                  <span className="font-medium text-[16px] whitespace-nowrap" style={{ color: "#4A5463" }}>
                     {mobileStockText}
                   </span>
                 )}
@@ -297,7 +274,7 @@ export default function ProductModal({
                   <QtyCapsule
                     value={mobileQty}
                     onMinus={() => setMobileQty((q) => Math.max(1, q - 1))}
-                    onPlus={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
+                    onPlus={() => setMobileQty((q) => Math.min(MAX_PER_PRODUCT, product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
                     minusDisabled={mobileQty <= 1}
                     plusDisabled={mobileOutOfStock || mobileMaxReached}
                     minusLabel="Restar cantidad"
@@ -305,6 +282,9 @@ export default function ProductModal({
                   />
                 </div>
               </div>
+              {mobileQty >= MAX_PER_PRODUCT && (
+                <p className="m-0 text-right text-[13px] text-stone">Máximo {MAX_PER_PRODUCT} por pan</p>
+              )}
 
               {/* v37: CTA anclado al pie de la pantalla (BRT-181). */}
               <button

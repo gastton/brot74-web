@@ -8,6 +8,7 @@ import OrderModal from "@/components/OrderModal";
 import CartBar from "@/components/CartBar";
 import DateSelector from "@/components/DateSelector";
 import HomeLanding from "@/components/home/HomeLanding";
+import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface Slot {
   id: number | null;
@@ -75,7 +76,7 @@ function clearSavedCart() {
 // params — la URL manda, el estado de "en qué paso estoy" se deriva de ella
 // (no vive en un useState propio) para que "atrás" del navegador retroceda
 // un paso real en vez de tirar al home. Lo que NO viaja en la URL es estado
-// de sesión (carrito, reserva de stock/timer) — eso sigue siendo local,
+// de sesión (carrito, checkout iniciado) — eso sigue siendo local,
 // ver el spike en BRT-94.
 function buildFlowUrl(params: { step?: "slots"; slot?: number | null; product?: number | null; checkout?: "form" | "payment" }): string {
   const sp = new URLSearchParams();
@@ -105,15 +106,15 @@ function HomeContent() {
   const [cart, setCart]                       = useState<CartMap>({});
   const [loadingSlots, setLoadingSlots]       = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const [reserving, setReserving]             = useState(false);
-  const [reserveError, setReserveError]       = useState("");
-  const [sessionToken, setSessionToken]       = useState("");
+  // Marca que el checkout se abrió en esta carga de página (vs. llegar por
+  // link directo, refresh o "atrás"/"adelante" del navegador). Sin reserva de
+  // stock por tiempo ya no hay un token que lo certifique.
+  const [checkoutStarted, setCheckoutStarted] = useState(false);
   const cartRestoredRef = useRef(false);
   // Marca si el modal de producto abierto ACTUALMENTE fue empujado por
   // nosotros en esta sesión (vs. llegado por link directo/refresh) — decide
   // si el botón de cerrar puede hacer router.back() o necesita replace.
   const productPushedRef = useRef(false);
-  const wasCheckoutOpenRef = useRef(false);
 
   const selectedProductId = productParam ? Number(productParam) : null;
   const selectedProduct = selectedProductId != null
@@ -141,24 +142,29 @@ function HomeContent() {
     }
   }, [selectedSlotId, fetchProducts]);
 
-  // Restore cart from localStorage once slots finish loading — solo si la
-  // URL no trae ya un slot propio (BRT-95: la URL manda, un link directo/
-  // refresh a un paso puntual no debe ser pisado por el carrito guardado).
+  // Restore cart from localStorage once slots finish loading. Si la URL ya
+  // trae un slot propio (BRT-95: la URL manda, un link directo/refresh a un
+  // paso puntual no debe ser pisado por el carrito guardado) solo se repone
+  // el contenido del carrito cuando es de ese mismo slot — sin tocar la URL.
   // Sigue siendo "una sola vez" (cartRestoredRef), aunque la URL cambie
   // después por otras navegaciones.
   useEffect(() => {
     if (loadingSlots || cartRestoredRef.current) return;
     cartRestoredRef.current = true;
-    if (slotParam) return;
     const saved = readSavedCart();
     if (!saved) return;
     try {
       const { slotId, cart: savedCart } = JSON.parse(saved);
       if (!slotId || !savedCart || Object.keys(savedCart).length === 0) return;
+      const sameSlotInUrl = !!slotParam && Number(slotParam) === slotId;
+      if (slotParam && !sameSlotInUrl) return;
       const slot = slots.find((s) => s.id === slotId && !s.disabled);
-      if (slot) {
-        setCart(savedCart);
-        router.replace(buildFlowUrl({ slot: slotId }));
+      if (sameSlotInUrl || slot) {
+        // Carritos guardados antes del tope de 3 por pan: se recortan.
+        setCart(Object.fromEntries(
+          Object.entries(savedCart as CartMap).map(([id, q]) => [id, Math.min(Number(q), MAX_PER_PRODUCT)])
+        ));
+        if (!sameSlotInUrl) router.replace(buildFlowUrl({ slot: slotId }));
       } else {
         clearSavedCart();
       }
@@ -168,42 +174,22 @@ function HomeContent() {
   }, [loadingSlots, slots, slotParam, router]);
 
   // Red de seguridad (BRT-95): si la URL apunta a un paso de checkout pero
-  // no hay sessionToken local (recarga de página, o "atrás" reabriendo una
-  // entrada de historial de un checkout ya cerrado/liberado), no existe
-  // ninguna reserva viva que mostrar — se vuelve al menú en silencio, igual
-  // que el caso ya existente de reserva vencida (no se puede "reconstruir"
-  // un pago sin una reserva de stock real detrás).
+  // el checkout no se abrió en esta carga de página (recarga, o "atrás"
+  // reabriendo una entrada de historial de un checkout ya cerrado) se vuelve
+  // al menú en silencio — el carrito guardado se repone solo (ver arriba).
   useEffect(() => {
-    if (isCheckoutOpen && !sessionToken && selectedSlotId) {
+    if (isCheckoutOpen && !checkoutStarted && selectedSlotId) {
       router.replace(buildFlowUrl({ slot: selectedSlotId }));
     }
-  }, [isCheckoutOpen, sessionToken, selectedSlotId, router]);
-
-  // Cuando el checkout deja de estar abierto (por cualquier vía: botón de
-  // cerrar, "atrás" del navegador, o la red de seguridad de arriba) se
-  // libera la reserva de stock y se refresca la grilla — antes vivía todo
-  // junto en handleModalClose, ahora se centraliza acá para cubrir también
-  // el cierre por navegación de historial, que no pasa por ningún handler.
-  useEffect(() => {
-    if (wasCheckoutOpenRef.current && !isCheckoutOpen) {
-      if (sessionToken) {
-        fetch("/api/cart/release", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionToken }),
-        }).catch(() => {});
-      }
-      setSessionToken("");
-      if (selectedSlotId) fetchProducts(selectedSlotId);
-    }
-    wasCheckoutOpenRef.current = isCheckoutOpen;
-  }, [isCheckoutOpen, sessionToken, selectedSlotId, fetchProducts]);
+  }, [isCheckoutOpen, checkoutStarted, selectedSlotId, router]);
 
   // Persist cart to localStorage on every change
   useEffect(() => {
     if (selectedSlotId && Object.keys(cart).length > 0) {
       writeSavedCart(JSON.stringify({ slotId: selectedSlotId, cart }));
-    } else if (selectedSlotId) {
+    } else if (selectedSlotId && cartRestoredRef.current) {
+      // Recién después de intentar restaurar: al montar con un slot en la
+      // URL el carrito todavía está vacío y no hay que borrar el guardado.
       clearSavedCart();
     }
   }, [cart, selectedSlotId]);
@@ -243,6 +229,7 @@ function HomeContent() {
       // deshabilitado. El updater funcional ve siempre el último `prev`,
       // así que este chequeo alcanza incluso en ese caso.
       if (product && product.stock !== null && current >= product.stock) return prev;
+      if (current >= MAX_PER_PRODUCT) return prev;
       return { ...prev, [productId]: current + 1 };
     });
   }
@@ -268,7 +255,7 @@ function HomeContent() {
     if (newQuantity <= 0) {
       removeItemFromCart(productId);
     } else {
-      setCart((prev) => ({ ...prev, [productId]: newQuantity }));
+      setCart((prev) => ({ ...prev, [productId]: Math.min(newQuantity, MAX_PER_PRODUCT) }));
     }
   }
 
@@ -279,33 +266,12 @@ function HomeContent() {
   const cartTotal    = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);
 
-  async function openCheckout() {
+  // Sin reserva de stock por tiempo: abrir el checkout es solo navegar. El
+  // stock se descuenta recién cuando el usuario confirma "Ya transferí".
+  function openCheckout() {
     if (!selectedSlotId || cartItems.length === 0) return;
-    setReserveError("");
-    setReserving(true);
-    try {
-      const res = await fetch("/api/cart/reserve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slotId: selectedSlotId,
-          items: cartItems.map((i) => ({ productId: i.id, quantity: i.quantity })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setReserveError(data.error ?? "No se pudo reservar. Intentá de nuevo.");
-        // Refresh products to show updated stock
-        fetchProducts(selectedSlotId);
-        return;
-      }
-      setSessionToken(data.sessionToken);
-      router.push(buildFlowUrl({ slot: selectedSlotId, checkout: "form" }));
-    } catch {
-      setReserveError("Error de conexión. Intentá de nuevo.");
-    } finally {
-      setReserving(false);
-    }
+    setCheckoutStarted(true);
+    router.push(buildFlowUrl({ slot: selectedSlotId, checkout: "form" }));
   }
 
   // BRT-95: pasar de "Tu pedido" a "Pagá por transferencia" ahora es un paso
@@ -316,10 +282,8 @@ function HomeContent() {
     router.push(buildFlowUrl({ slot: selectedSlotId, checkout: "payment" }));
   }
 
-  // Cierra el checkout. La liberación de la reserva y el refresco de stock
-  // viven en el efecto de arriba (cubre también el cierre por "atrás" del
-  // navegador); acá solo se decide la navegación y, si corresponde, se
-  // vacía el carrito (BRT-88: reserva vencida o cierre confirmado).
+  // Cierra el checkout: acá solo se decide la navegación y, si corresponde,
+  // se vacía el carrito (BRT-88: cierre confirmado).
   //
   // A diferencia del modal de producto, acá SIEMPRE se retrocede el número
   // exacto de pasos que nosotros empujamos (1 si solo se abrió "form", 2 si
@@ -335,7 +299,7 @@ function HomeContent() {
     }
     if (!selectedSlotId) return;
     const depth = checkoutParam === "payment" ? 2 : checkoutParam === "form" ? 1 : 0;
-    if (depth > 0 && sessionToken) {
+    if (depth > 0 && checkoutStarted) {
       window.history.go(-depth);
     } else {
       router.replace(buildFlowUrl({ slot: selectedSlotId }));
@@ -455,8 +419,6 @@ function HomeContent() {
           <CartBar
             count={cartItems.reduce((s, i) => s + i.quantity, 0)}
             total={cartTotal}
-            reserving={reserving}
-            error={reserveError}
             onCheckout={() => openCheckout()}
           />
         )}
@@ -477,14 +439,13 @@ function HomeContent() {
           />
         )}
 
-        {isCheckoutOpen && selectedSlotId && selectedSlot && sessionToken && (
+        {isCheckoutOpen && selectedSlotId && selectedSlot && checkoutStarted && (
           <OrderModal
             items={cartItems}
             slotId={selectedSlotId}
             slotLabel={[selectedSlot.dayLabel, selectedSlot.pickupTime].filter(Boolean).join(" · ")}
             canAddMore={products.some((p) => p.hasStock && !((cart[p.id] ?? 0) > 0))}
             step={checkoutParam === "payment" ? "payment" : "form"}
-            sessionToken={sessionToken}
             onRemoveItem={removeItemFromCart}
             onChangeQuantity={changeCartQuantity}
             onAdvanceToPayment={advanceToPaymentStep}

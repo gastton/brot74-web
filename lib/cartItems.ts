@@ -1,12 +1,16 @@
 /**
  * Valida y normaliza los `items` que llegan del cliente en
- * /api/cart/reserve y /api/orders (BRT-108).
+ * /api/orders (BRT-108).
  *
  * - Rechaza cualquier `productId`/`quantity` que no sea un entero positivo.
  * - Consolida líneas repetidas del mismo `productId`, sumando cantidades,
  *   para que no se pueda superar el stock disponible partiendo el mismo
  *   pedido en varias líneas.
  */
+
+// Máximo de unidades de un mismo pan por pedido. Quien quiera más hace otro
+// pedido: no hay cuentas, así que el tope es por pedido, no por persona.
+export const MAX_PER_PRODUCT = 3;
 
 export type CartItem = {
   productId: number;

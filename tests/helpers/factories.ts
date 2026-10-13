@@ -51,24 +51,6 @@ export async function createProductStock(
   });
 }
 
-export async function createCartReservation(
-  productId: number,
-  deliverySlotId: number,
-  overrides: Partial<Prisma.CartReservationUncheckedCreateInput> = {}
-) {
-  const in15Min = new Date(Date.now() + 15 * 60 * 1000);
-  return prisma.cartReservation.create({
-    data: {
-      productId,
-      deliverySlotId,
-      quantity: 1,
-      sessionToken: crypto.randomUUID(),
-      expiresAt: in15Min,
-      ...overrides,
-    },
-  });
-}
-
 export async function createOrder(
   deliverySlotId: number,
   items: { productId: number; quantity: number; unitPrice: number }[] = [],

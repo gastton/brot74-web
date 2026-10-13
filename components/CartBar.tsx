@@ -5,8 +5,6 @@ import { formatCurrency } from "@/lib/utils";
 interface CartBarProps {
   count: number;
   total: number;
-  reserving: boolean;
-  error: string;
   onCheckout: () => void;
 }
 
@@ -24,7 +22,7 @@ const ctaTransition = "transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s"
 // dos versiones están montadas siempre; CSS decide cuál se ve según el
 // ancho (md: 768px, mismo corte que ya usa la grilla de productos), así
 // no hay parpadeo al cargar. Desktop no cambia.
-function CountPill({ count, reserving }: { count: number; reserving: boolean }) {
+function CountPill({ count }: { count: number }) {
   return (
     <span
       className="flex-none flex items-center justify-center"
@@ -39,7 +37,7 @@ function CountPill({ count, reserving }: { count: number; reserving: boolean }) 
         fontWeight: 600,
       }}
     >
-      {reserving ? "…" : count}
+      {count}
     </span>
   );
 }
@@ -48,7 +46,7 @@ function CountPill({ count, reserving }: { count: number; reserving: boolean }) 
 // desktop mostraba "N productos" en versalitas y mobile era un botón
 // flotante circular sin texto — ninguno de los dos comunicaba el total
 // de un vistazo). Referencia: pantallas 2 y 7 de pedidos-estandares.html.
-export default function CartBar({ count, total, reserving, error, onCheckout }: CartBarProps) {
+export default function CartBar({ count, total, onCheckout }: CartBarProps) {
   return (
     <>
       {/* Desktop (md: 768px+) — barra de ancho completo */}
@@ -59,22 +57,14 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
         }}
       >
-        {error && (
-          <div className="max-w-[430px] min-[900px]:max-w-[720px] mx-auto mb-2">
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-[4px] px-4 py-2 text-sm text-center">
-              {error}
-            </div>
-          </div>
-        )}
         <div className="max-w-[420px] ml-auto lg:mr-[max(0px,calc((100%-1024px)/2))]">
           <button
             onClick={onCheckout}
-            disabled={reserving}
             aria-label={`Ver mi pedido, ${count} producto${count !== 1 ? "s" : ""}, ${formatCurrency(total)}`}
             className="brot-pill"
             style={{ justifyContent: "flex-start" }}
           >
-            <CountPill count={count} reserving={reserving} />
+            <CountPill count={count} />
             <span className="whitespace-nowrap">Ver mi pedido</span>
             <span className="ml-auto whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(total)}</span>
           </button>
@@ -88,16 +78,8 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           bottom: "calc(20px + env(safe-area-inset-bottom))",
         }}
       >
-        {error && (
-          <div className="mb-2">
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-[4px] px-3 py-2 text-sm text-center">
-              {error}
-            </div>
-          </div>
-        )}
         <button
           onClick={onCheckout}
-          disabled={reserving}
           aria-label={`Ver mi pedido, ${count} producto${count !== 1 ? "s" : ""}, ${formatCurrency(total)}`}
           className="brot-pill"
           style={{
@@ -111,7 +93,7 @@ export default function CartBar({ count, total, reserving, error, onCheckout }: 
           onTouchStart={(e) => { e.currentTarget.style.transform = "scale(.98)"; }}
           onTouchEnd={(e) => { e.currentTarget.style.transform = ""; }}
         >
-          <CountPill count={count} reserving={reserving} />
+          <CountPill count={count} />
           <span className="whitespace-nowrap">Ver mi pedido</span>
           <span className="ml-auto whitespace-nowrap" style={{ fontVariantNumeric: "tabular-nums" }}>{formatCurrency(total)}</span>
         </button>

@@ -6,28 +6,19 @@ export async function GET(req: NextRequest) {
 
   if (slotId) {
     const slotIdInt = parseInt(slotId);
-    const now = new Date();
 
-    const [products, cartReservations] = await Promise.all([
-      prisma.product.findMany({
-        where: { active: true },
-        orderBy: { sortOrder: "asc" },
-        include: { stocks: { where: { deliverySlotId: slotIdInt } } },
-      }),
-      prisma.cartReservation.groupBy({
-        by: ["productId"],
-        where: { deliverySlotId: slotIdInt, expiresAt: { gt: now } },
-        _sum: { quantity: true },
-      }),
-    ]);
+    const products = await prisma.product.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      include: { stocks: { where: { deliverySlotId: slotIdInt } } },
+    });
 
-    const cartHeldMap = new Map(cartReservations.map((r) => [r.productId, r._sum.quantity ?? 0]));
-
+    // Sin reservas de carrito por tiempo: lo disponible es el stock de la
+    // tanda menos lo ya pedido (pedidos creados con "Ya transferí").
     return NextResponse.json(
       products.map((p) => {
         const s = p.stocks[0] ?? null;
-        const cartHeld = cartHeldMap.get(p.id) ?? 0;
-        const available = s ? s.totalStock - s.reservedStock - cartHeld : null;
+        const available = s ? s.totalStock - s.reservedStock : null;
         return {
           id: p.id,
           name: p.name,

@@ -53,7 +53,6 @@ afterEach(async () => {
   await prisma.$transaction([
     prisma.orderItem.deleteMany(),
     prisma.order.deleteMany(),
-    prisma.cartReservation.deleteMany(),
     prisma.productStock.deleteMany(),
     prisma.product.deleteMany(),
     prisma.deliverySlot.deleteMany(),
