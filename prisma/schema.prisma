@@ -86,7 +86,7 @@ model Order {
 }
 
 // EN DESUSO: ya no se reserva stock por tiempo (los pedidos solo descuentan
-// stock al confirmarse con "Ya transferí"). Nada lee ni escribe esta tabla; se
+// stock al crearse, con "Pagar"). Nada lee ni escribe esta tabla; se
 // deja en la base a propósito y se borra en una migración aparte.
 model CartReservation {
   id             String       @id @default(cuid())

@@ -17,7 +17,7 @@ Sitio de e-commerce para [BROT74](https://brot74.com), panadería artesanal: cat
 
 - Catálogo de productos agrupado por fecha de entrega (delivery slots), con stock por fecha
 - Flujo de compra con navegación por URL (`useSearchParams`) para que "atrás" del navegador funcione en todo el checkout
-- Sin reserva de stock por tiempo: el pedido descuenta stock al confirmar "Ya transferí" y se cierra en la fecha de la tanda (con una tolerancia de 24 h para quien ya estaba en el flujo)
+- Sin reserva de stock por tiempo: el pedido se crea (pendiente) al tocar "Pagar", descuenta stock en ese momento y se cierra en la fecha de la tanda (con una tolerancia de 24 h para quien ya estaba en el flujo)
 - Checkout por transferencia bancaria (sin pasarela de pago)
 - Lista de espera (`/waitlist`) cuando no hay una fecha de entrega activa, con aviso manual por WhatsApp desde el admin
 - Panel `/admin`: productos, stock por fecha, pedidos, fechas de entrega y waitlist

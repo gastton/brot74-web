@@ -7,8 +7,8 @@
  * Dos momentos distintos (sin reserva de stock por tiempo):
  * - Cierre ("Pedidos hasta"): la fecha deja de mostrarse y los que llegan
  *   después van a la lista de espera.
- * - Cierre + tolerancia: quien ya estaba en el flujo (carrito armado o en la
- *   pantalla de pago) todavía puede confirmar "Ya transferí". Es el colchón
+ * - Cierre + tolerancia: quien ya estaba en el flujo (carrito armado) todavía
+ *   puede tocar "Pagar", que es cuando se crea el pedido. Es el colchón
  *   hasta que se revisan a mano los pedidos pagados; los `pending` sin pagar
  *   se descartan en ese momento.
  */

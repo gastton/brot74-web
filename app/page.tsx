@@ -267,7 +267,7 @@ function HomeContent() {
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);
 
   // Sin reserva de stock por tiempo: abrir el checkout es solo navegar. El
-  // stock se descuenta recién cuando el usuario confirma "Ya transferí".
+  // pedido (y su stock) se crea recién al tocar "Pagar".
   function openCheckout() {
     if (!selectedSlotId || cartItems.length === 0) return;
     setCheckoutStarted(true);
