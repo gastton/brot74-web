@@ -1,210 +1,123 @@
-/* BRT-136: landing pública nueva (v31), conversión de
-   _design/design_cambios_v31/pantallas_actualizadas/landing.html.
-   Todos los selectores quedan bajo .brot-landing a propósito — el HTML
-   original define reglas globales (body, h1/h2/h3, p, a, section,
-   footer, :root) que romperían el resto del sitio (checkout, admin,
-   confirmación) si se copiaran tal cual. Variables de color propias de
-   esta entrega (--cream acá es #F4EEE2, distinto del --color-cream de
-   marca #F9F5EC que usa el resto del sitio) — es así en el diseño
-   entregado, no un error de conversión. */
-
-.brot-landing {
-  --navy: #0E233C;
-  --amber: #C8851A;
-  --cream: #F4EEE2;
-  --stone: #7C766A;
-  --paper: #FFFFFF;
-  --rule: #0E233C;
-
-  position: relative;
-  background: var(--paper);
-  color: var(--navy);
-  /* var(--font-jost): next/font/google en app/layout.tsx ya carga Jost y lo
-     expone por esta variable — un literal "Jost" acá no matchea ningún
-     @font-face real (next/font genera un nombre interno propio), así que
-     el body de la landing terminaba en system-ui/sans-serif de fallback. */
-  font-family: var(--font-jost), system-ui, sans-serif;
-  font-weight: 300;
-  font-size: 15px;
-  line-height: 1.55;
-}
-.brot-landing * { box-sizing: border-box; }
-.brot-landing a { color: var(--amber); text-decoration: none; }
-.brot-landing a:hover { color: var(--navy); }
-
-.brot-landing .wrap { max-width: 1760px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 68px); }
-.brot-landing .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(28px, 6vw, 120px); }
-.brot-landing .rule { height: 1px; background: var(--rule); opacity: .85; }
-
-.brot-landing h1,
-.brot-landing h2,
-.brot-landing h3 { font-weight: 400; margin: 0; letter-spacing: -.01em; }
-.brot-landing h2 { font-size: clamp(24px, 2.2vw, 32px); margin-bottom: 26px; }
-.brot-landing p { margin: 0 0 18px; max-width: 56ch; text-wrap: pretty; }
-.brot-landing p:last-child { margin-bottom: 0; }
-.brot-landing strong { font-weight: 500; }
-
-/* rail fijo: instagram + CTA */
-.brot-landing .social { position: fixed; right: clamp(12px, 2vw, 26px); top: 50%; transform: translateY(-50%); z-index: 6; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.brot-landing .social span { width: 44px; height: 44px; border-radius: 50%; background: var(--navy); display: grid; place-items: center; color: var(--cream); transition: background .15s; }
-.brot-landing .social a:hover span { background: #1B3656; }
-.brot-landing .social svg { width: 18px; height: 18px; display: block; }
-.brot-landing .pill {
-  pointer-events: auto; background: var(--navy); color: var(--cream);
-  border: none; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
-  min-height: 44px; padding: 0 24px;
-  font-family: inherit; font-size: 13px; letter-spacing: .14em;
-  font-weight: 600; text-transform: uppercase; white-space: nowrap;
-  cursor: pointer;
-}
-.brot-landing .pill:hover { background: #1B3656; color: var(--cream); }
-
+/* v50 · Landing v3.3 (nórdico editorial). Conversión de
+   _design/design_cambios_v50/pantallas_actualizadas/landing.html: todo Jost
+   300/400/500/600, sin serif ni cursivas; menú fijo (transparente → .solid →
+   .off), barra mobile (.mbar) que aparece tras el hero.
+   Los selectores del HTML original colgaban de ".bl"; acá cuelgan de
+   ".brot-landing" para no pisar el resto del sitio (checkout, admin). Las
+   reglas sobre <html> (scroll suave, scroll-padding, scrollbar oculta en
+   mobile) van con :has(.brot-landing) por la misma razón. */
+html:has(.brot-landing){scroll-behavior:smooth;scroll-padding-top:72px}
+.brot-landing{--navy:#0E233C;--navy-h:#1B3656;--amber:#C8851A;--cream:#F4EEE2;--stone:#6B6559;--paper:#FFFFFF;--hair:color-mix(in srgb,#0E233C 22%,transparent);background:var(--paper);color:var(--navy);font-family:var(--font-jost),system-ui,sans-serif;font-weight:400;font-size:17px;line-height:1.65}
+.brot-landing *{box-sizing:border-box}
+.brot-landing a{color:var(--navy);text-decoration:none}
+.brot-landing a:hover{color:var(--navy-h)}
+.brot-landing .wrap{max-width:1520px;margin:0 auto;padding:0 clamp(20px,4vw,64px)}
+.brot-landing .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(20px,3vw,56px)}
+.brot-landing .rule{height:1px;background:var(--navy)}
+.brot-landing h1,.brot-landing h2,.brot-landing h3{margin:0;font-weight:400}
+.brot-landing h2{font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(40px,5vw,80px);line-height:1;letter-spacing:-.035em;margin-bottom:clamp(28px,3vw,44px);text-wrap:balance}
+.brot-landing p{margin:0 0 18px;max-width:52ch;text-wrap:pretty}
+.brot-landing p:last-child{margin-bottom:0}
+.brot-landing .eyebrow{display:flex;gap:14px;align-items:baseline;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone);margin-bottom:clamp(20px,2.4vw,32px)}
+.brot-landing .eyebrow b{font-weight:500;color:var(--amber);letter-spacing:.06em}
+.brot-landing .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:999px;background:var(--navy);color:var(--cream);font-family:inherit;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;border:none;cursor:pointer;white-space:nowrap;transition:background .15s}
+.brot-landing .btn:hover{background:var(--navy-h);color:var(--cream)}
+.brot-landing .link{white-space:nowrap;font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;border-bottom:1px solid var(--navy);padding-bottom:3px}
+.brot-landing .media{position:relative;overflow:hidden;background:var(--cream)}
+.brot-landing .media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+/* top bar */
+.brot-landing .bar{position:fixed;left:0;right:0;top:0;z-index:10;color:var(--cream);background:transparent;border-bottom:1px solid transparent;transition:transform .45s cubic-bezier(.2,.7,.2,1),background .3s,color .3s,border-color .3s}
+.brot-landing .bar::before{content:"";position:absolute;inset:0 0 -40px;background:linear-gradient(rgba(14,35,60,.32),rgba(14,35,60,0));pointer-events:none;transition:opacity .3s}
+.brot-landing .bar.solid{color:var(--navy);background:color-mix(in srgb,#fff 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-color:var(--hair)}
+.brot-landing .bar.solid::before{opacity:0}
+.brot-landing .bar.off{transform:translateY(-100%)}
+.brot-landing .bar .brand,.brot-landing .bar .nav a:not(.btn){color:inherit}
+.brot-landing .bar:not(.solid) .brand img{filter:brightness(0) invert(.95)}
+.brot-landing .bar:not(.solid) .brand span em{color:inherit}
+.brot-landing .bar:not(.solid) .btn{background:var(--cream);color:var(--navy)}
+.brot-landing .bar:not(.solid) .ig{border-color:rgba(244,238,226,.55)}
+.brot-landing [id]{scroll-margin-top:72px}
+.brot-landing .bar .wrap{position:relative;display:flex;align-items:center;justify-content:space-between;gap:24px;height:76px;transition:height .3s}
+.brot-landing .bar.solid .wrap{height:60px}
+.brot-landing .brand{white-space:nowrap;display:flex;align-items:center;gap:12px;font-size:17px;letter-spacing:.08em;font-weight:500}
+.brot-landing .brand img{width:38px;height:38px;display:block}
+.brot-landing .brand span em{font-style:normal;color:var(--amber)}
+.brot-landing .nav{display:flex;align-items:center;gap:clamp(20px,2.6vw,40px);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:500}
+.brot-landing .nav a:not(.btn):hover{color:var(--amber)}
+.brot-landing .nav a{white-space:nowrap}@media (max-width:1100px){.brot-landing .nav a.hide-m:not(.ig){display:none}}
+.brot-landing .ig{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--hair)}
+.brot-landing .ig svg{width:18px;height:18px}
 /* hero */
-.brot-landing .hero { position: relative; height: min(94vh, 900px); min-height: 520px; overflow: hidden; }
-.brot-landing .hero-bg { position: absolute; inset: 0; }
-.brot-landing .hero-card {
-  position: absolute; left: 32px; top: 415px; bottom: auto; width: 570px; height: auto;
-  min-height: 440px; max-width: calc(100% - 64px); background: var(--cream);
-  padding: clamp(24px, 3vw, 44px); display: flex; flex-direction: column;
-  justify-content: space-between; z-index: 3;
-}
-.brot-landing .hero-card .rule { margin-bottom: clamp(30px, 6vh, 64px); }
-.brot-landing .hero-title { font-size: clamp(44px, 6.4vw, 104px); line-height: .94; letter-spacing: -.02em; font-weight: 400; }
-
-/* secciones de contenido */
-.brot-landing section { padding: clamp(56px, 9vh, 132px) 0; }
-.brot-landing .media { position: relative; aspect-ratio: 1 / 1; width: 100%; }
-.brot-landing .media.tall { aspect-ratio: 574 / 704; margin-top: clamp(24px, 4vw, 64px); }
-.brot-landing .offset { align-self: center; }
-.brot-landing .offset .media { aspect-ratio: 16 / 26; width: 78%; margin-right: 0; margin-left: auto; margin-top: clamp(64px, 10vw, 180px); transform: translateY(clamp(24px, 4vw, 72px)); }
-/* antes inline en el JSX (style={{aspectRatio, width}}) — se movió acá
-   porque un estilo inline le gana en especificidad a cualquier regla de
-   CSS, y hubiera bloqueado el override de .media-bleed en mobile. */
-.brot-landing .porque-media .media { aspect-ratio: 1 / 1.05; width: 72%; }
-.brot-landing .retiro-col { align-self: center; }
-/* v46 · "Pedís hoy": columna izquierda en flex column; al final, filete a todo
-   el ancho de la columna + foto 1:1 al 60% (máx. 440px), alineada abajo con la
-   foto de la bolsa (mismo translateY). */
-.brot-landing .pedis-col { display: flex; flex-direction: column; }
-.brot-landing .pedis-extra { margin-top: auto; padding-top: clamp(40px, 5vw, 72px); transform: translateY(clamp(12px, 2vw, 32px)); }
-.brot-landing .pedis-extra .rule { width: 100%; margin-bottom: 30px; }
-.brot-landing .pedis-media { position: relative; width: 60%; max-width: 440px; aspect-ratio: 1 / 1; }
-.brot-landing .retiro-media { aspect-ratio: 481 / 852; width: 481px; max-width: 100%; margin-left: auto; margin-right: 0; transform: translateY(clamp(12px, 2vw, 32px)); }
-.brot-landing .block-rule { margin-bottom: 30px; }
-.brot-landing .day { margin-bottom: 22px; }
-/* Pedido explícito: "¿Y el 74?" al mismo tamaño y peso que los h2
-   (ej. "¿Por qué BROT 74?") — antes heredaba el font-size del body
-   (15px) y tenía font-weight:500 (se veía en negrita al agrandarlo). */
-.brot-landing .day dt { font-weight: 400; margin-bottom: 2px; font-size: clamp(24px, 2.2vw, 32px); }
-.brot-landing .day dd { margin: 0; max-width: 60ch; }
-
+.brot-landing .hero{position:relative;height:min(100vh,900px);min-height:600px}
+.brot-landing .hero .media{position:absolute;inset:0}
+.brot-landing .hero-card{position:absolute;left:clamp(20px,4vw,64px);bottom:clamp(20px,4vw,64px);width:min(540px,46vw);background:var(--cream);padding:clamp(28px,3vw,44px)}
+.brot-landing .hero-card .rule{margin-bottom:clamp(20px,2.4vw,28px)}
+.brot-landing .hero-card h1{font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(36px,4vw,60px);line-height:1;letter-spacing:-.035em;margin-bottom:clamp(24px,3vw,36px);text-wrap:balance}
+.brot-landing .hero-card h1 i{font-style:normal;color:var(--stone)}
+.brot-landing .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px 28px}
+/* sections */
+.brot-landing section{padding:clamp(96px,13vw,200px) 0}
+.brot-landing .idea-a{grid-column:1 / span 5}
+.brot-landing .idea-a .media{aspect-ratio:4/5}
+.brot-landing .idea-txt{margin-top:clamp(32px,4vw,56px)}
+.brot-landing .idea-b{grid-column:8 / span 5;align-self:end}
+.brot-landing .idea-b .media{aspect-ratio:3/4.4}
+.brot-landing .quote{padding:clamp(40px,6vw,96px) 0 clamp(80px,10vw,150px)}
+.brot-landing .quote .rule{margin-bottom:clamp(28px,3vw,44px)}
+.brot-landing .quote blockquote{margin:0;font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(56px,10.5vw,176px);line-height:.92;letter-spacing:-.05em}
+.brot-landing .quote figcaption{margin-top:clamp(20px,2.4vw,32px);font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone)}
+.brot-landing .porque{background:var(--cream)}
+.brot-landing .porque-img{grid-column:1 / span 5}
+.brot-landing .porque-img .media{aspect-ratio:1/1.1;background:#fff}
+.brot-landing .porque-txt{grid-column:7 / span 6;align-self:center}
+.brot-landing .num{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(20px,2.4vw,36px);align-items:center;margin:clamp(32px,4vw,56px) 0;padding:clamp(24px,3vw,36px) 0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.brot-landing .num strong{font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(88px,10vw,160px);line-height:.85;letter-spacing:-.06em;color:var(--amber)}
+.brot-landing .num strong small{font-size:.4em;letter-spacing:0;margin-left:.04em}
+.brot-landing .num p{margin:0;font-size:clamp(17px,1.4vw,20px)}
+.brot-landing .pedir-txt{grid-column:1 / span 6}
+.brot-landing .pedir-img{grid-column:8 / span 5}
+.brot-landing .pedir-img .media{aspect-ratio:481/760}
+.brot-landing .steps{list-style:none;margin:clamp(36px,4vw,56px) 0 0;padding:0;display:grid}
+.brot-landing .step{display:grid;grid-template-columns:clamp(56px,6vw,88px) minmax(0,1fr);gap:16px;padding:clamp(20px,2.2vw,28px) 0;border-top:1px solid var(--hair)}
+.brot-landing .step:last-child{border-bottom:1px solid var(--hair)}
+.brot-landing .step-n{font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;letter-spacing:-.03em;font-size:clamp(28px,2.6vw,38px);line-height:1;color:var(--amber)}
+.brot-landing .step h3{font-size:clamp(19px,1.5vw,22px);font-weight:500;margin-bottom:4px;letter-spacing:-.005em}
+.brot-landing .step p{margin:0;color:var(--stone)}
 /* footer */
-.brot-landing footer { border-top: 1px solid var(--rule); padding: clamp(48px, 8vh, 110px) 0 clamp(40px, 6vh, 80px); }
-/* Mismo bug de especificidad que ya se arregló para las secciones
-   (ver la regla de section.wrap en la media query ≤820px): footer
-   también tiene className="wrap", y ".brot-landing .wrap" (2 clases)
-   le gana a ".brot-landing footer" (1 clase + elemento) y pisa su
-   padding vertical a 0 — la línea del border-top quedaba pegada
-   contra el contenido anterior. No se notaba antes porque el párrafo
-   de "Pedís hoy" tenía <br/> de relleno al final; se sacaron al mover
-   "Horarios de entregas" ahí y quedó expuesto. En principio se repuso
-   acá el mismo valor que la regla de arriba pretendía dar; v33 lo
-   redujo a propósito (110px → 52px) para subir el sello + "Micropanadería
-   de Masa Madre" — ya no matchea el valor de la regla muerta de
-   arriba, es deliberado. */
-.brot-landing footer.wrap { padding-top: clamp(24px, 4vh, 52px); padding-bottom: clamp(40px, 6vh, 80px); }
-.brot-landing .foot-brand { font-size: clamp(22px, 2.4vw, 34px); letter-spacing: .02em; font-weight: 400; margin-bottom: 18px; }
-.brot-landing .foot-note { color: var(--stone); font-size: 15px; }
-.brot-landing .foot-place { margin-top: 10px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--stone); font-weight: 600; }
-.brot-landing .legal { margin-top: clamp(48px, 7vh, 96px); display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--stone); }
-
-/* responsive — 1200 / 820 / 520, igual que el diseño entregado */
-@media (max-width: 1200px) {
-  .brot-landing .hero-card { left: clamp(20px, 4vw, 32px); top: auto; bottom: 0; width: min(570px, 58vw); min-height: 320px; }
+.brot-landing footer{background:var(--navy);color:var(--cream);padding:clamp(64px,8vw,120px) 0 40px}
+.brot-landing footer a{color:var(--cream)}
+.brot-landing footer a:hover{color:var(--amber)}
+.brot-landing .f-brand{grid-column:1 / span 5}
+.brot-landing .f-brand img{width:clamp(88px,8vw,112px);display:block;margin-bottom:24px}
+.brot-landing .f-brand p{font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(26px,2.4vw,36px);line-height:1.15;letter-spacing:-.02em;max-width:18ch}
+.brot-landing .f-col{grid-column:span 2}
+.brot-landing .f-col:first-of-type{grid-column:7 / span 2}
+.brot-landing .f-col h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:color-mix(in srgb,var(--cream) 70%,transparent);margin-bottom:14px}
+.brot-landing .f-col ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.brot-landing .f-legal{margin-top:clamp(56px,7vw,96px);padding-top:24px;border-top:1px solid color-mix(in srgb,var(--cream) 22%,transparent);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--cream) 70%,transparent)}
+.brot-landing .mbar{display:none}
+@media (max-width:1100px){.brot-landing .f-brand{grid-column:1 / -1;margin-bottom:24px}
+.brot-landing .f-col,.brot-landing .f-col:first-of-type{grid-column:span 4}}
+@media (max-width:860px){
+.brot-landing .nav .hide-m{display:none}
+.brot-landing .grid>*{grid-column:1 / -1!important}
+.brot-landing .hero{height:auto;min-height:0}
+.brot-landing .hero .media{position:relative;height:62vh;min-height:360px}
+.brot-landing .hero-card{position:relative;left:auto;bottom:auto;width:auto;margin:-64px 16px 0}
+.brot-landing .idea-b{margin-top:clamp(32px,6vw,56px)}
+.brot-landing .idea-b .media{aspect-ratio:4/5}
+.brot-landing .porque-img .media{aspect-ratio:1016/1200}
+.brot-landing .porque-txt{margin-top:32px}
+.brot-landing .pedir-img{margin-top:40px}
+.brot-landing .pedir-img .media{aspect-ratio:4/5}
+.brot-landing .mbar{display:flex;position:fixed;left:16px;right:16px;bottom:16px;z-index:12;gap:12px;transition:transform .45s cubic-bezier(.2,.7,.2,1),opacity .3s}
+.brot-landing .mbar:not(.on){transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}
+html:has(.brot-landing){scrollbar-width:none}
+html:has(.brot-landing)::-webkit-scrollbar{display:none}
+.brot-landing .mbar .btn{flex:1;min-height:56px;font-size:16px;letter-spacing:.01em;text-transform:none;box-shadow:0 4px 14px rgba(14,35,60,.3)}
+.brot-landing .mbar .ig{width:56px;height:56px;background:var(--navy);color:var(--cream);border:none;box-shadow:0 4px 14px rgba(14,35,60,.3)}
+.brot-landing .mbar .ig svg{width:22px;height:22px}
+.brot-landing footer{padding-bottom:104px}
 }
-@media (max-width: 820px) {
-  /* Salvaguarda para .media-bleed (más abajo): "left:50%; margin-left:
-     -50vw" puede generar un scrollbar horizontal de 1px en algunos
-     navegadores si el viewport tiene scrollbar propio. */
-  .brot-landing { overflow-x: hidden; }
-  .brot-landing .grid { grid-template-columns: minmax(0, 1fr); }
-  .brot-landing .hero { height: auto; min-height: 0; overflow: visible; }
-  .brot-landing .hero-bg { position: relative; height: 56vh; min-height: 340px; }
-  /* Pedido explícito: la tarjeta flota (position:absolute, igual
-     técnica que ya usa desktop) al 50% de ancho, abajo a la izquierda
-     — pero NO pegada arriba como tobrod.dk, sino corrida hacia abajo
-     hasta que un 10% de su propia altura quede por debajo del borde
-     inferior de la foto (el resto, 90%, se superpone a la foto). Esto
-     ya es una decisión estética propia, distinta de la referencia.
-     Truco: bottom:0 ancla el borde inferior de la tarjeta al borde
-     inferior de la foto (0% afuera); translateY(10%) desplaza la caja
-     hacia abajo un 10% de SU PROPIA altura (a diferencia de top/bottom
-     en %, que se calculan sobre el contenedor) — así el 10% de abajo
-     queda fuera de la foto sin necesitar una altura fija. */
-  .brot-landing .hero-card { position: absolute; left: clamp(16px, 4vw, 24px); right: auto; top: auto; bottom: 0; transform: translateY(10%); width: 50%; max-width: none; min-height: 0; margin: 0; }
-  .brot-landing .offset .media { width: 100%; margin-right: 0; margin-top: clamp(28px, 6vw, 56px); }
-  .brot-landing .media.tall { margin-top: 0; }
-  /* Pedido explícito: estructura mobile inspirada en tobrod.dk — las
-     fotos de contenido van "a sangre" (full-bleed, de punta a punta de
-     la pantalla), no recuadradas dentro del padding de .wrap como en
-     desktop. Mismas fotos, mismo copy, mismos colores: solo cambia
-     cómo se enmarca cada imagen en mobile. Técnica estándar de
-     breakout (funciona sin importar cuántos contenedores centrados
-     haya por encima). !important es deliberado en las 3 propiedades:
-     .media-bleed es una utility class que tiene que ganarle sí o sí al
-     ancho/margin contextual de cada foto (ej. ".offset .media" define
-     margin-left:auto con más especificidad — sin !important quedaba
-     desplazada fuera de pantalla en vez de a sangre). max-width
-     también !important: .retiro-media (v34) trae max-width:100% para
-     acotarla en desktop, y sin esto el ancho quedaba capado al de su
-     columna (335px) en vez de los 100vw pedidos. */
-  .brot-landing .media-bleed {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    position: relative;
-    left: 50% !important;
-    margin-left: -50vw !important;
-  }
-  /* Bug real (no solo falta de "separación"): .brot-landing .wrap tiene
-     más clases que .brot-landing section, así que SIEMPRE le gana y
-     pisa el padding vertical a 0 — la regla ".brot-landing section"
-     de arriba nunca se aplica en ninguna sección con className="wrap".
-     Las otras 2 secciones no lo sufren porque tienen paddingTop inline
-     (mayor especificidad, gana siempre). En desktop no se nota porque
-     .hero-card es position:absolute (no ocupa espacio en el flujo); en
-     mobile pasa a estar en flujo y la sección "Idea" (sin paddingTop
-     inline) queda pegada contra la tarjeta del hero. Reponemos acá el
-     mismo valor que la regla muerta de arriba pretendía dar — solo
-     paddingTop, así no tocamos el padding horizontal de .wrap ni
-     pisamos el paddingTop inline que ya tienen las otras secciones. */
-  .brot-landing section.wrap { padding-top: clamp(56px, 9vh, 132px); }
-  /* Pedido explícito: en mobile la foto de "¿Por qué BROT 74?" va
-     después del texto de la sección ("Así de simple. Como el pan."),
-     no antes. Con order (no cambia el DOM) para no tocar el desktop,
-     donde esta misma foto sigue siendo la columna izquierda. */
-  .brot-landing .porque-media { order: 2; margin-top: clamp(28px, 6vw, 56px); }
-  /* Pedido explícito: esta foto también va a sangre en mobile (antes
-     iba contenida al 72%, centrada) — el ancho/centrado horizontal
-     ahora lo maneja .media-bleed (agregada en el JSX). transform:none
-     se mantiene: sin el desplazamiento óptico que sí tiene en
-     desktop. */
-  .brot-landing .retiro-media { margin-top: clamp(28px, 7vw, 56px); transform: none; }
-  .brot-landing .pedis-extra { transform: none; }
-  .brot-landing .pedis-media { width: 72%; max-width: none; }
-  /* El rail queda flotante también en mobile (igual que en desktop y que
-     la referencia tobrod.dk), no en flujo normal — probado en producción
-     con un usuario real: al pasar a position:static, el pill+IG solo se
-     veían pegados debajo del hero y desaparecían al seguir bajando, lo
-     cual se percibía como "se pierden" en vez de acompañar el scroll. */
-  .brot-landing .social { position: fixed; left: auto; right: clamp(16px, 4vw, 24px); top: auto; bottom: clamp(16px, 4vw, 24px); transform: none; flex-direction: row-reverse; align-items: center; justify-content: flex-end; gap: 12px; padding: 0; }
-  .brot-landing .social span,
-  .brot-landing .social .pill { box-shadow: 0 4px 14px rgba(14, 35, 60, .3); }
-  /* v46 · mobile: CTA en píldora a todo el ancho (56px) con Instagram de 56px al lado */
-  .brot-landing .social { left: clamp(16px, 4vw, 24px); }
-  .brot-landing .social .pill { flex: 1; min-height: 56px; font-size: 16px; font-weight: 500; letter-spacing: .01em; text-transform: none; }
-  .brot-landing .social span { width: 56px; height: 56px; }
-  .brot-landing .social svg { width: 22px; height: 22px; }
-}
-@media (max-width: 520px) {
-  .brot-landing .hero-title { font-size: clamp(40px, 13vw, 64px); }
-}
+@media (max-width:560px){.brot-landing .f-col,.brot-landing .f-col:first-of-type{grid-column:1 / -1!important}
+.brot-landing .nav .btn{display:none}}

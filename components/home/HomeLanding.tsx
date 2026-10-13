@@ -1,225 +1,232 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 import "./HomeLanding.css";
 
 interface HomeLandingProps {
   onReservar: () => void;
 }
 
-// BRT-136: landing pública nueva (v31) — reemplaza el home entero
-// (view === "home" en app/page.tsx). Conversión a React de
-// _design/design_cambios_v31/pantallas_actualizadas/landing.html,
-// respetando estructura y copy del diseño entregado (ver CAMBIOS.md /
-// manifest.json en esa carpeta). Cambios respecto del HTML estático,
-// todos pedidos explícitamente en el ticket:
-// - El pill "Elegí tu BROT" es un <button onClick={onReservar}> que usa
-//   el router del sitio (buildFlowUrl de BRT-95), no un <a href> a
-//   https://brot74.com/?step=slots hardcodeado.
-// - Los typos heredados del copy original ("trasnferencia" ×2,
-//   "conuna") están corregidos, así como los "¿" faltantes en
-//   "¿Por qué BROT 74?" y "¿Y el 74?".
+const INSTAGRAM_URL = "https://www.instagram.com/brot.74";
+
+// v50: landing v3.3 (nórdico editorial). Conversión a React de
+// _design/design_cambios_v50/pantallas_actualizadas/landing.html (fuente de
+// verdad de estilos y comportamiento; ver manifest.json → manual_steps).
+// Cambios respecto del HTML estático:
+// - Los CTA "Elegí tu BROT" son <button onClick={onReservar}> que usan el
+//   router del sitio (buildFlowUrl de BRT-95), no un <a href> a un anchor.
 // - Las fotos van con next/image en vez de <img> planas.
+// - El script de scroll (menú + barra mobile) pasó a un useEffect.
+function InstagramIcon({ strokeWidth }: { strokeWidth: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+interface MediaProps {
+  src: string;
+  alt: string;
+  sizes: string;
+  priority?: boolean;
+}
+
+function Media({ src, alt, sizes, priority }: MediaProps) {
+  return (
+    <div className="media">
+      <Image src={src} alt={alt} fill sizes={sizes} priority={priority} style={{ objectFit: "cover" }} />
+    </div>
+  );
+}
+
+const STEPS = [
+  { n: "01", t: "Elegí tu BROT", d: "Elegís la fecha y armás tu pedido online, según lo que haya disponible para esa tanda." },
+  { n: "02", t: "Pagá por transferencia", d: "Confirmás con una transferencia. Sin filas, sin efectivo, a tu ritmo." },
+  { n: "03", t: "Retirá en tu horario", d: "Pasás a buscarlo en el lugar y la franja de la fecha. Horneamos por tandas, no hay local abierto." },
+];
+
 export default function HomeLanding({ onReservar }: HomeLandingProps) {
+  const barRef = useRef<HTMLElement>(null);
+  const mbarRef = useRef<HTMLDivElement>(null);
+  const heroBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Menú fijo: transparente sobre el hero → .solid al scrollear (>40px) → .off
+  // al bajar pasados 480px (reaparece al subir). Barra mobile (.mbar): aparece
+  // recién cuando el botón del hero sale de pantalla. Se togglean clases
+  // directo en el DOM (como el script de la referencia) para no re-renderizar
+  // en cada evento de scroll.
+  useEffect(() => {
+    const bar = barRef.current;
+    const mbar = mbarRef.current;
+    const heroBtn = heroBtnRef.current;
+    if (!bar) return;
+
+    let last = window.scrollY;
+    function update() {
+      const y = window.scrollY;
+      if (mbar && heroBtn) mbar.classList.toggle("on", heroBtn.getBoundingClientRect().bottom < 0);
+      bar!.classList.toggle("solid", y > 40);
+      bar!.classList.toggle("off", y > 480 && y > last + 2);
+      if (y < last - 2 || y <= 480) bar!.classList.remove("off");
+      last = y;
+    }
+
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
   return (
     <div className="brot-landing">
-      {/* Hero */}
-      <header className="hero">
-        <div className="hero-bg">
-          <Image
-            src="/assets/landing-hero.webp"
-            alt="Pan de masa madre recién horneado"
-            fill
-            style={{ objectFit: "cover" }}
-            sizes="100vw"
-            priority
-          />
-        </div>
-        <div className="hero-card">
-          <div>
-            <div className="rule"></div>
-            <h1 className="hero-title">
-              BROT
-              <br />
-              <span style={{ color: "#C8851A" }}>74</span>
-            </h1>
-          </div>
-          <div
-            style={{
-              fontSize: "12px",
-              letterSpacing: "1.76px",
-              textTransform: "uppercase",
-              marginBottom: "clamp(20px,6vh,72px)",
-            }}
-          >
-            Panes de fermentación natural, como debe ser
-          </div>
+      {/* Menú fijo */}
+      <header className="bar" ref={barRef}>
+        <div className="wrap">
+          <a className="brand" href="#top">
+            <Image src="/assets/logo-sello-mono-navy-transparente.png" alt="" width={2400} height={2400} />
+            <span>BROT <em>74</em></span>
+          </a>
+          <nav className="nav">
+            <a className="hide-m" href="#pedir">Cómo pedir</a>
+            <a className="ig hide-m" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <InstagramIcon strokeWidth={1.6} />
+            </a>
+            <button type="button" className="btn" onClick={onReservar}>Elegí tu BROT</button>
+          </nav>
         </div>
       </header>
 
-      {/* Rail: position:fixed tanto en desktop como en mobile (queda
-         flotante siempre visible mientras se scrollea, como en la
-         referencia tobrod.dk) — el orden en el DOM no importa porque
-         nunca pasa a position:static. El bloque va igual después del
-         hero en el markup (antes importaba para el fallback en flujo
-         que se probó y se descartó por UX). Ver HomeLanding.css. */}
-      <div className="social">
-        <a
-          href="https://www.instagram.com/brot.74"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Instagram"
-        >
-          <span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="3" width="18" height="18" rx="5"></rect>
-              <circle cx="12" cy="12" r="5"></circle>
-              <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"></circle>
-            </svg>
-          </span>
-        </a>
-        <button type="button" className="pill" onClick={onReservar}>
-          Elegí tu BROT
-        </button>
+      {/* Hero */}
+      <div className="hero" id="top">
+        <div className="media">
+          <Image
+            src="/assets/landing-hero.webp"
+            alt="Pan de masa madre recién horneado, con corte y harina"
+            fill
+            sizes="100vw"
+            priority
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+        <div className="hero-card">
+          <div className="rule"></div>
+          <div className="eyebrow">Micropanadería de masa madre · Mendiolaza</div>
+          <h1>Panes de fermentación natural, <i>como debe ser.</i></h1>
+          <div className="hero-actions">
+            <button type="button" className="btn" onClick={onReservar} ref={heroBtnRef}>Elegí tu BROT</button>
+            <a className="link" href="#pedir">Cómo funciona</a>
+          </div>
+        </div>
       </div>
 
       {/* Idea */}
-      <section className="wrap">
-        <div className="grid">
-          <div>
-            <div className="media tall media-bleed">
-              <Image
+      <section id="idea">
+        <div className="wrap">
+          <div className="grid">
+            <div className="idea-a">
+              <Media
                 src="/assets/landing-idea-1.webp"
-                alt=""
-                fill
-                style={{ objectFit: "cover" }}
-                sizes="(min-width: 820px) 50vw, 100vw"
+                alt="Miga abierta de un pan de masa madre cortado al medio"
+                sizes="(min-width: 861px) 40vw, 100vw"
               />
-            </div>
-            <div className="rule" style={{ margin: "30px 0" }}></div>
-            <h2>Idea</h2>
-            <p>
-              El concepto es básico: pocos panes, elaborados con
-              productos naturales, sin conservantes ni aditivos. Y el
-              tiempo como parte fundamental del proceso.
-            </p>
-            <p>
-              Harinas, agua y sal.
-              <br />
-              <br />
-            </p>
-          </div>
-          <div className="offset">
-            <div className="media media-bleed">
-              <Image
-                src="/assets/landing-idea-2.webp"
-                alt=""
-                fill
-                style={{ objectFit: "cover" }}
-                sizes="(min-width: 820px) 39vw, 100vw"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Por qué BROT 74 */}
-      <section className="wrap" style={{ paddingTop: "clamp(90px,13vh,190px)" }}>
-        <div className="grid">
-          {/* porque-media: en mobile este bloque pasa a estar DESPUÉS del
-             texto ("order" de CSS Grid, ver HomeLanding.css) — pedido
-             explícito del usuario, la imagen va después de "Así de
-             simple. Como el pan." solo en mobile. En desktop no cambia
-             nada, sigue siendo la columna izquierda del grid. El
-             aspect-ratio/width de esta foto (antes inline) se movieron
-             a HomeLanding.css (.porque-media .media) porque un estilo
-             inline tiene más especificidad que cualquier regla de CSS
-             y hubiera bloqueado el override de "media-bleed" en
-             mobile. */}
-          <div className="porque-media">
-            <div className="media media-bleed">
-              <Image
-                src="/assets/landing-porque.webp"
-                alt=""
-                fill
-                style={{ objectFit: "cover" }}
-                sizes="(min-width: 820px) 36vw, 72vw"
-              />
-            </div>
-          </div>
-          <div>
-            <div className="rule block-rule"></div>
-            <h2>
-              ¿Por qué <span style={{ color: "#C8851A" }}>BROT 74?</span>
-            </h2>
-            <dl className="day">
-              <dd>
-                BROT 74 nace de una idea simple: encontrar una palabra
-                que conectara con la cultura del pan y que, al mismo
-                tiempo, tuviera una identidad propia.
-              </dd>
-            </dl>
-            <p>
-              Brot significa pan en alemán. Y si hay un país donde el
-              pan forma parte de la cultura, la tradición y la vida
-              cotidiana, ese es Alemania.
-            </p>
-            <dl className="day">
-              <dt>
-                ¿Y el <span style={{ color: "#C8851A" }}>74?</span>
-              </dt>
-              <dd>
-                Nuestra identidad está en ese número. 74% es la
-                hidratación de nuestra masa madre.
-              </dd>
-            </dl>
-            <p>Así de simple. Como el pan.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Pedís hoy, retirás cuando esté listo */}
-      {/* paddingBottom explícito: es la última sección antes del
-         footer, así que necesita su PROPIO aire abajo (las secciones
-         anteriores no lo necesitan porque la siguiente sección aporta
-         el espacio con su paddingTop). Mismo bug de especificidad de
-         siempre (.wrap le gana a section y pisa el padding vertical a
-         0). v46: los 3 pasos pasaron al panel "¿Cómo funciona?" del flujo
-         de pedido; acá quedan 2 párrafos + foto 1:1 abajo a la izquierda. */}
-      <section className="wrap" style={{ paddingTop: "clamp(56px,8vh,110px)", paddingBottom: "clamp(56px,9vh,132px)" }}>
-        <div className="grid">
-          <div className="pedis-col">
-            <div className="rule block-rule"></div>
-            <h2>
-              Pedís hoy, <span style={{ color: "#C8851A" }}>retirás cuando esté listo</span>
-            </h2>
-            <p>Somos una micropanadería: horneamos pocos panes, por tandas y para fechas fijas.</p>
-            <p>Por eso trabajamos con pedidos anticipados. Así tu BROT, artesanal y natural, lo retirás recién hecho.</p>
-            <div className="pedis-extra">
-              <div className="rule"></div>
-              <div className="pedis-media">
-                <Image
-                  src="/assets/landing-pedis.webp"
-                  alt="Panes recién horneados"
-                  fill
-                  style={{ objectFit: "cover" }}
-                  sizes="(min-width: 820px) 440px, 72vw"
-                />
+              <div className="idea-txt">
+                <div className="eyebrow"><b>01</b>Idea</div>
+                <h2>Pocos panes, mucho tiempo.</h2>
+                <p>
+                  El concepto es básico: pocos panes, elaborados con productos naturales, sin conservantes ni
+                  aditivos. Y el tiempo como parte fundamental del proceso.
+                </p>
               </div>
             </div>
+            <div className="idea-b">
+              <Media
+                src="/assets/landing-idea-2.webp"
+                alt="Baguette de masa madre sobre mesa de madera"
+                sizes="(min-width: 861px) 40vw, 100vw"
+              />
+            </div>
           </div>
-          <div className="retiro-col">
-            {/* media-bleed: pedido explícito, SOLO en mobile esta foto
-               también va a sangre (de punta a punta), igual que las de
-               "Idea" y "¿Por qué BROT 74?". Desktop no se toca — ahí
-               sigue a su tamaño real (481px). Ver HomeLanding.css. */}
-            <div className="media retiro-media media-bleed">
-              <Image
+        </div>
+      </section>
+
+      {/* Frase destacada */}
+      <div className="wrap">
+        <figure className="quote" style={{ margin: 0 }}>
+          <div className="rule"></div>
+          <blockquote>Harinas,<br />agua y sal.</blockquote>
+          <figcaption>Nada más. Nada menos.</figcaption>
+        </figure>
+      </div>
+
+      {/* Por qué BROT 74 */}
+      <section className="porque" id="porque">
+        <div className="wrap">
+          <div className="grid">
+            <div className="porque-img">
+              <Media
+                src="/assets/landing-porque.webp"
+                alt="Porción servida en plato de cerámica"
+                sizes="(min-width: 861px) 40vw, 100vw"
+              />
+            </div>
+            <div className="porque-txt">
+              <div className="eyebrow"><b>02</b>El nombre</div>
+              <h2>¿Por qué BROT 74?</h2>
+              <p>
+                BROT 74 nace de una idea simple: encontrar una palabra que conectara con la cultura del pan y que,
+                al mismo tiempo, tuviera una identidad propia.
+              </p>
+              <p>
+                Brot significa pan en alemán. Y si hay un país donde el pan forma parte de la cultura, la tradición
+                y la vida cotidiana, ese es Alemania.
+              </p>
+              <div className="num">
+                <strong>74<small>%</small></strong>
+                <p>Nuestra identidad está en ese número: es la hidratación de nuestra masa madre.</p>
+              </div>
+              <p style={{ fontSize: "clamp(22px,1.8vw,28px)", fontWeight: 300, letterSpacing: "-.01em" }}>
+                Así de simple. Como el pan.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Cómo pedir */}
+      <section id="pedir">
+        <div className="wrap">
+          <div className="grid">
+            <div className="pedir-txt">
+              <div className="eyebrow"><b>03</b>Cómo pedir</div>
+              <h2>Pedís hoy, retirás cuando esté listo.</h2>
+              <p>
+                Somos una micropanadería: horneamos pocos panes, por tandas y para fechas fijas. Por eso trabajamos
+                con pedidos anticipados. Así tu BROT lo retirás recién hecho.
+              </p>
+              <ol className="steps">
+                {STEPS.map((s) => (
+                  <li key={s.n} className="step">
+                    <span className="step-n">{s.n}</span>
+                    <div>
+                      <h3>{s.t}</h3>
+                      <p>{s.d}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <div className="pedir-img">
+              <Media
                 src="/assets/landing-retiro.png"
                 alt="Bolsa kraft con panes lista para retirar"
-                fill
-                style={{ objectFit: "cover" }}
-                sizes="(min-width: 820px) 481px, 100vw"
+                sizes="(min-width: 861px) 40vw, 100vw"
               />
             </div>
           </div>
@@ -227,31 +234,43 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
       </section>
 
       {/* Footer */}
-      <footer className="wrap" id="contacto">
-        <div className="grid">
-          {/* Pedido explícito: logo más chico y centrado junto con el
-             subtítulo "Micropanadería de Masa Madre" (antes: alineados
-             a la izquierda, logo más grande). textAlign:center en el
-             contenedor centra el <p> de texto; el logo (display:block)
-             necesita además su propio margin:auto para centrarse. */}
-          <div style={{ gridColumn: "1 / -1", textAlign: "center" }}>
-            <div className="foot-brand" style={{ marginBottom: 0 }}>
-              <Image
-                src="/assets/logo-sello-mono-navy-transparente.png"
-                alt="BROT 74"
-                width={2400}
-                height={2400}
-                style={{ width: "clamp(80px,9vw,120px)", height: "auto", display: "block", margin: "0 auto" }}
-              />
+      <footer id="contacto">
+        <div className="wrap">
+          <div className="grid">
+            <div className="f-brand">
+              <Image src="/assets/ramillete-mono-cream.png" alt="BROT 74" width={832} height={1295} />
+              <p>Micropanadería de masa madre.</p>
             </div>
-            <div className="foot-note" style={{ marginTop: "18px" }}>
-              Micropanadería de Masa Madre
+            <div className="f-col">
+              <h3>Entregas</h3>
+              <ul><li>Miércoles, 18:00</li><li>Sábados, 18:00</li></ul>
             </div>
-            <div className="foot-place">Mendiolaza, Córdoba</div>
+            <div className="f-col">
+              <h3>Retiro</h3>
+              <ul><li>Mendiolaza</li><li>Córdoba</li></ul>
+            </div>
+            <div className="f-col">
+              <h3>Seguinos</h3>
+              <ul>
+                <li><a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a></li>
+                <li><a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">@brot.74</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="f-legal">
+            <span>© 2026 BROT 74</span>
+            <span>Harinas, agua y sal</span>
           </div>
         </div>
-        <div className="legal"></div>
       </footer>
+
+      {/* Barra mobile (≤860px): aparece cuando el botón del hero sale de pantalla */}
+      <div className="mbar" ref={mbarRef}>
+        <a className="ig" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <InstagramIcon strokeWidth={1.8} />
+        </a>
+        <button type="button" className="btn" onClick={onReservar}>Elegí tu BROT</button>
+      </div>
     </div>
   );
 }
