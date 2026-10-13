@@ -282,7 +282,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
     showToast("CVU copiado");
   }
 
-  // "Ya transferí": el pedido ya existe (se creó con "Pagar"), acá solo se
+  // "¡Listo!": el pedido ya existe (se creó con "Pagar"), acá solo se
   // pasa a la confirmación.
   function handleYaPague() {
     if (orderId == null || successScheduledRef.current) return;
@@ -386,11 +386,11 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
                 </div>
               )}
               <p className="text-[15px] text-stone m-0 italic" style={{ marginTop: "14px" }}>
-                Transferí desde tu banco o billetera y avisanos con el botón de abajo.
+                Transferí desde tu banco o billetera y, cuando termines, tocá el botón de abajo.
               </p>
             </div>
 
-            {/* Ya transferí: lleva directo a la confirmación (el pedido ya existe). */}
+            {/* ¡Listo!: lleva directo a la confirmación (el pedido ya existe). */}
             <div className="brot-cf-cta" style={{ marginTop: "auto", paddingTop: "22px" }}>
               <button
                 type="button"
@@ -398,7 +398,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
                 disabled={loading}
                 className="brot-pill"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya transferí"}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "¡Listo!"}
               </button>
 
               {error && (
