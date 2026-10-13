@@ -1,7 +1,7 @@
 /**
  * Rate limiter en memoria, best-effort. Pensado para endpoints de bajo
- * tráfico (ej. login del admin) donde alcanza con un freno básico contra
- * fuerza bruta.
+ * tráfico (login del admin, creación de pedidos, lista de espera) donde
+ * alcanza con un freno básico contra fuerza bruta y abuso.
  *
  * Limitación conocida: el estado vive en memoria del proceso, así que no es
  * consistente entre instancias serverless concurrentes ni sobrevive a un
@@ -9,6 +9,8 @@
  * compartido (Redis, Vercel KV, etc.) — no vale la pena la complejidad para
  * el volumen de tráfico actual de este proyecto.
  */
+
+import { NextResponse } from "next/server";
 
 type Bucket = {
   count: number;
@@ -70,4 +72,28 @@ export function checkRateLimit(
 
 export function resetRateLimit(key: string): void {
   buckets.delete(key);
+}
+
+// Para los tests: el estado vive en memoria del proceso, así que sin esto un
+// test heredaría el contador del anterior.
+export function resetAllRateLimits(): void {
+  buckets.clear();
+  callsSinceSweep = 0;
+}
+
+// IP del cliente según los headers del proxy (en Vercel, x-forwarded-for lo
+// pone la plataforma).
+export function getClientIp(req: Request): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0].trim();
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
+
+// Respuesta 429 estándar con Retry-After.
+export function tooManyRequestsResponse(resetAt: number, message: string): NextResponse {
+  const retryAfterSeconds = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
+  return NextResponse.json(
+    { error: message },
+    { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+  );
 }
