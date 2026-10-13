@@ -28,6 +28,28 @@ function baseOrder(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Arma producto + fecha + stock y hace un pedido de un solo pan: la mayoría de
+// los casos solo cambian la fecha, el stock, la cantidad o algún campo extra.
+async function placeSingleOrder({
+  slot: slotOverrides = {},
+  totalStock = 5,
+  quantity = 1,
+  extra = {},
+}: {
+  slot?: Parameters<typeof createDeliverySlot>[0];
+  totalStock?: number;
+  quantity?: number;
+  extra?: Record<string, unknown>;
+} = {}) {
+  const product = await createProduct();
+  const slot = await createDeliverySlot(slotOverrides);
+  await createProductStock(product.id, slot.id, { totalStock });
+  const res = await POST(
+    makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity }], ...extra }))
+  );
+  return { res, product, slot };
+}
+
 describe("POST /api/orders", () => {
   beforeEach(() => {
     vi.mocked(sendWhatsAppNotification).mockReset();
@@ -54,119 +76,59 @@ describe("POST /api/orders", () => {
   });
 
   it("devuelve 400 si el slot está inactivo", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot({ active: false });
-    await createProductStock(product.id, slot.id);
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
-    );
+    const { res } = await placeSingleOrder({ slot: { active: false } });
 
     expect(res.status).toBe(400);
   });
 
   it("devuelve 400 si ya pasó el horario límite calculado por defecto más la tolerancia (BRT-114)", async () => {
-    const product = await createProduct();
     // Entrega hace 5 horas => el cutoff por defecto (20hs antes de la fecha)
     // pasó hace 25hs, más allá de las 24hs de tolerancia.
-    const slot = await createDeliverySlot({ date: new Date(Date.now() - 5 * 60 * 60 * 1000) });
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
-    );
+    const { res } = await placeSingleOrder({ slot: { date: new Date(Date.now() - 5 * 60 * 60 * 1000) } });
 
     expect(res.status).toBe(400);
   });
 
   it("devuelve 400 si ya pasó un orderCutoff explícito más la tolerancia, aunque la fecha de entrega sea futura (BRT-114)", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot({ orderCutoff: new Date(Date.now() - 25 * 60 * 60 * 1000) });
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
-    );
+    const { res } = await placeSingleOrder({ slot: { orderCutoff: new Date(Date.now() - 25 * 60 * 60 * 1000) } });
 
     expect(res.status).toBe(400);
   });
 
   it("acepta un pedido después del cierre pero dentro de la tolerancia (quien ya estaba en el flujo)", async () => {
-    const product = await createProduct();
     // Cerró hace 1 hora; todavía faltan 23 de las 24 de tolerancia.
-    const slot = await createDeliverySlot({ orderCutoff: new Date(Date.now() - 60 * 60 * 1000) });
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
-    );
+    const { res } = await placeSingleOrder({ slot: { orderCutoff: new Date(Date.now() - 60 * 60 * 1000) } });
 
     expect(res.status).toBe(200);
   });
 
   it("ignora un sessionToken enviado por clientes viejos: ya no existen reservas por tiempo", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-
-    const res = await POST(
-      makeRequest(
-        baseOrder({
-          deliverySlotId: slot.id,
-          items: [{ productId: product.id, quantity: 1 }],
-          sessionToken: crypto.randomUUID(),
-        })
-      )
-    );
+    const { res } = await placeSingleOrder({ extra: { sessionToken: crypto.randomUUID() } });
 
     expect(res.status).toBe(200);
   });
 
   it("crea el pedido normalmente si todavía no pasó el cutoff (BRT-114)", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
-    );
+    const { res } = await placeSingleOrder();
 
     expect(res.status).toBe(200);
   });
 
   it("devuelve 400 si el stock es insuficiente", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 1 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 3 }] }))
-    );
+    const { res } = await placeSingleOrder({ totalStock: 1, quantity: 3 });
 
     expect(res.status).toBe(400);
   });
 
   it("acepta exactamente 3 unidades del mismo pan en un pedido", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 100 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 3 }] }))
-    );
+    const { res, product, slot } = await placeSingleOrder({ totalStock: 100, quantity: 3 });
 
     expect(res.status).toBe(200);
     expect((await getStock(product.id, slot.id))?.reservedStock).toBe(3);
   });
 
   it("devuelve 400 si se piden más de 3 unidades del mismo pan, aunque haya stock", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 100 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 4 }] }))
-    );
+    const { res, product, slot } = await placeSingleOrder({ totalStock: 100, quantity: 4 });
     const json = await res.json();
 
     expect(res.status).toBe(400);
@@ -221,13 +183,7 @@ describe("POST /api/orders", () => {
   it("crea el pedido igual si falla la notificación de WhatsApp", async () => {
     vi.mocked(sendWhatsAppNotification).mockRejectedValueOnce(new Error("network down"));
 
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
-    );
+    const { res } = await placeSingleOrder();
 
     expect(res.status).toBe(200);
   });
@@ -347,13 +303,7 @@ describe("POST /api/orders", () => {
   });
 
   it("crea el pedido normalmente cuando sí existe ProductStock (BRT-113)", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-
-    const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
-    );
+    const { res } = await placeSingleOrder();
 
     expect(res.status).toBe(200);
   });
