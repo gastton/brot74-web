@@ -9,7 +9,7 @@ vi.mock("@/lib/whatsapp", () => ({
 import { POST } from "@/app/api/orders/route";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { prisma } from "@/lib/db";
-import { createProduct, createDeliverySlot, createProductStock, createCartReservation, getStock } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock, getStock } from "../helpers/factories";
 
 function makeRequest(body: unknown) {
   return new NextRequest("http://localhost/api/orders", {
@@ -33,15 +33,13 @@ describe("POST /api/orders", () => {
     vi.mocked(sendWhatsAppNotification).mockReset();
   });
 
-  it("crea el pedido, reserva stock y libera la reserva de carrito", async () => {
+  it("crea el pedido y descuenta el stock", async () => {
     const product = await createProduct({ price: 1500 });
     const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 5, reservedStock: 0 });
-    const sessionToken = crypto.randomUUID();
-    await createCartReservation(product.id, slot.id, { sessionToken, quantity: 2 });
 
     const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 2 }], sessionToken }))
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 2 }] }))
     );
     const json = await res.json();
 
@@ -50,9 +48,6 @@ describe("POST /api/orders", () => {
 
     const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(2);
-
-    const cartReservations = await prisma.cartReservation.findMany({ where: { sessionToken } });
-    expect(cartReservations).toHaveLength(0);
 
     const order = await prisma.order.findUnique({ where: { id: json.orderId }, include: { items: true } });
     expect(order?.items).toHaveLength(1);
@@ -70,11 +65,11 @@ describe("POST /api/orders", () => {
     expect(res.status).toBe(400);
   });
 
-  it("devuelve 400 si ya pasó el horario límite calculado por defecto (BRT-114)", async () => {
+  it("devuelve 400 si ya pasó el horario límite calculado por defecto más la tolerancia (BRT-114)", async () => {
     const product = await createProduct();
-    // Entrega en 1 hora => el cutoff por defecto (20hs antes de la fecha)
-    // ya pasó hace 19hs.
-    const slot = await createDeliverySlot({ date: new Date(Date.now() + 60 * 60 * 1000) });
+    // Entrega hace 5 horas => el cutoff por defecto (20hs antes de la fecha)
+    // pasó hace 25hs, más allá de las 24hs de tolerancia.
+    const slot = await createDeliverySlot({ date: new Date(Date.now() - 5 * 60 * 60 * 1000) });
     await createProductStock(product.id, slot.id, { totalStock: 5 });
 
     const res = await POST(
@@ -84,9 +79,9 @@ describe("POST /api/orders", () => {
     expect(res.status).toBe(400);
   });
 
-  it("devuelve 400 si ya pasó un orderCutoff explícito, aunque la fecha de entrega sea futura (BRT-114)", async () => {
+  it("devuelve 400 si ya pasó un orderCutoff explícito más la tolerancia, aunque la fecha de entrega sea futura (BRT-114)", async () => {
     const product = await createProduct();
-    const slot = await createDeliverySlot({ orderCutoff: new Date(Date.now() - 60_000) });
+    const slot = await createDeliverySlot({ orderCutoff: new Date(Date.now() - 25 * 60 * 60 * 1000) });
     await createProductStock(product.id, slot.id, { totalStock: 5 });
 
     const res = await POST(
@@ -94,6 +89,37 @@ describe("POST /api/orders", () => {
     );
 
     expect(res.status).toBe(400);
+  });
+
+  it("acepta un pedido después del cierre pero dentro de la tolerancia (quien ya estaba en el flujo)", async () => {
+    const product = await createProduct();
+    // Cerró hace 1 hora; todavía faltan 23 de las 24 de tolerancia.
+    const slot = await createDeliverySlot({ orderCutoff: new Date(Date.now() - 60 * 60 * 1000) });
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }))
+    );
+
+    expect(res.status).toBe(200);
+  });
+
+  it("ignora un sessionToken enviado por clientes viejos: ya no existen reservas por tiempo", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 5 });
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({
+          deliverySlotId: slot.id,
+          items: [{ productId: product.id, quantity: 1 }],
+          sessionToken: crypto.randomUUID(),
+        })
+      )
+    );
+
+    expect(res.status).toBe(200);
   });
 
   it("crea el pedido normalmente si todavía no pasó el cutoff (BRT-114)", async () => {
@@ -118,22 +144,6 @@ describe("POST /api/orders", () => {
     );
 
     expect(res.status).toBe(400);
-  });
-
-  it("devuelve 409 si el sessionToken expiró o no cubre la cantidad pedida", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
-    const sessionToken = crypto.randomUUID();
-    await createCartReservation(product.id, slot.id, { sessionToken, expiresAt: new Date(Date.now() - 1000) });
-
-    const res = await POST(
-      makeRequest(
-        baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }], sessionToken })
-      )
-    );
-
-    expect(res.status).toBe(409);
   });
 
   it("crea el pedido igual si falla la notificación de WhatsApp", async () => {
@@ -276,69 +286,17 @@ describe("POST /api/orders", () => {
     expect(res.status).toBe(200);
   });
 
-  it("solo consume la reserva de carrito de la fecha del pedido, no las de otras fechas (BRT-110)", async () => {
+  it("pedidos de usuarios distintos no se bloquean entre sí: sin reservas, el stock solo baja con pedidos confirmados", async () => {
     const product = await createProduct();
-    const slotA = await createDeliverySlot();
-    const slotB = await createDeliverySlot();
-    await createProductStock(product.id, slotA.id, { totalStock: 5 });
-    await createProductStock(product.id, slotB.id, { totalStock: 5 });
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 100, reservedStock: 0 });
 
-    const sessionToken = crypto.randomUUID();
-    await createCartReservation(product.id, slotA.id, { sessionToken, quantity: 1 });
-    // Reserva activa para slotB, con el mismo productId — no debería
-    // confundirse con la de slotA ni borrarse al confirmar el pedido de A.
-    await createCartReservation(product.id, slotB.id, { sessionToken, quantity: 2 });
+    const body = baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 3 }] });
+    const first = await POST(makeRequest(body));
+    const second = await POST(makeRequest(body));
 
-    const res = await POST(
-      makeRequest(
-        baseOrder({
-          deliverySlotId: slotA.id,
-          items: [{ productId: product.id, quantity: 1 }],
-          sessionToken,
-        })
-      )
-    );
-
-    expect(res.status).toBe(200);
-
-    const reservationsA = await prisma.cartReservation.findMany({
-      where: { sessionToken, deliverySlotId: slotA.id },
-    });
-    expect(reservationsA).toHaveLength(0);
-
-    const reservationsB = await prisma.cartReservation.findMany({
-      where: { sessionToken, deliverySlotId: slotB.id },
-    });
-    expect(reservationsB).toHaveLength(1);
-    expect(reservationsB[0].quantity).toBe(2);
-  });
-
-  it("devuelve 409 si el sessionToken no tiene reserva para la fecha del pedido (BRT-110)", async () => {
-    const product = await createProduct();
-    const slotA = await createDeliverySlot();
-    const slotB = await createDeliverySlot();
-    await createProductStock(product.id, slotA.id, { totalStock: 5 });
-    await createProductStock(product.id, slotB.id, { totalStock: 5 });
-
-    const sessionToken = crypto.randomUUID();
-    // Reserva únicamente para slotB — el pedido es para slotA.
-    await createCartReservation(product.id, slotB.id, { sessionToken, quantity: 1 });
-
-    const res = await POST(
-      makeRequest(
-        baseOrder({
-          deliverySlotId: slotA.id,
-          items: [{ productId: product.id, quantity: 1 }],
-          sessionToken,
-        })
-      )
-    );
-
-    expect(res.status).toBe(409);
-
-    const reservationsB = await prisma.cartReservation.findMany({
-      where: { sessionToken, deliverySlotId: slotB.id },
-    });
-    expect(reservationsB).toHaveLength(1);
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect((await getStock(product.id, slot.id))?.reservedStock).toBe(6);
   });
 });

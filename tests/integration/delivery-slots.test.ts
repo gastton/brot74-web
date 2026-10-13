@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { GET } from "@/app/api/delivery-slots/route";
-import { createProduct, createDeliverySlot, createProductStock, createCartReservation } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock } from "../helpers/factories";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -52,11 +52,10 @@ describe("GET /api/delivery-slots", () => {
     expect(json.map((s: { id: number }) => s.id)).not.toContain(slot.id);
   });
 
-  it("descuenta reservas de carrito activas al calcular disponibilidad", async () => {
+  it("no devuelve un slot cuando todo su stock ya fue pedido", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot({ date: new Date(Date.now() + 30 * HOUR) });
-    await createProductStock(product.id, slot.id, { totalStock: 2 });
-    await createCartReservation(product.id, slot.id, { quantity: 2 });
+    await createProductStock(product.id, slot.id, { totalStock: 2, reservedStock: 2 });
 
     const res = await GET();
     const json = await res.json();
@@ -64,11 +63,10 @@ describe("GET /api/delivery-slots", () => {
     expect(json.map((s: { id: number }) => s.id)).not.toContain(slot.id);
   });
 
-  it("ignora reservas de carrito expiradas al calcular disponibilidad", async () => {
+  it("devuelve un slot al que todavía le queda stock después de pedidos parciales", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot({ date: new Date(Date.now() + 30 * HOUR) });
-    await createProductStock(product.id, slot.id, { totalStock: 2 });
-    await createCartReservation(product.id, slot.id, { quantity: 2, expiresAt: new Date(Date.now() - 1000) });
+    await createProductStock(product.id, slot.id, { totalStock: 100, reservedStock: 99 });
 
     const res = await GET();
     const json = await res.json();

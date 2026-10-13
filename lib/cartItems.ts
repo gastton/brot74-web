@@ -1,6 +1,6 @@
 /**
  * Valida y normaliza los `items` que llegan del cliente en
- * /api/cart/reserve y /api/orders (BRT-108).
+ * /api/orders (BRT-108).
  *
  * - Rechaza cualquier `productId`/`quantity` que no sea un entero positivo.
  * - Consolida líneas repetidas del mismo `productId`, sumando cantidades,

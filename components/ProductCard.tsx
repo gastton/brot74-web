@@ -77,16 +77,6 @@ export default function ProductCard({
         ) : (
           <div className="absolute inset-0 bg-[#ddd6c8]" />
         )}
-
-        {/* Escasez: rótulo recto, centrado en el borde inferior de la foto */}
-        {slotSelected && remaining !== null && remaining <= 2 && remaining > 0 && (
-          <span
-            className="brot-tag absolute left-1/2 bottom-0 -translate-x-1/2 whitespace-nowrap"
-            style={{ background: "#C8851A", color: "#0E233C", padding: "5px 8px 4px" }}
-          >
-            Últimos {remaining}
-          </span>
-        )}
       </div>
 
       {/* Texto */}

@@ -1,6 +1,6 @@
 # BROT74
 
-Sitio de e-commerce para [BROT74](https://brot74.com), panadería artesanal: catálogo por fecha de entrega, carrito con reserva de stock, checkout por transferencia bancaria, lista de espera cuando no hay entregas disponibles, y un panel de administración para gestionar productos, stock, pedidos y entregas.
+Sitio de e-commerce para [BROT74](https://brot74.com), panadería artesanal: catálogo por fecha de entrega, carrito, checkout por transferencia bancaria, lista de espera cuando no hay entregas disponibles, y un panel de administración para gestionar productos, stock, pedidos y entregas.
 
 ## Stack
 
@@ -11,13 +11,13 @@ Sitio de e-commerce para [BROT74](https://brot74.com), panadería artesanal: cat
 - Autenticación de admin con JWT ([`jose`](https://github.com/panva/jose)) en cookie `httpOnly`
 - **[Vitest](https://vitest.dev)** para tests de integración (API routes contra una base Postgres real)
 - **[Playwright](https://playwright.dev)** para tests E2E (flujo real en el navegador)
-- Deploy en **Vercel**, con un cron job (`/api/cron/cleanup`) para liberar reservas de carrito vencidas
+- Deploy en **Vercel**
 
 ## Funcionalidad
 
 - Catálogo de productos agrupado por fecha de entrega (delivery slots), con stock por fecha
 - Flujo de compra con navegación por URL (`useSearchParams`) para que "atrás" del navegador funcione en todo el checkout
-- Reserva temporal de stock al agregar al carrito, liberada automáticamente si no se completa la compra
+- Sin reserva de stock por tiempo: el pedido descuenta stock al confirmar "Ya transferí" y se cierra en la fecha de la tanda (con una tolerancia de 24 h para quien ya estaba en el flujo)
 - Checkout por transferencia bancaria (sin pasarela de pago)
 - Lista de espera (`/waitlist`) cuando no hay una fecha de entrega activa, con aviso manual por WhatsApp desde el admin
 - Panel `/admin`: productos, stock por fecha, pedidos, fechas de entrega y waitlist
@@ -63,7 +63,6 @@ El build de producción corre `prisma migrate deploy` (ver [Scripts](#scripts)),
 | `ADMIN_PASSWORD` | Contraseña del panel `/admin` |
 | `JWT_SECRET` | Secreto para firmar la cookie de sesión del admin |
 | `BLOB_READ_WRITE_TOKEN` | Token de Vercel Blob para subir imágenes de producto |
-| `CRON_SECRET` | Protege el endpoint `/api/cron/cleanup` |
 | `WHATSAPP_PHONE` / `WHATSAPP_APIKEY` | Envío de mensajes de WhatsApp (waitlist) |
 | `NEXT_PUBLIC_ALIAS` / `NEXT_PUBLIC_CVU` / `NEXT_PUBLIC_CUIT` / `NEXT_PUBLIC_TITULAR` | Datos de la cuenta bancaria mostrados en el checkout por transferencia |
 | `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp mostrado en el sitio |
@@ -97,7 +96,7 @@ npx playwright install --with-deps   # una sola vez
 npm run test:e2e
 ```
 
-Los specs viven en `e2e/`. Todavía son solo el setup base (BRT-122) — los escenarios de negocio (checkout, reserva de stock, botón atrás, sesión de admin) se van sumando en tickets aparte.
+Los specs viven en `e2e/`. Todavía son solo el setup base (BRT-122) — los escenarios de negocio (checkout, botón atrás, sesión de admin) se van sumando en tickets aparte.
 
 ## Scripts
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Loader2, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import QtyCapsule from "./QtyCapsule";
@@ -24,7 +24,6 @@ interface OrderModalProps {
   // useState interno — así "atrás" desde el paso de pago vuelve al form
   // en vez de cerrar todo el checkout.
   step: "form" | "payment";
-  sessionToken: string;
   onRemoveItem: (productId: number) => void;
   onChangeQuantity: (productId: number, newQuantity: number) => void;
   onAdvanceToPayment: () => void;
@@ -174,7 +173,7 @@ function saveContact(name: string, phone: string) {
   }
 }
 
-export default function OrderModal({ items, slotId, slotLabel, step, sessionToken, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotLabel, step, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState(() => loadSavedContact().name);
   const [phone, setPhone]     = useState(() => loadSavedContact().phone);
   const [loading, setLoading] = useState(false);
@@ -185,9 +184,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   const [cvuCopied, setCvuCopied] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastText, setToastText] = useState("Alias copiado");
-  // La reserva (15 min) se hizo con estas cantidades: el "+" no puede pasarlas
-  // sin volver a reservar, o /api/orders devolvería "Tu reserva expiró".
-  const [reservedQty] = useState<Record<number, number>>(() => Object.fromEntries(items.map((i) => [i.id, i.quantity])));
 
   const orderDoneRef = useRef(false);
   const successScheduledRef = useRef(false);
@@ -199,18 +195,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
   const CUIT    = process.env.NEXT_PUBLIC_CUIT    ?? "";
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-
-  // Release reservation if user closes the tab/navigates away mid-checkout
-  useEffect(() => {
-    function handleBeforeUnload() {
-      if (!orderDoneRef.current && sessionToken) {
-        const blob = new Blob([JSON.stringify({ sessionToken })], { type: "application/json" });
-        navigator.sendBeacon("/api/cart/release", blob);
-      }
-    }
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [sessionToken]);
 
   // "Pagar": solo valida y pasa a la pantalla de transferencia — el pedido
   // todavía no existe en la DB, se crea recién cuando el usuario confirma
@@ -241,7 +225,6 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
           customerName: name.trim(),
           customerPhone: digits,
           deliverySlotId: slotId,
-          sessionToken,
           items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
       });
@@ -486,7 +469,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, sessionToke
                         minusIsTrash={item.quantity === 1}
                         onMinus={() => (item.quantity === 1 ? onRemoveItem(item.id) : onChangeQuantity(item.id, item.quantity - 1))}
                         onPlus={() => onChangeQuantity(item.id, item.quantity + 1)}
-                        plusDisabled={item.quantity >= (reservedQty[item.id] ?? item.quantity) || (item.stock !== null && item.quantity >= item.stock)}
+                        plusDisabled={item.stock !== null && item.quantity >= item.stock}
                       />
                       <span className="text-[16px] text-navy whitespace-nowrap text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
                         {formatCurrency(item.price * item.quantity)}

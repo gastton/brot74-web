@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "@/app/api/products/route";
-import { createProduct, createDeliverySlot, createProductStock, createCartReservation } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock } from "../helpers/factories";
 
 function getRequest(query = "") {
   return new NextRequest(`http://localhost/api/products${query}`);
@@ -29,29 +29,15 @@ describe("GET /api/products", () => {
     expect(json[0].hasStock).toBe(true);
   });
 
-  it("con slotId, calcula el stock disponible descontando reservas de carrito activas", async () => {
+  it("con slotId, el stock disponible es el total menos lo ya pedido", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot();
     await createProductStock(product.id, slot.id, { totalStock: 10, reservedStock: 2 });
-    await createCartReservation(product.id, slot.id, { quantity: 3 });
 
     const res = await GET(getRequest(`?slotId=${slot.id}`));
     const json = await res.json();
 
-    expect(json[0].stock).toBe(5);
-    expect(json[0].hasStock).toBe(true);
-  });
-
-  it("con slotId, ignora reservas de carrito expiradas", async () => {
-    const product = await createProduct();
-    const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 5, reservedStock: 0 });
-    await createCartReservation(product.id, slot.id, { quantity: 5, expiresAt: new Date(Date.now() - 1000) });
-
-    const res = await GET(getRequest(`?slotId=${slot.id}`));
-    const json = await res.json();
-
-    expect(json[0].stock).toBe(5);
+    expect(json[0].stock).toBe(8);
     expect(json[0].hasStock).toBe(true);
   });
 

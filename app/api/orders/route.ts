@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 import { normalizeCartItems } from "@/lib/cartItems";
-import { isCutoffPassed } from "@/lib/deliverySlots";
+import { isOrderingClosed } from "@/lib/deliverySlots";
 
 class InsufficientStockError extends Error {
   constructor(public productId: number, public productName: string) {
@@ -13,7 +13,7 @@ class InsufficientStockError extends Error {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { customerName, customerPhone, deliverySlotId, items: rawItems, notes, sessionToken } = body;
+    const { customerName, customerPhone, deliverySlotId, items: rawItems, notes } = body;
 
     if (!customerName || !customerPhone || !deliverySlotId) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -31,36 +31,15 @@ export async function POST(req: NextRequest) {
 
     const now = new Date();
 
-    // BRT-114: el cierre de pedidos por horario era solo cosmético en el
-    // front (/api/delivery-slots ocultaba la fecha vencida del listado,
-    // pero nada impedía confirmar el pedido igual pegándole directo al
-    // endpoint). Misma regla que usa /api/delivery-slots.
-    if (isCutoffPassed(slot, now)) {
+    // BRT-114: el cierre de pedidos por horario se valida server-side, no
+    // solo en el front. Sin reserva de stock por tiempo, quien ya estaba en
+    // el flujo cuando cerró la fecha puede confirmar hasta el fin de la
+    // tolerancia (ver lib/deliverySlots.ts); después, 400.
+    if (isOrderingClosed(slot, now)) {
       return NextResponse.json(
         { error: "El horario límite para pedir en esta fecha ya pasó" },
         { status: 400 }
       );
-    }
-
-    // Validate cart reservation if sessionToken provided
-    let reservationValid = false;
-    if (sessionToken) {
-      // BRT-110: filtrar también por deliverySlotId — si no, una reserva de
-      // carrito activa para otra fecha de entrega se confunde con la de
-      // este pedido (y más abajo se borraría por error).
-      const reservations = await prisma.cartReservation.findMany({
-        where: { sessionToken, deliverySlotId, expiresAt: { gt: now } },
-      });
-      if (reservations.length > 0) {
-        const resMap = new Map(reservations.map((r) => [r.productId, r.quantity]));
-        reservationValid = items.every(
-          (item) => (resMap.get(item.productId) ?? 0) >= item.quantity
-        );
-      }
-    }
-
-    if (sessionToken && !reservationValid) {
-      return NextResponse.json({ error: "Tu reserva expiró. Volvé a intentar." }, { status: 409 });
     }
 
     // Verify stock and calculate total
@@ -87,18 +66,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      let available: number;
-      if (reservationValid) {
-        // The reservation already holds this stock — only count confirmed orders
-        available = stock.totalStock - stock.reservedStock;
-      } else {
-        // No reservation: deduct active cart reservations too
-        const agg = await prisma.cartReservation.aggregate({
-          where: { productId: item.productId, deliverySlotId, expiresAt: { gt: now } },
-          _sum: { quantity: true },
-        });
-        available = stock.totalStock - stock.reservedStock - (agg._sum.quantity ?? 0);
-      }
+      const available = stock.totalStock - stock.reservedStock;
 
       if (available < item.quantity) {
         return NextResponse.json({ error: `Stock insuficiente para ${product.name}` }, { status: 400 });
@@ -109,17 +77,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Re-chequeo del cutoff justo antes de crear el pedido: entre el chequeo
-    // de arriba y acá pasaron varias consultas async (productos, stock,
-    // reserva) — una ventana chica pero real en la que el cutoff podría
-    // haber pasado mientras se procesaba el request.
-    if (isCutoffPassed(slot, new Date())) {
+    // de arriba y acá pasaron varias consultas async (productos, stock) —
+    // una ventana chica pero real en la que el cutoff podría haber pasado
+    // mientras se procesaba el request.
+    if (isOrderingClosed(slot, new Date())) {
       return NextResponse.json(
         { error: "El horario límite para pedir en esta fecha ya pasó" },
         { status: 400 }
       );
     }
 
-    // Create order, reserve stock, and release cart reservation — all in one transaction
+    // Create order and reserve stock — all in one transaction
     let order;
     try {
       order = await prisma.$transaction(async (tx) => {
@@ -165,12 +133,6 @@ export async function POST(req: NextRequest) {
           if (affected === 0) {
             throw new InsufficientStockError(item.productId, item.name);
           }
-        }
-
-        if (sessionToken) {
-          // BRT-110: solo la reserva de esta fecha, no todas las del
-          // sessionToken — una reserva activa de otra fecha no se toca.
-          await tx.cartReservation.deleteMany({ where: { sessionToken, deliverySlotId } });
         }
 
         return newOrder;
