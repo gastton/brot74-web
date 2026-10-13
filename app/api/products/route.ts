@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Sin reservas de carrito por tiempo: lo disponible es el stock de la
-    // tanda menos lo ya pedido (pedidos creados con "Ya transferí").
+    // tanda menos lo ya pedido (pedidos creados al tocar "Pagar").
     return NextResponse.json(
       products.map((p) => {
         const s = p.stocks[0] ?? null;

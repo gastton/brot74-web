@@ -180,13 +180,13 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [orderSignature, setOrderSignature] = useState("");
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
   const [cvuCopied, setCvuCopied] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastText, setToastText] = useState("Alias copiado");
 
-  const orderDoneRef = useRef(false);
   const successScheduledRef = useRef(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -197,54 +197,59 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-  // "Pagar": solo valida y pasa a la pantalla de transferencia — el pedido
-  // todavía no existe en la DB, se crea recién cuando el usuario confirma
-  // que ya pagó (ver handleYaPague).
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
-    onAdvanceToPayment();
+  // Lo que identifica al pedido ya creado: si el usuario vuelve atrás desde la
+  // pantalla de pago y no cambia nada, "Pagar" reutiliza el mismo pedido en
+  // vez de crear otro.
+  function currentSignature() {
+    const lines = items.map((i) => `${i.id}x${i.quantity}`).join(",");
+    return `${slotId}|${name.trim()}|${phone.replace(/\D/g, "")}|${lines}`;
   }
 
-  // Crea el pedido recién cuando el usuario confirma que ya pagó.
-  // Si ya se creó (o se está creando) por un click anterior, no repite el POST.
+  // Crea el pedido (pending) al tocar "Pagar", antes de mostrar los datos
+  // bancarios: toda transferencia que llegue tiene un pedido para conciliar,
+  // y si la fecha ya cerró se rechaza acá, antes de que la persona transfiera.
   async function createOrder(): Promise<number | null> {
-    if (orderId) return orderId;
-    if (orderDoneRef.current) return null; // ya hay un POST en curso
-    orderDoneRef.current = true;
+    const signature = currentSignature();
+    if (orderId != null && orderSignature === signature) return orderId;
     setLoading(true);
-    setError("");
     try {
-      const digits = phone.replace(/\D/g, "");
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerName: name.trim(),
-          customerPhone: digits,
+          customerPhone: phone.replace(/\D/g, ""),
           deliverySlotId: slotId,
           items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        orderDoneRef.current = false;
         setError(data.error ?? "Error al procesar el pedido");
         return null;
       }
       setOrderId(data.orderId);
+      setOrderSignature(signature);
       saveContact(name.trim(), phone.trim());
       return data.orderId;
     } catch {
-      orderDoneRef.current = false;
       setError("Error de conexión. Intentá de nuevo.");
       return null;
     } finally {
       setLoading(false);
     }
+  }
+
+  // "Pagar": valida los datos, crea el pedido y pasa a la pantalla de transferencia.
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (loading) return;
+    setError("");
+    if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
+    const id = await createOrder();
+    if (id != null) onAdvanceToPayment();
   }
 
   // Botón X (BRT-88): si hay productos en el carrito, confirma antes de
@@ -277,14 +282,19 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
     showToast("CVU copiado");
   }
 
-  // "Ya transferí": único gesto real de que el usuario transfirió — recién acá
-  // se crea el pedido y se avisa por WhatsApp.
-  async function handleYaPague() {
-    const newOrderId = await createOrder();
-    if (newOrderId != null && !successScheduledRef.current) {
-      successScheduledRef.current = true;
-      setTimeout(() => onSuccess(newOrderId), 1000);
+  // "Ya transferí": el pedido ya existe (se creó con "Pagar"), acá solo se
+  // pasa a la confirmación.
+  function handleYaPague() {
+    if (orderId == null || successScheduledRef.current) return;
+    // Pantalla de pago alcanzada con "adelante" tras editar el carrito: el
+    // pedido creado ya no coincide con lo que se ve.
+    if (orderSignature !== currentSignature()) {
+      setError("Tu pedido cambió. Volvé atrás y tocá Pagar de nuevo.");
+      return;
     }
+    successScheduledRef.current = true;
+    setLoading(true);
+    onSuccess(orderId);
   }
 
   return (
@@ -327,7 +337,9 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
           <div className="brot-cf-body flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[6px] pb-6">
             {/* Total a transferir — ámbar, 56px/500, filete navy abajo */}
             <div className="brot-cf-tot text-center" style={{ marginTop: "auto", padding: "22px 0 20px", borderBottom: "1px solid #0E233C" }}>
-              <div className="brot-mlabel" style={{ fontWeight: 500 }}>Total a transferir</div>
+              <div className="brot-mlabel" style={{ fontWeight: 500 }}>
+                {orderId != null ? `Pedido #${orderId} · total a transferir` : "Total a transferir"}
+              </div>
               <div className="brot-cf-tot-amount leading-none mt-[10px]" style={{ fontSize: "56px", fontWeight: 500, letterSpacing: "-.03em", color: "#C8851A", fontVariantNumeric: "tabular-nums" }}>
                 {formatCurrency(total)}
               </div>
@@ -378,8 +390,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
               </p>
             </div>
 
-            {/* Ya transferí: lleva directo a la confirmación. Si la reserva expira
-               queda cubierto por el diálogo de expiración (BRT-88). */}
+            {/* Ya transferí: lleva directo a la confirmación (el pedido ya existe). */}
             <div className="brot-cf-cta" style={{ marginTop: "auto", paddingTop: "22px" }}>
               <button
                 type="button"
@@ -525,11 +536,16 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
             <div className="brot-co-actions" style={{ display: "flex", alignItems: "stretch", gap: "10px", marginTop: "18px" }}>
               <button
                 type="submit"
+                disabled={loading}
                 className="brot-pill"
                 style={{ flex: 1, minWidth: 0, padding: "0 14px", gap: "6px", whiteSpace: "nowrap" }}
               >
-                Pagar
-                <span style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{formatCurrency(total)}</span>
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  <>
+                    Pagar
+                    <span style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>{formatCurrency(total)}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -564,7 +580,11 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
       {/* Diálogo de confirmación al cerrar con la X (BRT-88) */}
       {showCloseConfirm && (
         <ConfirmDialog
-          message="Al cerrar esta pantalla se perderán los productos seleccionados. ¿Cerrar de todos modos?"
+          message={
+            step === "payment" && orderId != null
+              ? `Tu pedido #${orderId} ya quedó registrado, pero no lo preparamos hasta que llegue la transferencia. ¿Cerrar de todos modos?`
+              : "Al cerrar esta pantalla se perderán los productos seleccionados. ¿Cerrar de todos modos?"
+          }
           confirmLabel="SÍ"
           cancelLabel="NO"
           onConfirm={() => { setShowCloseConfirm(false); onClose(true); }}
