@@ -8,6 +8,10 @@
  *   pedido en varias líneas.
  */
 
+// Máximo de unidades de un mismo pan por pedido. Quien quiera más hace otro
+// pedido: no hay cuentas, así que el tope es por pedido, no por persona.
+export const MAX_PER_PRODUCT = 3;
+
 export type CartItem = {
   productId: number;
   quantity: number;

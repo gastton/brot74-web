@@ -140,10 +140,82 @@ describe("POST /api/orders", () => {
     await createProductStock(product.id, slot.id, { totalStock: 1 });
 
     const res = await POST(
-      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 5 }] }))
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 3 }] }))
     );
 
     expect(res.status).toBe(400);
+  });
+
+  it("acepta exactamente 3 unidades del mismo pan en un pedido", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 100 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 3 }] }))
+    );
+
+    expect(res.status).toBe(200);
+    expect((await getStock(product.id, slot.id))?.reservedStock).toBe(3);
+  });
+
+  it("devuelve 400 si se piden más de 3 unidades del mismo pan, aunque haya stock", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 100 });
+
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 4 }] }))
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(json.error).toMatch(/Máximo 3/);
+    expect((await getStock(product.id, slot.id))?.reservedStock).toBe(0);
+  });
+
+  it("el tope de 3 aplica al total del pan: líneas repetidas que suman más de 3 se rechazan", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 100 });
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({
+          deliverySlotId: slot.id,
+          items: [
+            { productId: product.id, quantity: 2 },
+            { productId: product.id, quantity: 2 },
+          ],
+        })
+      )
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it("el tope de 3 es por pan: se pueden pedir 3 de un pan y 3 de otro en el mismo pedido", async () => {
+    const a = await createProduct({ price: 1000 });
+    const b = await createProduct({ price: 2000 });
+    const slot = await createDeliverySlot();
+    await createProductStock(a.id, slot.id, { totalStock: 100 });
+    await createProductStock(b.id, slot.id, { totalStock: 100 });
+
+    const res = await POST(
+      makeRequest(
+        baseOrder({
+          deliverySlotId: slot.id,
+          items: [
+            { productId: a.id, quantity: 3 },
+            { productId: b.id, quantity: 3 },
+          ],
+        })
+      )
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.total).toBe(9000);
   });
 
   it("crea el pedido igual si falla la notificación de WhatsApp", async () => {
@@ -179,15 +251,15 @@ describe("POST /api/orders", () => {
   it("consolida líneas duplicadas del mismo productId antes de validar stock (BRT-108)", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot();
-    await createProductStock(product.id, slot.id, { totalStock: 5 });
+    await createProductStock(product.id, slot.id, { totalStock: 2 });
 
     const res = await POST(
       makeRequest(
         baseOrder({
           deliverySlotId: slot.id,
           items: [
-            { productId: product.id, quantity: 3 },
-            { productId: product.id, quantity: 3 },
+            { productId: product.id, quantity: 2 },
+            { productId: product.id, quantity: 1 },
           ],
         })
       )

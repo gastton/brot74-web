@@ -8,6 +8,7 @@ import OrderModal from "@/components/OrderModal";
 import CartBar from "@/components/CartBar";
 import DateSelector from "@/components/DateSelector";
 import HomeLanding from "@/components/home/HomeLanding";
+import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface Slot {
   id: number | null;
@@ -159,7 +160,10 @@ function HomeContent() {
       if (slotParam && !sameSlotInUrl) return;
       const slot = slots.find((s) => s.id === slotId && !s.disabled);
       if (sameSlotInUrl || slot) {
-        setCart(savedCart);
+        // Carritos guardados antes del tope de 3 por pan: se recortan.
+        setCart(Object.fromEntries(
+          Object.entries(savedCart as CartMap).map(([id, q]) => [id, Math.min(Number(q), MAX_PER_PRODUCT)])
+        ));
         if (!sameSlotInUrl) router.replace(buildFlowUrl({ slot: slotId }));
       } else {
         clearSavedCart();
@@ -225,6 +229,7 @@ function HomeContent() {
       // deshabilitado. El updater funcional ve siempre el último `prev`,
       // así que este chequeo alcanza incluso en ese caso.
       if (product && product.stock !== null && current >= product.stock) return prev;
+      if (current >= MAX_PER_PRODUCT) return prev;
       return { ...prev, [productId]: current + 1 };
     });
   }
@@ -250,7 +255,7 @@ function HomeContent() {
     if (newQuantity <= 0) {
       removeItemFromCart(productId);
     } else {
-      setCart((prev) => ({ ...prev, [productId]: newQuantity }));
+      setCart((prev) => ({ ...prev, [productId]: Math.min(newQuantity, MAX_PER_PRODUCT) }));
     }
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { formatCurrency } from "@/lib/utils";
+import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface ProductCardProps {
   id: number;
@@ -43,7 +44,9 @@ export default function ProductCard({
   // BRT-117: además del caso "sin stock para nadie" (outOfStock), el "+" de
   // quick-add tiene que respetar lo que ya hay en el carrito — mismo límite
   // que ya usa el "+" del modal de detalle (ver ProductModal canAdd).
-  const limitReached = remaining !== null && remaining <= 0;
+  const stockReached = remaining !== null && remaining <= 0;
+  const maxReached = quantity >= MAX_PER_PRODUCT;
+  const limitReached = stockReached || maxReached;
 
   const textColor = outOfStock ? "#4A5463" : "#0E233C";
   const priceColor = outOfStock ? "#4A5463" : "#8A5A0E";
@@ -146,6 +149,9 @@ export default function ProductCard({
               </>
             )}
           </button>
+        )}
+        {!isDisabled && maxReached && !stockReached && (
+          <div className="text-[13px] text-stone mt-1">Máximo {MAX_PER_PRODUCT} por pan</div>
         )}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
-import { normalizeCartItems } from "@/lib/cartItems";
+import { normalizeCartItems, MAX_PER_PRODUCT } from "@/lib/cartItems";
 import { isOrderingClosed } from "@/lib/deliverySlots";
 
 class InsufficientStockError extends Error {
@@ -22,6 +22,15 @@ export async function POST(req: NextRequest) {
     const items = normalizeCartItems(rawItems);
     if (!items) {
       return NextResponse.json({ error: "Cantidades inválidas" }, { status: 400 });
+    }
+
+    // normalizeCartItems ya consolidó las líneas repetidas: el tope aplica al
+    // total de cada pan, no a cada línea por separado.
+    if (items.some((i) => i.quantity > MAX_PER_PRODUCT)) {
+      return NextResponse.json(
+        { error: `Máximo ${MAX_PER_PRODUCT} unidades de cada pan por pedido` },
+        { status: 400 }
+      );
     }
 
     const slot = await prisma.deliverySlot.findUnique({ where: { id: deliverySlotId } });

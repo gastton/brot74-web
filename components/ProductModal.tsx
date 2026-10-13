@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import ImageZoomModal from "./ImageZoomModal";
 import QtyCapsule from "./QtyCapsule";
+import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface Product {
   id: number;
@@ -58,7 +59,7 @@ export default function ProductModal({
   // ── Desktop: stock/controles sin cambios (BRT-89 es mobile-only) ──
   const remaining = product.stock !== null ? product.stock - quantity : null;
   const isOutOfStock = !product.hasStock || (remaining !== null && remaining <= 0 && quantity === 0);
-  const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0);
+  const canAdd = slotSelected && !isOutOfStock && (remaining === null || remaining > 0) && quantity < MAX_PER_PRODUCT;
 
   // Sin contadores de stock: los panes disponibles se ofrecen sin límite
   // visible. Solo se avisa cuando un pan no se ofrece en esta fecha.
@@ -68,7 +69,7 @@ export default function ProductModal({
   // que el stock se muestra contra el total disponible, no contra lo que
   // ya había en el carrito. ──
   const mobileOutOfStock = !product.hasStock || (product.stock !== null && product.stock <= 0);
-  const mobileMaxReached = product.stock !== null && mobileQty >= product.stock;
+  const mobileMaxReached = mobileQty >= MAX_PER_PRODUCT || (product.stock !== null && mobileQty >= product.stock);
   const mobileCanConfirm = slotSelected && !mobileOutOfStock;
 
   const mobileStockText = slotSelected && mobileOutOfStock ? "Sin stock esta fecha" : null;
@@ -249,6 +250,9 @@ export default function ProductModal({
                   </div>
                 </div>
               )}
+              {quantity >= MAX_PER_PRODUCT && (
+                <p className="m-0 mt-2 text-[13px] text-stone">Máximo {MAX_PER_PRODUCT} por pan</p>
+              )}
             </div>
           )}
 
@@ -270,7 +274,7 @@ export default function ProductModal({
                   <QtyCapsule
                     value={mobileQty}
                     onMinus={() => setMobileQty((q) => Math.max(1, q - 1))}
-                    onPlus={() => setMobileQty((q) => (product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
+                    onPlus={() => setMobileQty((q) => Math.min(MAX_PER_PRODUCT, product.stock !== null ? Math.min(product.stock, q + 1) : q + 1))}
                     minusDisabled={mobileQty <= 1}
                     plusDisabled={mobileOutOfStock || mobileMaxReached}
                     minusLabel="Restar cantidad"
@@ -278,6 +282,9 @@ export default function ProductModal({
                   />
                 </div>
               </div>
+              {mobileQty >= MAX_PER_PRODUCT && (
+                <p className="m-0 text-right text-[13px] text-stone">Máximo {MAX_PER_PRODUCT} por pan</p>
+              )}
 
               {/* v37: CTA anclado al pie de la pantalla (BRT-181). */}
               <button

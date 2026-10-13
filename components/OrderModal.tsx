@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Loader2, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import QtyCapsule from "./QtyCapsule";
+import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 import { CalendarIcon } from "./FlowIcons";
 
 interface CartItem {
@@ -461,7 +462,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
                       <div className="min-w-0">
                         <div className="text-[16px] text-navy">{item.name}</div>
                         <div className="whitespace-nowrap text-[12px] sm:text-[13px]" style={{ color: "#4A5463", fontVariantNumeric: "tabular-nums" }}>
-                          {formatCurrency(item.price)} c/u
+                          {formatCurrency(item.price)} c/u{item.quantity >= MAX_PER_PRODUCT ? ` · máx. ${MAX_PER_PRODUCT}` : ""}
                         </div>
                       </div>
                       <QtyCapsule
@@ -469,7 +470,7 @@ export default function OrderModal({ items, slotId, slotLabel, step, onRemoveIte
                         minusIsTrash={item.quantity === 1}
                         onMinus={() => (item.quantity === 1 ? onRemoveItem(item.id) : onChangeQuantity(item.id, item.quantity - 1))}
                         onPlus={() => onChangeQuantity(item.id, item.quantity + 1)}
-                        plusDisabled={item.stock !== null && item.quantity >= item.stock}
+                        plusDisabled={item.quantity >= MAX_PER_PRODUCT || (item.stock !== null && item.quantity >= item.stock)}
                       />
                       <span className="text-[16px] text-navy whitespace-nowrap text-right" style={{ fontVariantNumeric: "tabular-nums" }}>
                         {formatCurrency(item.price * item.quantity)}
