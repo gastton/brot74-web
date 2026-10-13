@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
+
+const WAITLIST_RATE_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 };
 
 export async function POST(req: NextRequest) {
+  const { allowed, resetAt } = checkRateLimit(`waitlist:${getClientIp(req)}`, WAITLIST_RATE_LIMIT);
+  if (!allowed) {
+    return tooManyRequestsResponse(resetAt, "Demasiados intentos. Probá de nuevo más tarde.");
+  }
+
   try {
     const { phone } = await req.json();
 

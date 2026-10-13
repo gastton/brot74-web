@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 import { normalizeCartItems, MAX_PER_PRODUCT } from "@/lib/cartItems";
 import { isOrderingClosed } from "@/lib/deliverySlots";
+import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 class InsufficientStockError extends Error {
   constructor(public productId: number, public productName: string) {
@@ -10,7 +11,18 @@ class InsufficientStockError extends Error {
   }
 }
 
+// Endpoint público que crea pedidos y manda un WhatsApp real al dueño: sin un
+// freno, un script podría llenar la lista de pedidos falsos, ocupar stock y
+// spamear el WhatsApp. El tope es generoso porque muchas personas comparten
+// IP en redes móviles, y cambiar el carrito en el checkout crea un pedido nuevo.
+const ORDERS_RATE_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 };
+
 export async function POST(req: NextRequest) {
+  const { allowed, resetAt } = checkRateLimit(`orders:${getClientIp(req)}`, ORDERS_RATE_LIMIT);
+  if (!allowed) {
+    return tooManyRequestsResponse(resetAt, "Demasiados pedidos desde tu conexión. Probá de nuevo en un rato.");
+  }
+
   try {
     const body = await req.json();
     const { customerName, customerPhone, deliverySlotId, items: rawItems, notes } = body;

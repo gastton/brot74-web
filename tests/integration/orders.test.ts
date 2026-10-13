@@ -11,10 +11,11 @@ import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { prisma } from "@/lib/db";
 import { createProduct, createDeliverySlot, createProductStock, getStock } from "../helpers/factories";
 
-function makeRequest(body: unknown) {
+function makeRequest(body: unknown, ip?: string) {
   return new NextRequest("http://localhost/api/orders", {
     method: "POST",
     body: JSON.stringify(body),
+    headers: ip ? { "x-forwarded-for": ip } : undefined,
   });
 }
 
@@ -320,5 +321,44 @@ describe("POST /api/orders", () => {
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
     expect((await getStock(product.id, slot.id))?.reservedStock).toBe(6);
+  });
+
+  describe("límite de pedidos por IP", () => {
+    // Pedidos inválidos (400) alcanzan para consumir el cupo sin tocar la DB.
+    async function exhaustLimit(ip: string) {
+      for (let i = 0; i < 10; i++) {
+        const res = await POST(makeRequest({}, ip));
+        expect(res.status).toBe(400);
+      }
+    }
+
+    it("responde 429 con Retry-After al pasar de 10 pedidos por hora, sin crear el pedido ni avisar por WhatsApp", async () => {
+      const product = await createProduct();
+      const slot = await createDeliverySlot();
+      await createProductStock(product.id, slot.id, { totalStock: 100 });
+      await exhaustLimit("203.0.113.7");
+
+      const res = await POST(
+        makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }), "203.0.113.7")
+      );
+
+      expect(res.status).toBe(429);
+      expect(Number(res.headers.get("Retry-After"))).toBeGreaterThan(0);
+      expect(await prisma.order.count()).toBe(0);
+      expect(sendWhatsAppNotification).not.toHaveBeenCalled();
+    });
+
+    it("otra IP no se ve afectada por el límite de la primera", async () => {
+      const product = await createProduct();
+      const slot = await createDeliverySlot();
+      await createProductStock(product.id, slot.id, { totalStock: 100 });
+      await exhaustLimit("203.0.113.7");
+
+      const res = await POST(
+        makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity: 1 }] }), "198.51.100.9")
+      );
+
+      expect(res.status).toBe(200);
+    });
   });
 });
