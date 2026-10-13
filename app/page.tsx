@@ -9,6 +9,7 @@ import CartBar from "@/components/CartBar";
 import DateSelector from "@/components/DateSelector";
 import HomeLanding from "@/components/home/HomeLanding";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
+import PickupDateRow from "@/components/PickupDateRow";
 
 interface Slot {
   id: number | null;
@@ -370,14 +371,15 @@ function HomeContent() {
             <div>
               <button
                 onClick={() => router.push(buildFlowUrl({ step: "slots" }))}
-                className="brot-kick inline-flex items-center gap-[6px] min-h-[44px] -ml-1 bg-transparent border-none cursor-pointer hover:text-navy transition-colors"
+                aria-label="Cambiar fecha"
+                className="block min-h-[44px] -my-[11px] bg-transparent border-none p-0 cursor-pointer text-left"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 5l-7 7 7 7"/>
-                </svg>
-                {selectedSlot?.dayLabel ?? "Cambiar fecha"}
+                {selectedSlot
+                  ? <PickupDateRow date={selectedSlot.date} pickupTime={selectedSlot.pickupTime} />
+                  : <span className="brot-kick">Cambiar fecha</span>}
               </button>
-              <h2 className="brot-h brot-h--web mt-[2px]">
+              {/* v49: fila de fecha (toca para cambiar de fecha) arriba del título */}
+              <h2 className="brot-h brot-h--web mt-4">
                 Elegí tu <span style={{ color: "#C8851A" }}>BROT</span>
               </h2>
             </div>
@@ -443,7 +445,8 @@ function HomeContent() {
           <OrderModal
             items={cartItems}
             slotId={selectedSlotId}
-            slotLabel={[selectedSlot.dayLabel, selectedSlot.pickupTime].filter(Boolean).join(" · ")}
+            slotDate={selectedSlot.date}
+            pickupTime={selectedSlot.pickupTime}
             canAddMore={products.some((p) => p.hasStock && !((cart[p.id] ?? 0) > 0))}
             step={checkoutParam === "payment" ? "payment" : "form"}
             onRemoveItem={removeItemFromCart}
