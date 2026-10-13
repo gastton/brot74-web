@@ -47,7 +47,7 @@ function InfoRow({ icon, label, value, last }: InfoRowProps) {
     >
       <span className="flex-none flex">{icon}</span>
       <div className="flex-1 min-w-0">
-        <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap" style={{ fontWeight: 500 }}>
+        <div className="brot-mlabel whitespace-nowrap" style={{ fontWeight: 600 }}>
           {label}
         </div>
         <div className="text-[16px] text-navy mt-0 leading-[1.25] whitespace-nowrap">
@@ -211,13 +211,13 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
 
               <div
                 className="absolute left-6 min-[900px]:left-0 select-none"
-                style={{ bottom: "-34px", width: "190px", background: "#fff", padding: "16px 18px 14px" }}
+                style={{ bottom: "-34px", width: "190px", background: "#F4EEE2", padding: "16px 18px 14px" }}
               >
                 <div className="brot-rule" />
                 <div className="mt-3" style={{ fontSize: "84px", fontWeight: 300, lineHeight: 0.9, letterSpacing: "-.03em", color: "#0E233C" }}>
                   {day}
                 </div>
-                <div className="brot-kick mt-2" style={{ color: "#0E233C" }}>
+                <div className="brot-kick mt-2" style={{ color: "#C8851A" }}>
                   {weekday} · {month}
                 </div>
               </div>

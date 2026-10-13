@@ -325,12 +325,12 @@ function HomeContent() {
     return (
       <div className="min-h-screen bg-white">
         <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 pt-5 pb-10">
-          {/* Título — v45 editorial: filete navy + título a la izquierda */}
-          <header className="mb-6">
-            <div className="brot-rule" />
-            <h2 className="brot-h mt-[22px]">
+          {/* Título — v45 editorial; v48: el filete va ABAJO del título (separa título y foto) */}
+          <header className="mb-[22px]">
+            <h2 className="brot-h">
               Tu próximo<br /><span style={{ color: "#C8851A" }}>BROT</span>
             </h2>
+            <div className="brot-rule mt-5" />
           </header>
 
           {loadingSlots ? (
