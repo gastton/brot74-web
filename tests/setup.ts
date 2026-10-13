@@ -34,6 +34,7 @@ for (const name of ["ADMIN_PASSWORD", "JWT_SECRET", "DIRECT_URL"] as const) {
 }
 
 import { prisma } from "@/lib/db";
+import { resetAllRateLimits } from "@/lib/rateLimit";
 
 beforeAll(() => {
   // BRT-179 (Prisma 7): `db push` sacó el flag --skip-generate (ya no
@@ -50,6 +51,7 @@ beforeAll(() => {
 });
 
 afterEach(async () => {
+  resetAllRateLimits();
   await prisma.$transaction([
     prisma.orderItem.deleteMany(),
     prisma.order.deleteMany(),
