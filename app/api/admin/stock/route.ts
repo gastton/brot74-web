@@ -37,6 +37,12 @@ export async function PUT(req: NextRequest) {
 
   const { productId, deliverySlotId, totalStock } = await req.json();
 
+  // Sin esto, un valor negativo, decimal o no numérico llegaba a la base
+  // (o explotaba en Prisma con un 500) y dejaba el disponible en negativo.
+  if (!Number.isInteger(productId) || !Number.isInteger(deliverySlotId) || !Number.isInteger(totalStock) || totalStock < 0) {
+    return NextResponse.json({ error: "Datos inválidos: el stock debe ser un número entero mayor o igual a 0" }, { status: 400 });
+  }
+
   const stock = await prisma.productStock.upsert({
     where: { productId_deliverySlotId: { productId, deliverySlotId } },
     update: { totalStock },

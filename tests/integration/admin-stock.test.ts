@@ -80,4 +80,34 @@ describe("PUT /api/admin/stock", () => {
     expect(stock?.totalStock).toBe(20);
     expect(stock?.reservedStock).toBe(2);
   });
+
+  it("acepta 0 como stock (agotar un pan)", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+
+    const res = await PUT(
+      putRequest({ productId: product.id, deliverySlotId: slot.id, totalStock: 0 }, await adminCookieHeader())
+    );
+
+    expect(res.status).toBe(200);
+    expect((await getStock(product.id, slot.id))?.totalStock).toBe(0);
+  });
+
+  it.each([
+    ["negativo", -3],
+    ["decimal", 2.5],
+    ["texto", "abc"],
+    ["vacío", null],
+  ])("devuelve 400 y no toca el stock si totalStock es %s", async (_label, totalStock) => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 7, reservedStock: 1 });
+
+    const res = await PUT(
+      putRequest({ productId: product.id, deliverySlotId: slot.id, totalStock }, await adminCookieHeader())
+    );
+
+    expect(res.status).toBe(400);
+    expect((await getStock(product.id, slot.id))?.totalStock).toBe(7);
+  });
 });

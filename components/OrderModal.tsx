@@ -182,6 +182,10 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
   const [error, setError]     = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
   const [orderSignature, setOrderSignature] = useState("");
+  // Total que calculó el servidor al crear el pedido: es el que hay que
+  // transferir (puede diferir del calculado acá si un precio cambió mientras
+  // se armaba el carrito).
+  const [orderTotal, setOrderTotal] = useState<number | null>(null);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
   const [cvuCopied, setCvuCopied] = useState(false);
@@ -233,6 +237,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
         return null;
       }
       setOrderId(data.orderId);
+      setOrderTotal(typeof data.total === "number" ? data.total : null);
       setOrderSignature(signature);
       saveContact(name.trim(), phone.trim());
       return data.orderId;
@@ -350,7 +355,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
                 {orderId != null ? `Pedido #${orderId} · total a transferir` : "Total a transferir"}
               </div>
               <div className="brot-cf-tot-amount leading-none mt-[10px]" style={{ fontSize: "56px", fontWeight: 500, letterSpacing: "-.03em", color: "#C8851A", fontVariantNumeric: "tabular-nums" }}>
-                {formatCurrency(total)}
+                {formatCurrency(orderTotal ?? total)}
               </div>
             </div>
 
