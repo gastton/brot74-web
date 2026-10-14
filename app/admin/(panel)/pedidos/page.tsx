@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, Phone, MapPin, Package, Home, ChevronDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { toastError } from "@/lib/toast";
 
 interface Order {
   id: number;
@@ -48,11 +49,22 @@ function PedidosContent() {
 
   async function updateStatus(orderId: number, status: string) {
     setUpdating(orderId);
-    await fetch(`/api/admin/orders/${orderId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
+    // Si el servidor rechaza el cambio (ej. 409 sin stock para reactivar, 401
+    // sesión vencida) hay que avisarlo: antes el desplegable volvía al valor
+    // anterior sin ningún mensaje.
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toastError(data.error ?? "No se pudo cambiar el estado del pedido.");
+      }
+    } catch {
+      toastError("Error de conexión. Probá de nuevo.");
+    }
     await fetchOrders();
     setUpdating(null);
   }

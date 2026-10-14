@@ -161,11 +161,22 @@ export default function FechasPage() {
   async function saveStock(productId: number, deliverySlotId: number, key: string) {
     const val = parseInt(stockEdits[key] ?? "0");
     if (isNaN(val)) return;
-    await fetch("/api/admin/stock", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId, deliverySlotId, totalStock: val }),
-    });
+    try {
+      const res = await fetch("/api/admin/stock", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId, deliverySlotId, totalStock: val }),
+      });
+      if (!res.ok) {
+        // Se conserva lo tipeado para poder corregirlo.
+        const data = await res.json().catch(() => ({}));
+        toastError(data.error ?? "No se pudo guardar el stock.");
+        return;
+      }
+    } catch {
+      toastError("Error de conexión. Probá de nuevo.");
+      return;
+    }
     setStockEdits((prev) => { const next = { ...prev }; delete next[key]; return next; });
     fetchAll();
   }
