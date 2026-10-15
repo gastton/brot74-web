@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { parseDiscount } from "@/lib/pricing";
 import { syncProductStockForDays } from "@/lib/productStock";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,6 +11,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const productId = parseInt(id);
   const data = await req.json();
+  const discount = parseDiscount(data);
+  if ("error" in discount) return NextResponse.json({ error: discount.error }, { status: 400 });
 
   const prevProduct = await prisma.product.findUnique({ where: { id: productId } });
   const prevDays = new Set<string>((prevProduct?.availableDays ?? "").split(",").filter(Boolean));
@@ -30,6 +33,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       availableDays: data.availableDays ?? "",
       active: data.active,
       sortOrder: data.sortOrder,
+      discountActive: discount.discountActive,
+      discountPrice: discount.discountPrice,
     },
   });
 

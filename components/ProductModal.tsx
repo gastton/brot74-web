@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import ImageZoomModal from "./ImageZoomModal";
 import QtyCapsule from "./QtyCapsule";
+import PriceTag from "./PriceTag";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface Product {
@@ -13,6 +14,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  discountPrice: number | null;
   weight: string;
   ingredients: string;
   imageUrl: string;
@@ -48,6 +50,8 @@ export default function ProductModal({
   onCheckout,
 }: ProductModalProps) {
   const [descCollapsed, setDescCollapsed] = useState(true);
+  // v51: precio vigente (con descuento si aplica) para subtotal y "Sumar".
+  const unitPrice = product.discountPrice ?? product.price;
   const [showZoom, setShowZoom] = useState(false); // BRT-93
 
   // Cantidad elegida en mobile (BRT-89): se define ANTES de confirmar, no
@@ -145,9 +149,7 @@ export default function ProductModal({
             <h3 className="font-normal text-[32px] text-navy m-0 min-w-0 whitespace-nowrap overflow-hidden text-ellipsis" style={{ letterSpacing: "-.02em", lineHeight: 1.02 }}>
               {product.name}
             </h3>
-            <div className="font-medium text-[20px] whitespace-nowrap flex-none" style={{ color: "#8A5A0E", fontVariantNumeric: "tabular-nums" }}>
-              {formatCurrency(product.price)}
-            </div>
+            <PriceTag price={product.price} discountPrice={product.discountPrice} size={20} oldSize={15} stacked />
           </div>
 
           {/* Gramaje */}
@@ -245,7 +247,7 @@ export default function ProductModal({
                   <div className="text-right">
                     <div className="brot-mlabel">Subtotal</div>
                     <div className="font-bold text-[20px] text-navy mt-0.5">
-                      {formatCurrency(product.price * quantity)}
+                      {formatCurrency(unitPrice * quantity)}
                     </div>
                   </div>
                 </div>
@@ -293,7 +295,7 @@ export default function ProductModal({
                 disabled={!mobileCanConfirm}
                 className="brot-pill mt-auto"
               >
-                {mobileCanConfirm ? `Sumar ${mobileQty} · ${formatCurrency(product.price * mobileQty)}` : "No disponible"}
+                {mobileCanConfirm ? `Sumar ${mobileQty} · ${formatCurrency(unitPrice * mobileQty)}` : "No disponible"}
               </button>
             </div>
           )}

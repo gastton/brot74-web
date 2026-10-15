@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCurrency } from "@/lib/utils";
+import PriceTag from "./PriceTag";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface ProductCardProps {
@@ -8,6 +8,7 @@ interface ProductCardProps {
   name: string;
   description: string;
   price: number;
+  discountPrice: number | null;
   weight: string;
   ingredients: string;
   imageUrl: string;
@@ -26,7 +27,7 @@ export default function ProductCard({
   name,
   description,
   price,
-  weight,
+  discountPrice,
   imageUrl,
   focalX,
   focalY,
@@ -88,22 +89,17 @@ export default function ProductCard({
           <div className="text-[20px] font-medium leading-[1.15]" style={{ letterSpacing: "-.01em", color: textColor }}>
             {name}
           </div>
-          <span
-            className="hidden md:block text-[18px] font-medium flex-none"
-            style={{ color: priceColor, fontVariantNumeric: "tabular-nums" }}
-          >
-            {formatCurrency(price)}
-          </span>
+          {/* Wrapper con hidden/md:block: PriceTag ya fija su propio display (inline-flex),
+             y "hidden md:inline-flex" directo sobre él quedaba pisado por ese inline-flex. */}
+          <div className="hidden md:block flex-none">
+            <PriceTag price={price} discountPrice={discountPrice} size={18} oldSize={15} color={priceColor} />
+          </div>
         </div>
 
-        {/* Precio + gramos (mobile) */}
-        <div className="flex items-baseline gap-[10px] md:hidden">
-          <span className="text-[17px] font-medium whitespace-nowrap" style={{ color: priceColor, fontVariantNumeric: "tabular-nums" }}>
-            {formatCurrency(price)}
-          </span>
-          {weight && <span className="text-[15px] text-stone whitespace-nowrap">{weight}</span>}
+        {/* Precio (mobile) — v52: sin gramaje en la card */}
+        <div className="flex flex-wrap items-baseline gap-x-[10px] md:hidden">
+          <PriceTag price={price} discountPrice={discountPrice} size={17} oldSize={14} color={priceColor} />
         </div>
-        {weight && <div className="hidden md:block text-[15px] text-stone mt-1">{weight}</div>}
 
         {/* Descripción — solo mobile, recortada a 3 líneas (BRT-92) */}
         {description && (

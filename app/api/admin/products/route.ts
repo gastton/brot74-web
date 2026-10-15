@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { parseDiscount } from "@/lib/pricing";
 import { isIdConflict, resyncIdSequence } from "@/lib/idSequence";
 import { syncProductStockForDays } from "@/lib/productStock";
 
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const data = await req.json();
+  const discount = parseDiscount(data);
+  if ("error" in discount) return NextResponse.json({ error: discount.error }, { status: 400 });
   const productData: Prisma.ProductCreateInput = {
     name: data.name,
     description: data.description ?? "",
@@ -33,6 +36,8 @@ export async function POST(req: NextRequest) {
     availableDays: data.availableDays ?? "",
     active: data.active ?? true,
     sortOrder: data.sortOrder ?? 0,
+    discountActive: discount.discountActive,
+    discountPrice: discount.discountPrice,
   };
 
   let product;

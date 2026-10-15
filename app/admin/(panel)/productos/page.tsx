@@ -9,6 +9,7 @@ import BreadCardGenerator from "@/components/admin/BreadCardGenerator";
 import type { BreadCardProduct } from "@/components/admin/BreadCardGenerator";
 import { formatCurrency } from "@/lib/utils";
 import { toastError, toastSuccess } from "@/lib/toast";
+import { hasDiscount } from "@/lib/pricing";
 
 const DAYS = [
   { key: "lunes",     label: "Lunes",      short: "L" },
@@ -30,6 +31,8 @@ interface Product {
   availableDays: string;
   active: boolean;
   sortOrder: number;
+  discountActive: boolean;
+  discountPrice: number | null;
 }
 
 const emptyForm = {
@@ -45,6 +48,8 @@ const emptyForm = {
   availableDays: [] as string[],
   active: true,
   sortOrder: "0",
+  discountActive: false,
+  discountPrice: "",
 };
 
 export default function ProductosPage() {
@@ -59,6 +64,15 @@ export default function ProductosPage() {
   const [imagePreview, setImagePreview] = useState<string>("");
   const [cardGeneratorProduct, setCardGeneratorProduct] = useState<BreadCardProduct | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // v51 · Descuento: con el switch ON el precio con descuento es obligatorio y menor al precio.
+  const priceNum = parseInt(form.price);
+  const discountNum = parseInt(form.discountPrice);
+  const discountError = !form.discountActive ? null
+    : !form.discountPrice ? "Cargá el precio con descuento."
+    : !(discountNum > 0) || (priceNum > 0 && discountNum >= priceNum) ? "Tiene que ser menor al precio original."
+    : null;
+  const discountPct = form.discountActive && !discountError && priceNum > 0 ? Math.round((1 - discountNum / priceNum) * 100) : null;
 
   async function fetchProducts() {
     const res = await fetch("/api/admin/products");
@@ -91,6 +105,8 @@ export default function ProductosPage() {
       availableDays: p.availableDays ? p.availableDays.split(",").filter(Boolean) : [],
       active: p.active,
       sortOrder: String(p.sortOrder),
+      discountActive: p.discountActive ?? false,
+      discountPrice: p.discountPrice != null ? String(p.discountPrice) : "",
     });
     setImagePreview(p.imageUrl);
     setShowForm(true);
@@ -133,14 +149,14 @@ export default function ProductosPage() {
   }
 
   async function handleSave() {
-    if (!form.name || !form.price) return;
+    if (!form.name || !form.price || discountError) return;
     setSaving(true);
     const url = editing ? `/api/admin/products/${editing.id}` : "/api/admin/products";
     const method = editing ? "PUT" : "POST";
     await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, price: parseInt(form.price), sortOrder: parseInt(form.sortOrder), availableDays: form.availableDays.join(","), focalX: form.focalX, focalY: form.focalY, imageScale: form.imageScale }),
+      body: JSON.stringify({ ...form, price: parseInt(form.price), discountPrice: form.discountPrice ? parseInt(form.discountPrice) : null, sortOrder: parseInt(form.sortOrder), availableDays: form.availableDays.join(","), focalX: form.focalX, focalY: form.focalY, imageScale: form.imageScale }),
     });
     await fetchProducts();
     setShowForm(false);
@@ -204,7 +220,15 @@ export default function ProductosPage() {
                   {p.description && <p className="text-sm text-muted mt-1">{p.description}</p>}
                   {p.ingredients && <p className="text-xs text-muted/70 mt-1 italic">🌾 {p.ingredients}</p>}
                   <div className="flex items-center gap-2 mt-2">
-                    <p className="text-xl font-bold text-brown">{formatCurrency(p.price)}</p>
+                    {hasDiscount(p) ? (
+                      <p className="flex items-baseline gap-2">
+                        <s className="text-sm text-muted">{formatCurrency(p.price)}</s>
+                        <span className="text-xl font-bold text-brown">{formatCurrency(p.discountPrice as number)}</span>
+                        <span className="text-xs bg-amber/20 text-amber px-2 py-0.5 rounded font-semibold">Descuento</span>
+                      </p>
+                    ) : (
+                      <p className="text-xl font-bold text-brown">{formatCurrency(p.price)}</p>
+                    )}
                     <div className="flex gap-1">
                       {DAYS.map((d) => {
                         const active = p.availableDays?.includes(d.key);
@@ -330,6 +354,48 @@ export default function ProductosPage() {
                 <Field label="Precio (ARS) *" value={form.price} onChange={(v) => setForm({ ...form, price: v })} placeholder="6500" type="number" />
                 <Field label="Peso" value={form.weight} onChange={(v) => setForm({ ...form, weight: v })} placeholder="700g" />
               </div>
+
+              {/* Descuento (v51): switch + precio con descuento. OFF = campo deshabilitado. */}
+              <div className="rounded-xl border-2 border-border bg-white p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-charcoal">Descuento</p>
+                    <p className="text-xs text-muted mt-0.5">
+                      {form.discountActive ? "En la web: precio tachado + precio con descuento." : "Apagado: en la web se ve solo el precio."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={form.discountActive}
+                    aria-label="Descuento"
+                    onClick={() => setForm({ ...form, discountActive: !form.discountActive })}
+                    className={`relative w-11 h-[26px] shrink-0 rounded-full transition-colors ${form.discountActive ? "bg-amber" : "bg-border"}`}
+                  >
+                    <span className={`absolute top-[3px] left-[3px] w-5 h-5 rounded-full bg-white shadow transition-transform ${form.discountActive ? "translate-x-[18px]" : ""}`} />
+                  </button>
+                </div>
+                <div>
+                  <label htmlFor="discountPrice" className={`block text-sm font-semibold mb-1 ${form.discountActive ? "text-charcoal" : "text-muted"}`}>
+                    Precio con descuento (ARS){form.discountActive ? " *" : ""}
+                  </label>
+                  <input
+                    id="discountPrice"
+                    type="number"
+                    inputMode="numeric"
+                    value={form.discountPrice}
+                    disabled={!form.discountActive}
+                    onChange={(e) => setForm({ ...form, discountPrice: e.target.value })}
+                    placeholder="5900"
+                    className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white disabled:bg-cream disabled:text-muted disabled:cursor-not-allowed"
+                  />
+                  {discountError ? (
+                    <p className="text-xs text-red-500 mt-1.5">{discountError}</p>
+                  ) : discountPct !== null ? (
+                    <p className="text-xs text-muted mt-1.5">{discountPct}% menos que el precio original.</p>
+                  ) : null}
+                </div>
+              </div>
               <Field label="Ingredientes" value={form.ingredients} onChange={(v) => setForm({ ...form, ingredients: v })} placeholder="Harina integral, semillas de girasol, nueces, miel" textarea />
 
               {/* Días disponibles */}
@@ -368,7 +434,7 @@ export default function ProductosPage() {
                 <button onClick={() => setShowForm(false)} className="flex-1 btn-secondary rounded-xl py-3 text-sm">
                   Cancelar
                 </button>
-                <button onClick={handleSave} disabled={saving || uploading || !form.name || !form.price} className="flex-1 btn-primary flex items-center justify-center gap-2 rounded-xl py-3 text-sm">
+                <button onClick={handleSave} disabled={saving || uploading || !form.name || !form.price || !!discountError} className="flex-1 btn-primary flex items-center justify-center gap-2 rounded-xl py-3 text-sm">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Guardar
                 </button>

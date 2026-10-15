@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { hasDiscount } from "@/lib/pricing";
 
 export async function GET(req: NextRequest) {
   const slotId = req.nextUrl.searchParams.get("slotId");
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest) {
           name: p.name,
           description: p.description,
           price: p.price,
+          discountPrice: hasDiscount(p) ? p.discountPrice : null,
           weight: p.weight,
           ingredients: p.ingredients,
           imageUrl: p.imageUrl,
@@ -48,6 +50,7 @@ export async function GET(req: NextRequest) {
       name: p.name,
       description: p.description,
       price: p.price,
+      discountPrice: hasDiscount(p) ? p.discountPrice : null,
       weight: p.weight,
       ingredients: p.ingredients,
       imageUrl: p.imageUrl,
