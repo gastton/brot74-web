@@ -110,6 +110,103 @@ describe("POST /api/admin/products", () => {
   });
 });
 
+describe("descuento de producto (v53)", () => {
+  const ctx = (id: number) => ({ params: Promise.resolve({ id: String(id) }) });
+
+  it("POST: con el descuento ON y un precio menor al original, lo persiste", async () => {
+    const res = await POST(
+      postRequest(
+        { name: "Con descuento", price: "6800", discountActive: true, discountPrice: "5900" },
+        await adminCookieHeader()
+      )
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.discountActive).toBe(true);
+    expect(json.discountPrice).toBe(5900);
+  });
+
+  it("POST: con el descuento OFF, conserva el valor cargado pero queda apagado", async () => {
+    const res = await POST(
+      postRequest(
+        { name: "Apagado", price: "6800", discountActive: false, discountPrice: "5900" },
+        await adminCookieHeader()
+      )
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.discountActive).toBe(false);
+    expect(json.discountPrice).toBe(5900);
+  });
+
+  it("POST: sin descuento cargado, queda apagado por defecto", async () => {
+    const res = await POST(postRequest({ name: "Sin descuento", price: "6800" }, await adminCookieHeader()));
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.discountActive).toBe(false);
+    expect(json.discountPrice).toBeNull();
+  });
+
+  it.each([
+    ["sin precio con descuento", { discountPrice: "" }],
+    ["con un precio igual al original", { discountPrice: "6800" }],
+    ["con un precio mayor al original", { discountPrice: "7000" }],
+    ["con un precio en cero", { discountPrice: "0" }],
+  ])("POST: con el descuento ON %s devuelve 400 y no crea el producto", async (_label, extra) => {
+    const res = await POST(
+      postRequest({ name: "Inválido", price: "6800", discountActive: true, ...extra }, await adminCookieHeader())
+    );
+
+    expect(res.status).toBe(400);
+    expect(await prisma.product.count()).toBe(0);
+  });
+
+  it("PUT: prende el descuento con un precio válido", async () => {
+    const product = await createProduct({ price: 6800 });
+
+    const res = await PUT(
+      putRequest({ name: "X", price: 6800, discountActive: true, discountPrice: 5900 }, await adminCookieHeader()),
+      ctx(product.id)
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.discountActive).toBe(true);
+    expect(json.discountPrice).toBe(5900);
+  });
+
+  it("PUT: con el descuento ON y un precio >= al original devuelve 400 y no modifica el producto", async () => {
+    const product = await createProduct({ price: 6800, discountActive: false });
+
+    const res = await PUT(
+      putRequest({ name: "Cambiado", price: 6800, discountActive: true, discountPrice: 6800 }, await adminCookieHeader()),
+      ctx(product.id)
+    );
+
+    expect(res.status).toBe(400);
+    const after = await prisma.product.findUniqueOrThrow({ where: { id: product.id } });
+    expect(after.discountActive).toBe(false);
+    expect(after.name).not.toBe("Cambiado");
+  });
+
+  it("PUT: apagar el descuento conserva el precio con descuento cargado", async () => {
+    const product = await createProduct({ price: 6800, discountActive: true, discountPrice: 5900 });
+
+    const res = await PUT(
+      putRequest({ name: "X", price: 6800, discountActive: false, discountPrice: 5900 }, await adminCookieHeader()),
+      ctx(product.id)
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.discountActive).toBe(false);
+    expect(json.discountPrice).toBe(5900);
+  });
+});
+
 describe("PUT /api/admin/products/[id]", () => {
   it("devuelve 401 sin sesión de admin", async () => {
     const res = await PUT(putRequest({ name: "X", price: 1000 }), { params: Promise.resolve({ id: "1" }) });

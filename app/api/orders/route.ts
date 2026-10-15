@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { effectivePrice } from "@/lib/pricing";
 import { sendWhatsAppNotification, buildOrderMessage } from "@/lib/whatsapp";
 import { normalizeCartItems, MAX_PER_PRODUCT } from "@/lib/cartItems";
 import { isOrderingClosed } from "@/lib/deliverySlots";
@@ -93,8 +94,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: `Stock insuficiente para ${product.name}` }, { status: 400 });
       }
 
-      total += product.price * item.quantity;
-      enrichedItems.push({ productId: item.productId, quantity: item.quantity, unitPrice: product.price, name: product.name });
+      total += effectivePrice(product) * item.quantity;
+      enrichedItems.push({ productId: item.productId, quantity: item.quantity, unitPrice: effectivePrice(product), name: product.name });
     }
 
     // Re-chequeo del cutoff justo antes de crear el pedido: entre el chequeo

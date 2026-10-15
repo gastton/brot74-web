@@ -27,6 +27,8 @@ model Product {
   imageScale  Float    @default(1)
   availableDays String @default("")
   active      Boolean  @default(true)
+  discountActive Boolean @default(false) // v51
+  discountPrice  Int?                    // v51 · se cobra solo si discountActive y < price
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

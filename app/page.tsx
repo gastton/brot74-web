@@ -30,6 +30,7 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  discountPrice: number | null; // v53: precio con descuento vigente (null = sin descuento)
   weight: string;
   ingredients: string;
   imageUrl: string;
@@ -262,7 +263,7 @@ function HomeContent() {
 
   const cartItems = products
     .filter((p) => (cart[p.id] ?? 0) > 0)
-    .map((p) => ({ id: p.id, name: p.name, price: p.price, quantity: cart[p.id], stock: p.stock }));
+    .map((p) => ({ id: p.id, name: p.name, price: p.discountPrice ?? p.price, quantity: cart[p.id], stock: p.stock }));
 
   const cartTotal    = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const selectedSlot = slots.find((s) => s.id === selectedSlotId);

@@ -362,3 +362,43 @@ describe("POST /api/orders", () => {
     });
   });
 });
+
+describe("POST /api/orders con descuento (v53)", () => {
+  async function orderOf(product: { id: number }, quantity: number) {
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id, { totalStock: 10 });
+    const res = await POST(
+      makeRequest(baseOrder({ deliverySlotId: slot.id, items: [{ productId: product.id, quantity }] }))
+    );
+    return { res, json: await res.json() };
+  }
+
+  it("con el descuento ON cobra el precio con descuento: unitPrice y total", async () => {
+    const product = await createProduct({ price: 1000, discountActive: true, discountPrice: 700 });
+
+    const { res, json } = await orderOf(product, 2);
+
+    expect(res.status).toBe(200);
+    expect(json.total).toBe(1400);
+    const items = await prisma.orderItem.findMany({ where: { orderId: json.orderId } });
+    expect(items[0].unitPrice).toBe(700);
+  });
+
+  it("con el descuento OFF cobra el precio original aunque haya un precio con descuento guardado", async () => {
+    const product = await createProduct({ price: 1000, discountActive: false, discountPrice: 700 });
+
+    const { json } = await orderOf(product, 2);
+
+    expect(json.total).toBe(2000);
+    const items = await prisma.orderItem.findMany({ where: { orderId: json.orderId } });
+    expect(items[0].unitPrice).toBe(1000);
+  });
+
+  it("con el descuento ON pero un precio no menor al original, cobra el original", async () => {
+    const product = await createProduct({ price: 1000, discountActive: true, discountPrice: 1000 });
+
+    const { json } = await orderOf(product, 1);
+
+    expect(json.total).toBe(1000);
+  });
+});

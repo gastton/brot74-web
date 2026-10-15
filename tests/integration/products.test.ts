@@ -63,4 +63,31 @@ describe("GET /api/products", () => {
     expect(json[0].stock).toBe(0);
     expect(json[0].hasStock).toBe(false);
   });
+
+  describe("descuento (v53)", () => {
+    it("con el descuento ON expone discountPrice", async () => {
+      await createProduct({ price: 6800, discountActive: true, discountPrice: 5900 });
+
+      const json = await (await GET(getRequest())).json();
+
+      expect(json[0].price).toBe(6800);
+      expect(json[0].discountPrice).toBe(5900);
+    });
+
+    it("con el descuento OFF devuelve discountPrice null aunque haya un valor guardado", async () => {
+      await createProduct({ price: 6800, discountActive: false, discountPrice: 5900 });
+
+      const json = await (await GET(getRequest())).json();
+
+      expect(json[0].discountPrice).toBeNull();
+    });
+
+    it("con el descuento ON pero un precio no menor al original, no lo expone", async () => {
+      await createProduct({ price: 6800, discountActive: true, discountPrice: 6800 });
+
+      const json = await (await GET(getRequest())).json();
+
+      expect(json[0].discountPrice).toBeNull();
+    });
+  });
 });
