@@ -19,9 +19,26 @@ const jost = Jost({
   display: "swap",
 });
 
+// Vista previa al compartir el link (WhatsApp, redes): usa los tags Open Graph.
+// La imagen sale de app/opengraph-image.jpg (1200x630) y app/twitter-image.jpg;
+// metadataBase hace que Next arme su URL absoluta (WhatsApp no sigue relativas).
 export const metadata: Metadata = {
+  metadataBase: new URL("https://brot74.com"),
   title: "BROT 74",
-  description: "Pedidos de pan artesanal de fermentación natural.",
+  description: "Pan Artesanal",
+  openGraph: {
+    title: "BROT 74",
+    description: "Pan Artesanal",
+    url: "/",
+    siteName: "BROT 74",
+    locale: "es_AR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BROT 74",
+    description: "Pan Artesanal",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
