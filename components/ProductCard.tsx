@@ -1,6 +1,7 @@
 "use client";
 
 import PriceTag from "./PriceTag";
+import QtyCapsule from "./QtyCapsule";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 
 interface ProductCardProps {
@@ -21,6 +22,7 @@ interface ProductCardProps {
   slotSelected: boolean;
   onClick: () => void;
   onQuickAdd: () => void;
+  onQuickRemove: () => void;
 }
 
 export default function ProductCard({
@@ -38,6 +40,7 @@ export default function ProductCard({
   slotSelected,
   onClick,
   onQuickAdd,
+  onQuickRemove,
 }: ProductCardProps) {
   const remaining = stock !== null ? stock - quantity : null;
   const outOfStock = slotSelected && !hasStock && stock !== null && stock <= 0;
@@ -81,6 +84,24 @@ export default function ProductCard({
         ) : (
           <div className="absolute inset-0 bg-[#ddd6c8]" />
         )}
+        {/* v54: rótulo decorativo — avisa que la card abre el detalle (el toque lo toma la card) */}
+        {!isDisabled && (
+          <span
+            className="absolute left-1/2 bottom-0 -translate-x-1/2 whitespace-nowrap pointer-events-none"
+            style={{
+              background: "#F4EEE2",
+              color: "#0E233C",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: ".12em",
+              textTransform: "uppercase",
+              padding: "2px 8px 1px",
+              lineHeight: 1.2,
+            }}
+          >
+            Ver más
+          </span>
+        )}
       </div>
 
       {/* Texto */}
@@ -122,29 +143,39 @@ export default function ProductCard({
           <div className="brot-kick mt-3">Sin stock esta fecha</div>
         )}
 
-        {/* Agregar (BRT-89/117): suma 1 unidad sin abrir el modal. Deshabilitado
-           al llegar al límite de stock; con cantidad > 0 pasa a píldora llena. */}
+        {/* v54: con 0 unidades, "Agregar +" (suma 1 sin abrir el modal); con >= 1,
+           la cápsula − N + (la misma del modal y de Tu pedido). Con 1 el − es un
+           tacho que saca el pan y vuelve a "Agregar". El wrapper frena el click para
+           que la acción de cantidad no abra el modal (toda la card es tocable). */}
         {!isDisabled && (
-          <button
-            type="button"
-            aria-label={`Agregar ${name}`}
-            aria-disabled={limitReached}
-            disabled={limitReached}
-            onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
-            className={`brot-ghost brot-ghost--sm mt-[10px]${quantity > 0 ? " brot-ghost--on" : ""}`}
-          >
-            {quantity > 0 ? (
-              <>En tu pedido · {quantity}</>
-            ) : (
-              <>
-                <span className="md:hidden">Agregar</span>
-                <span className="hidden md:inline">Sumar</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                  <path d="M5 12h14M12 5v14"/>
-                </svg>
-              </>
-            )}
-          </button>
+          quantity > 0 ? (
+            <div className="mt-[10px] inline-block" onClick={(e) => e.stopPropagation()}>
+              <QtyCapsule
+                value={quantity}
+                onMinus={onQuickRemove}
+                onPlus={onQuickAdd}
+                minusIsTrash={quantity <= 1}
+                minusLabel={`Quitar uno de ${name}`}
+                plusLabel={`Sumar uno de ${name}`}
+                plusDisabled={limitReached}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              aria-label={`Agregar ${name}`}
+              aria-disabled={limitReached}
+              disabled={limitReached}
+              onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
+              className="brot-ghost brot-ghost--sm mt-[10px]"
+            >
+              <span className="md:hidden">Agregar</span>
+              <span className="hidden md:inline">Sumar</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M5 12h14M12 5v14"/>
+              </svg>
+            </button>
+          )
         )}
         {!isDisabled && maxReached && !stockReached && (
           <div className="text-[13px] text-stone mt-1">Máximo {MAX_PER_PRODUCT} por pan</div>

@@ -408,6 +408,7 @@ function HomeContent() {
                   slotSelected={!!selectedSlotId}
                   onClick={() => openProduct(product)}
                   onQuickAdd={() => addToCart(product.id)}
+                  onQuickRemove={() => removeFromCart(product.id)}
                 />
               ))}
             </div>
