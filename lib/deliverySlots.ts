@@ -34,3 +34,30 @@ export function isOrderingClosed(
   const cutoff = slot.orderCutoff ?? new Date(slot.date.getTime() - CUTOFF_HOURS * 60 * 60 * 1000);
   return now.getTime() >= cutoff.getTime() + ORDER_GRACE_HOURS * 60 * 60 * 1000;
 }
+
+/**
+ * Archivo de fechas en el admin (Fechas, Pedidos, Dashboard). Funciones puras
+ * que aceptan fechas como Date o string ISO (el admin las recibe como JSON).
+ *
+ * - Fechas se archiva al cerrar "Pedidos hasta" (la fecha ya no se gestiona).
+ * - Pedidos y Dashboard esperan a que pase el día de retiro: entre el cierre y
+ *   la entrega todavía hay que revisar pagos, hornear y entregar esos pedidos.
+ */
+type SlotDates = { date: Date | string; orderCutoff: Date | string | null };
+
+// El slot guarda la fecha a las 12:00 UTC. Pasadas 12 h (≈ 21:00 en Argentina,
+// después del horario de retiro) se considera que el día de retiro terminó;
+// no depende de la zona horaria de quien lo evalúa (servidor o navegador).
+const PICKUP_DAY_END_HOURS = 12;
+
+export function isPickupPast(slot: SlotDates, now: Date): boolean {
+  return now.getTime() >= new Date(slot.date).getTime() + PICKUP_DAY_END_HOURS * 60 * 60 * 1000;
+}
+
+export function isSlotArchived(slot: SlotDates, now: Date): boolean {
+  const normalized = {
+    date: new Date(slot.date),
+    orderCutoff: slot.orderCutoff ? new Date(slot.orderCutoff) : null,
+  };
+  return isCutoffPassed(normalized, now) || isPickupPast(slot, now);
+}

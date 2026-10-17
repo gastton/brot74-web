@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { NEW_SLOT_STOCK } from "@/lib/productStock";
 
 const DAY_MAP: Record<number, string> = { 1: "lunes", 6: "sabado" };
 const TARGET_DAYS = [1, 6];        // Lunes, Sábado
-const DEFAULT_STOCK = 8;
 
 export async function POST(req: NextRequest) {
   const session = await requireAdmin(req);
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       const days = (product.availableDays ?? "").split(",").filter(Boolean);
       if (dayName && days.includes(dayName)) {
         await prisma.productStock.create({
-          data: { productId: product.id, deliverySlotId: slot.id, totalStock: DEFAULT_STOCK, reservedStock: 0 },
+          data: { productId: product.id, deliverySlotId: slot.id, totalStock: NEW_SLOT_STOCK, reservedStock: 0 },
         });
       }
     }

@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { GET, POST } from "@/app/api/admin/slots/route";
 import { PUT, DELETE } from "@/app/api/admin/slots/[id]/route";
 import { prisma } from "@/lib/db";
-import { createProduct, createDeliverySlot, createProductStock } from "../helpers/factories";
+import { createProduct, createDeliverySlot, createProductStock, createOrder } from "../helpers/factories";
 import { adminCookieHeader } from "../helpers/auth";
 
 function getRequest(headers: Record<string, string> = {}) {
@@ -53,7 +53,7 @@ describe("POST /api/admin/slots", () => {
     expect(res.status).toBe(401);
   });
 
-  it("crea el slot e inicializa stock (8 unidades) para cada producto activo", async () => {
+  it("crea el slot e inicializa stock (20 unidades) para cada producto activo", async () => {
     const active = await createProduct({ active: true });
     await createProduct({ active: false });
 
@@ -67,7 +67,21 @@ describe("POST /api/admin/slots", () => {
     const stocks = await prisma.productStock.findMany({ where: { deliverySlotId: json.id } });
     expect(stocks).toHaveLength(1);
     expect(stocks[0].productId).toBe(active.id);
-    expect(stocks[0].totalStock).toBe(8);
+    expect(stocks[0].totalStock).toBe(20);
+    expect(stocks[0].reservedStock).toBe(0);
+  });
+
+  it("inicializa 20 unidades para todos los panes activos y ninguno para los inactivos", async () => {
+    await createProduct({ active: true });
+    await createProduct({ active: true });
+    await createProduct({ active: false });
+
+    const res = await POST(postRequest({ date: "2026-08-12", dayLabel: "Miércoles" }, await adminCookieHeader()));
+    const json = await res.json();
+
+    const stocks = await prisma.productStock.findMany({ where: { deliverySlotId: json.id } });
+    expect(stocks).toHaveLength(2);
+    expect(stocks.every((s) => s.totalStock === 20)).toBe(true);
   });
 });
 
@@ -102,6 +116,73 @@ describe("PUT /api/admin/slots/[id]", () => {
 
     expect(json.deliveryMode).toBe("pickup");
   });
+
+  it("habilitar/deshabilitar (body solo con active) conserva Pedidos hasta, horario, lugar e imagen", async () => {
+    const cutoff = new Date("2026-08-09T15:00:00.000Z");
+    const slot = await createDeliverySlot({
+      active: true,
+      orderCutoff: cutoff,
+      pickupTime: "10:00 - 13:00",
+      location: "Las Zinnias 154",
+      imageUrl: "https://example.com/foto.jpg",
+      imageFocalX: 30,
+      imageFocalY: 70,
+      imageScale: 1.4,
+    });
+    const headers = await adminCookieHeader();
+
+    // deshabilitar y volver a habilitar, como hace el admin
+    await PUT(putRequest({ active: false }, headers), { params: Promise.resolve({ id: String(slot.id) }) });
+    const res = await PUT(putRequest({ active: true }, headers), { params: Promise.resolve({ id: String(slot.id) }) });
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.active).toBe(true);
+    expect(new Date(json.orderCutoff).toISOString()).toBe(cutoff.toISOString());
+    expect(json.pickupTime).toBe("10:00 - 13:00");
+    expect(json.location).toBe("Las Zinnias 154");
+    expect(json.imageUrl).toBe("https://example.com/foto.jpg");
+    expect(json.imageFocalX).toBe(30);
+    expect(json.imageFocalY).toBe(70);
+    expect(json.imageScale).toBe(1.4);
+  });
+
+  it("cambiar solo orderCutoff no pisa el resto de los campos", async () => {
+    const slot = await createDeliverySlot({ pickupTime: "10:00 - 13:00", imageScale: 1.4 });
+
+    const res = await PUT(
+      putRequest({ orderCutoff: "2026-08-08T15:00:00.000Z" }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(slot.id) }) }
+    );
+    const json = await res.json();
+
+    expect(new Date(json.orderCutoff).toISOString()).toBe("2026-08-08T15:00:00.000Z");
+    expect(json.pickupTime).toBe("10:00 - 13:00");
+    expect(json.imageScale).toBe(1.4);
+  });
+
+  it("un orderCutoff null explícito limpia Pedidos hasta", async () => {
+    const slot = await createDeliverySlot({ orderCutoff: new Date("2026-08-09T15:00:00.000Z") });
+
+    const res = await PUT(
+      putRequest({ orderCutoff: null }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(slot.id) }) }
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.orderCutoff).toBeNull();
+  });
+
+  it("devuelve 404 si la fecha no existe", async () => {
+    const res = await PUT(putRequest({ active: false }, await adminCookieHeader()), { params: Promise.resolve({ id: "999999" }) });
+    expect(res.status).toBe(404);
+  });
+
+  it("devuelve 400 si el id no es válido", async () => {
+    const res = await PUT(putRequest({ active: false }, await adminCookieHeader()), { params: Promise.resolve({ id: "abc" }) });
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("DELETE /api/admin/slots/[id]", () => {
@@ -122,5 +203,26 @@ describe("DELETE /api/admin/slots/[id]", () => {
     expect(remaining).toBeNull();
     const stocks = await prisma.productStock.findMany({ where: { deliverySlotId: slot.id } });
     expect(stocks).toHaveLength(0);
+  });
+
+  it("devuelve 409 (no 500) y no borra la fecha si tiene pedidos", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    await createProductStock(product.id, slot.id);
+    await createOrder(slot.id, [{ productId: product.id, quantity: 1, unitPrice: 1000 }]);
+    await createOrder(slot.id, [{ productId: product.id, quantity: 2, unitPrice: 1000 }]);
+
+    const res = await DELETE(deleteRequest(await adminCookieHeader()), { params: Promise.resolve({ id: String(slot.id) }) });
+    const json = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(json.error).toMatch(/2 pedidos/);
+    expect(await prisma.deliverySlot.findUnique({ where: { id: slot.id } })).not.toBeNull();
+    expect(await prisma.order.count({ where: { deliverySlotId: slot.id } })).toBe(2);
+  });
+
+  it("devuelve 404 si la fecha no existe", async () => {
+    const res = await DELETE(deleteRequest(await adminCookieHeader()), { params: Promise.resolve({ id: "999999" }) });
+    expect(res.status).toBe(404);
   });
 });

@@ -75,6 +75,7 @@ describe("POST /api/admin/slots/generate", () => {
     const stockedProductIds = mondayStocks.map((s) => s.productId);
 
     expect(stockedProductIds).toContain(lunesOnly.id);
+    expect(mondayStocks.every((s) => s.totalStock === 20)).toBe(true);
     expect(stockedProductIds).not.toContain(sabadoOnly.id);
   });
 });
