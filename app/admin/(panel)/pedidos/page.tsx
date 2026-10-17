@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Loader2, Phone, MapPin, Package, Home, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toastError } from "@/lib/toast";
+import { isPickupPast } from "@/lib/deliverySlots";
 
 interface Order {
   id: number;
@@ -19,6 +21,9 @@ interface Order {
   createdAt: string;
   items: { name: string; quantity: number; unitPrice: number }[];
 }
+
+// Estados con el pago ya confirmado (para el resumen de panes por fecha).
+const PAID_STATUSES = ["paid", "preparing", "ready", "delivered"];
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending:   { label: "Pendiente",  color: "bg-yellow-100 text-yellow-800" },
@@ -36,6 +41,8 @@ function PedidosContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<number | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     const url = slotFilter ? `/api/admin/orders?slotId=${slotFilter}` : "/api/admin/orders";
@@ -76,12 +83,118 @@ function PedidosContent() {
     return acc;
   }, {});
 
+  function renderGroup([key, slotOrders]: [string, Order[]]) {
+    const [, label] = key.split("|");
+    return (
+      <div key={key}>
+        <div className="flex items-center gap-2 mb-3">
+          <Home className="w-4 h-4 text-amber" />
+          <h2 className="font-serif text-lg font-bold text-brown">{label}</h2>
+          <span className="text-xs text-muted ml-auto">{slotOrders.length} pedidos</span>
+        </div>
+
+        <div className="space-y-3">
+          {slotOrders.map((order) => {
+            const st = STATUS_LABELS[order.status] ?? { label: order.status, color: "bg-gray-100 text-gray-700" };
+            return (
+              <div key={order.id} className="bg-white rounded-2xl border-2 border-border p-5">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-charcoal">{order.customerName}</p>
+                      <span className="text-xs text-muted">#{order.id}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1 text-sm text-muted">
+                      <Phone className="w-3.5 h-3.5" />
+                      <a href={`tel:${order.customerPhone}`} className="hover:text-brown">{order.customerPhone}</a>
+                    </div>
+                    {order.customerAddress && (
+                      <div className="flex items-center gap-1.5 mt-0.5 text-sm text-muted">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{order.customerAddress}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
+                    <div className="relative">
+                      <select
+                        value={order.status}
+                        onChange={(e) => updateStatus(order.id, e.target.value)}
+                        disabled={updating === order.id}
+                        className="appearance-none bg-cream border-2 border-border rounded-lg pl-3 pr-7 py-1.5 text-sm font-medium text-charcoal focus:outline-none focus:border-amber cursor-pointer"
+                      >
+                        {Object.entries(STATUS_LABELS).map(([val, { label }]) => (
+                          <option key={val} value={val}>{label}</option>
+                        ))}
+                      </select>
+                      {updating === order.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-muted" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-border">
+                  <div className="space-y-1">
+                    {order.items.map((item, i) => (
+                      <div key={i} className="flex justify-between text-sm">
+                        <span className="text-charcoal">{item.name} <span className="text-muted">×{item.quantity}</span></span>
+                        <span className="text-muted">{formatCurrency(item.quantity * item.unitPrice)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between font-bold text-sm mt-2 pt-2 border-t border-border">
+                    <span>Total</span>
+                    <span className="text-brown">{formatCurrency(order.total)}</span>
+                  </div>
+                  {order.notes && (
+                    <p className="text-xs text-muted mt-2 italic">📝 {order.notes}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Archivo: las fechas cuyo día de retiro ya pasó. Entre el cierre de "Pedidos
+  // hasta" y la entrega los pedidos siguen a la vista (hay que cobrar, hornear y entregar).
+  const nowDate = new Date();
+  const groups = Object.entries(grouped);
+  const archivedGroups = groups.filter(([key]) => isPickupPast({ date: key.split("|")[0], orderCutoff: null }, nowDate));
+  const activeGroups = groups.filter(([key]) => !isPickupPast({ date: key.split("|")[0], orderCutoff: null }, nowDate));
+
+  // Resumen de panes de la fecha: suma de unidades por pan, sin pedidos cancelados.
+  const breadSummary = (() => {
+    const byName = new Map<string, { total: number; paid: number }>();
+    for (const o of orders) {
+      if (o.status === "cancelled") continue;
+      for (const i of o.items) {
+        const row = byName.get(i.name) ?? { total: 0, paid: 0 };
+        row.total += i.quantity;
+        if (PAID_STATUSES.includes(o.status)) row.paid += i.quantity;
+        byName.set(i.name, row);
+      }
+    }
+    const rows = [...byName.entries()].map(([name, v]) => ({ name, ...v })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+    return { rows, total: rows.reduce((n, r) => n + r.total, 0), paid: rows.reduce((n, r) => n + r.paid, 0) };
+  })();
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-3xl font-bold text-brown">Pedidos</h1>
         <p className="text-muted text-sm mt-1">
           {slotFilter ? "Filtrando por fecha" : "Todos los pedidos"} · {orders.length} total
+          {slotFilter && (
+            <> · <Link href="/admin/pedidos" className="text-amber hover:underline">Ver todos</Link></>
+          )}
         </p>
       </div>
 
@@ -93,85 +206,77 @@ function PedidosContent() {
           <p className="text-muted">No hay pedidos todavía.</p>
         </div>
       ) : (
-        Object.entries(grouped).map(([key, slotOrders]) => {
-          const [, label] = key.split("|");
-          return (
-            <div key={key}>
+        <>
+          {/* Con una fecha elegida (viene del Dashboard) se muestra el total de panes;
+              el detalle de pedidos queda detrás de un botón. */}
+          {slotFilter && (
+            <div className="bg-white rounded-2xl border-2 border-border p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Home className="w-4 h-4 text-amber" />
-                <h2 className="font-serif text-lg font-bold text-brown">{label}</h2>
-                <span className="text-xs text-muted ml-auto">{slotOrders.length} pedidos</span>
+                <Package className="w-4 h-4 text-amber" />
+                <h2 className="font-serif text-lg font-bold text-brown">Total de panes</h2>
+                <span className="text-xs text-muted ml-auto">{orders[0]?.slotLabel}</span>
               </div>
-
-              <div className="space-y-3">
-                {slotOrders.map((order) => {
-                  const st = STATUS_LABELS[order.status] ?? { label: order.status, color: "bg-gray-100 text-gray-700" };
-                  return (
-                    <div key={order.id} className="bg-white rounded-2xl border-2 border-border p-5">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-bold text-charcoal">{order.customerName}</p>
-                            <span className="text-xs text-muted">#{order.id}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-1 text-sm text-muted">
-                            <Phone className="w-3.5 h-3.5" />
-                            <a href={`tel:${order.customerPhone}`} className="hover:text-brown">{order.customerPhone}</a>
-                          </div>
-                          {order.customerAddress && (
-                            <div className="flex items-center gap-1.5 mt-0.5 text-sm text-muted">
-                              <MapPin className="w-3.5 h-3.5" />
-                              <span>{order.customerAddress}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${st.color}`}>{st.label}</span>
-                          <div className="relative">
-                            <select
-                              value={order.status}
-                              onChange={(e) => updateStatus(order.id, e.target.value)}
-                              disabled={updating === order.id}
-                              className="appearance-none bg-cream border-2 border-border rounded-lg pl-3 pr-7 py-1.5 text-sm font-medium text-charcoal focus:outline-none focus:border-amber cursor-pointer"
-                            >
-                              {Object.entries(STATUS_LABELS).map(([val, { label }]) => (
-                                <option key={val} value={val}>{label}</option>
-                              ))}
-                            </select>
-                            {updating === order.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin absolute right-2 top-1/2 -translate-y-1/2 text-muted" />
-                            ) : (
-                              <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 pt-3 border-t border-border">
-                        <div className="space-y-1">
-                          {order.items.map((item, i) => (
-                            <div key={i} className="flex justify-between text-sm">
-                              <span className="text-charcoal">{item.name} <span className="text-muted">×{item.quantity}</span></span>
-                              <span className="text-muted">{formatCurrency(item.quantity * item.unitPrice)}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex justify-between font-bold text-sm mt-2 pt-2 border-t border-border">
-                          <span>Total</span>
-                          <span className="text-brown">{formatCurrency(order.total)}</span>
-                        </div>
-                        {order.notes && (
-                          <p className="text-xs text-muted mt-2 italic">📝 {order.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              {breadSummary.rows.length === 0 ? (
+                <p className="text-sm text-muted">No hay pedidos activos en esta fecha.</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-muted text-left border-b border-border">
+                      <th className="py-2 font-semibold">Pan</th>
+                      <th className="py-2 font-semibold text-right">Total</th>
+                      <th className="py-2 font-semibold text-right">Pagados</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {breadSummary.rows.map((r) => (
+                      <tr key={r.name} className="border-b border-border last:border-0">
+                        <td className="py-2 text-charcoal">{r.name}</td>
+                        <td className="py-2 text-right font-bold text-brown">{r.total}</td>
+                        <td className="py-2 text-right text-muted">{r.paid}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t-2 border-border font-bold">
+                      <td className="py-2">Total panes</td>
+                      <td className="py-2 text-right text-brown">{breadSummary.total}</td>
+                      <td className="py-2 text-right text-muted">{breadSummary.paid}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              )}
+              <p className="text-xs text-muted mt-3">Sin contar pedidos cancelados. “Pagados” incluye pagado, preparando, listo y entregado.</p>
+              <button
+                onClick={() => setShowDetail((v) => !v)}
+                className="mt-3 flex items-center gap-2 text-sm text-amber hover:underline"
+              >
+                {showDetail ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {showDetail ? "Ocultar detalle de pedidos" : `Ver detalle de pedidos (${orders.length})`}
+              </button>
             </div>
-          );
-        })
+          )}
+
+          {(!slotFilter || showDetail) && (
+            <>
+              {(slotFilter ? groups : activeGroups).map(renderGroup)}
+
+              {!slotFilter && archivedGroups.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowArchived((v) => !v)}
+                    className="flex items-center gap-2 text-sm text-muted hover:text-brown transition-colors py-1"
+                  >
+                    {showArchived ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {showArchived
+                      ? "Ocultar fechas archivadas"
+                      : `Ver ${archivedGroups.length} fecha${archivedGroups.length !== 1 ? "s" : ""} archivada${archivedGroups.length !== 1 ? "s" : ""} (${archivedGroups.reduce((n, [, o]) => n + o.length, 0)} pedidos)`}
+                  </button>
+                  {showArchived && <div className="mt-3 space-y-6">{archivedGroups.map(renderGroup)}</div>}
+                </div>
+              )}
+            </>
+          )}
+        </>
       )}
     </div>
   );

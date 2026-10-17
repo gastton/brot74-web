@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 
 const DAY_MAP: Record<string, number> = { lunes: 1, miercoles: 3, sabado: 6 };
 export const DEFAULT_STOCK = 5;
+// Stock inicial de cada pan activo al crear una fecha nueva.
+export const NEW_SLOT_STOCK = 20;
 
 /**
  * Sincroniza el ProductStock de los slots futuros de un producto según el

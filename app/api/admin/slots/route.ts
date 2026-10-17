@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { NEW_SLOT_STOCK } from "@/lib/productStock";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin(req);
@@ -38,11 +39,9 @@ export async function POST(req: NextRequest) {
   });
 
   const products = await prisma.product.findMany({ where: { active: true } });
-  for (const p of products) {
-    await prisma.productStock.create({
-      data: { productId: p.id, deliverySlotId: slot.id, totalStock: 8, reservedStock: 0 },
-    });
-  }
+  await prisma.productStock.createMany({
+    data: products.map((p) => ({ productId: p.id, deliverySlotId: slot.id, totalStock: NEW_SLOT_STOCK, reservedStock: 0 })),
+  });
 
   return NextResponse.json(slot, { status: 201 });
 }

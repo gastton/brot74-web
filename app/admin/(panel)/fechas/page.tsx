@@ -5,6 +5,7 @@ import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Calenda
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import { toastError, toastSuccess } from "@/lib/toast";
+import { isSlotArchived } from "@/lib/deliverySlots";
 
 interface Slot {
   id: number;
@@ -120,7 +121,8 @@ export default function FechasPage() {
     await fetch(`/api/admin/slots/${slot.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dayLabel: slot.dayLabel, active: !slot.active }),
+      // La API actualiza solo lo que viene: mandar el resto lo pisaba con vacíos.
+      body: JSON.stringify({ active: !slot.active }),
     });
     fetchAll();
   }
@@ -154,7 +156,17 @@ export default function FechasPage() {
 
   async function handleDelete(id: number) {
     if (!confirm("¿Eliminar esta fecha? Se eliminarán también los stocks asociados.")) return;
-    await fetch(`/api/admin/slots/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`/api/admin/slots/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toastError(data.error ?? "No se pudo eliminar la fecha.");
+        return;
+      }
+    } catch {
+      toastError("Error de conexión. Probá de nuevo.");
+      return;
+    }
     fetchAll();
   }
 
@@ -181,10 +193,10 @@ export default function FechasPage() {
     fetchAll();
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const past = slots.filter((s) => new Date(s.date) < today);
-  const upcoming = slots.filter((s) => new Date(s.date) >= today);
+  // Archivadas: las que ya cerraron "Pedidos hasta" (o ya pasaron).
+  const nowDate = new Date();
+  const past = slots.filter((s) => isSlotArchived(s, nowDate));
+  const upcoming = slots.filter((s) => !isSlotArchived(s, nowDate));
 
   return (
     <div className="space-y-6">
@@ -194,12 +206,15 @@ export default function FechasPage() {
           <p className="text-muted text-sm mt-1">Gestioná cuándo y cuánto producís</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* "Generar mes" oculto a pedido: el modal y /api/admin/slots/generate quedan
+             por si se vuelve a usar; alcanza con volver a mostrar este botón.
           <button
             onClick={() => { setShowGenerate(true); setGenerateResult(null); }}
             className="btn-secondary flex items-center gap-2 rounded-xl text-sm"
           >
             <CalendarDays className="w-4 h-4" /> Generar mes
           </button>
+          */}
           <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2 rounded-xl text-sm">
             <Plus className="w-4 h-4" /> Nueva fecha
           </button>
@@ -231,7 +246,7 @@ export default function FechasPage() {
                 className="flex items-center gap-2 text-sm text-muted hover:text-brown transition-colors py-1"
               >
                 {showPast ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                {showPast ? "Ocultar fechas anteriores" : `Ver ${past.length} fecha${past.length !== 1 ? "s" : ""} anterior${past.length !== 1 ? "es" : ""}`}
+                {showPast ? "Ocultar fechas archivadas" : `Ver ${past.length} fecha${past.length !== 1 ? "s" : ""} archivada${past.length !== 1 ? "s" : ""}`}
               </button>
               {showPast && (
                 <div className="mt-3">
