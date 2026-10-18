@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import QtyCapsule from "./QtyCapsule";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 import PickupDateRow from "./PickupDateRow";
+import ExitDialog from "./ExitDialog";
 
 interface CartItem {
   id: number;
@@ -52,99 +53,6 @@ function CloseIcon() {
 
 function BagIcon({ stroke = "#F4EEE2" }: { stroke?: string }) {
   return <ShoppingCart size={20} color={stroke} strokeWidth={1.8} />;
-}
-
-// Diálogo de aviso/confirmación propio (BRT-88): reemplaza a window.confirm/
-// alert nativos, que no permiten personalizar el texto de los botones.
-// Con un solo botón (sin cancelLabel) funciona como alerta ("OK"); con dos,
-// como confirmación (cancelar / confirmar).
-function ConfirmDialog({
-  message,
-  confirmLabel,
-  cancelLabel,
-  onConfirm,
-  onCancel,
-}: {
-  message: string;
-  confirmLabel: string;
-  cancelLabel?: string;
-  onConfirm: () => void;
-  onCancel?: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center" style={{ padding: "19px" }}>
-      <div
-        className="absolute inset-0"
-        style={{ background: "rgba(14,35,60,.58)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }}
-      />
-      <div
-        className="relative w-full text-center"
-        style={{ ...MODAL_STYLE, maxWidth: "336px", padding: "26px 24px 22px" }}
-      >
-        <div
-          className="mx-auto"
-          style={{
-            width: "42px",
-            height: "42px",
-            borderRadius: "12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(166,68,46,.12)",
-            color: "#A6442E",
-            marginBottom: "14px",
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 8v4.5"/><path d="M12 16h.01"/><circle cx="12" cy="12" r="9.2"/>
-          </svg>
-        </div>
-        <p className="font-bold text-[15.5px] text-navy" style={{ lineHeight: 1.4, margin: 0 }}>
-          {message}
-        </p>
-        <div className="flex" style={{ gap: "10px", marginTop: "20px" }}>
-          {cancelLabel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 font-bold text-[14.5px]"
-              style={{
-                border: "1.5px solid rgba(14,35,60,.16)",
-                background: "#fff",
-                color: "#0E233C",
-                borderRadius: "var(--brot-radius)",
-                padding: "13px 6px",
-                cursor: "pointer",
-                transition: ctaTransition,
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
-            >
-              {cancelLabel}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="flex-1 font-bold text-[14.5px]"
-            style={{
-              border: "none",
-              background: "#0E233C",
-              color: "#F4EEE2",
-              borderRadius: "var(--brot-radius)",
-              padding: "13px 6px",
-              cursor: "pointer",
-              transition: ctaTransition,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 16px 30px -16px rgba(14,35,60,.55)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-          >
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // BRT-182: recordar nombre y teléfono entre pedidos. Envuelto en try/catch
@@ -204,6 +112,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
   const showDateRow = step === "form" && items.length > 0;
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const breadCount = items.reduce((sum, i) => sum + i.quantity, 0);
 
   // Lo que identifica al pedido ya creado: si el usuario vuelve atrás desde la
   // pantalla de pago y no cambia nada, "Pagar" reutiliza el mismo pedido en
@@ -578,19 +487,30 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
         </div>
       )}
 
-      {/* Diálogo de confirmación al cerrar con la X (BRT-88) */}
+      {/* Aviso al cerrar con la X con panes elegidos (BRT-88; rediseñado en v55) */}
       {showCloseConfirm && (
-        <ConfirmDialog
-          message={
-            step === "payment" && orderId != null
-              ? `Tu pedido #${orderId} ya quedó registrado, pero no lo preparamos hasta que llegue la transferencia. ¿Cerrar de todos modos?`
-              : "Al cerrar esta pantalla se perderán los productos seleccionados. ¿Cerrar de todos modos?"
-          }
-          confirmLabel="SÍ"
-          cancelLabel="NO"
-          onConfirm={() => { setShowCloseConfirm(false); onClose(true); }}
-          onCancel={() => setShowCloseConfirm(false)}
-        />
+        step === "payment" && orderId != null ? (
+          // Con el pedido ya registrado (paso de pago) el aviso es otro: no se pierde
+          // nada elegido, pero no se prepara hasta que llegue la transferencia.
+          <ExitDialog
+            title="¿Salir sin terminar?"
+            body={`Tu pedido #${orderId} ya quedó registrado, pero no lo preparamos hasta que llegue la transferencia.`}
+            stayLabel="Volver al pago"
+            leaveLabel="Salir"
+            onStay={() => setShowCloseConfirm(false)}
+            onLeave={() => { setShowCloseConfirm(false); onClose(true); }}
+          />
+        ) : (
+          <ExitDialog
+            title="¿Salir sin terminar?"
+            body={`${breadCount === 1 ? "Tenés 1 pan elegido" : `Tenés ${breadCount} panes elegidos`}. Si salís ahora, se borran y vas a tener que elegirlos de nuevo.`}
+            stayLabel="Seguir eligiendo"
+            leaveLabel="Salir y borrar el pedido"
+            leaveLabelDesktop="Salir y borrar"
+            onStay={() => setShowCloseConfirm(false)}
+            onLeave={() => { setShowCloseConfirm(false); onClose(true); }}
+          />
+        )
       )}
     </div>
   );

@@ -209,22 +209,35 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
                 />
               </div>
 
+              {/* v55 · hoja de calendario en 3 líneas: día (500 14px) / número ámbar (64px 400, como el
+                 "74" del hero) / mes (300 12px, como la frase del hero). */}
               <div
                 className="absolute left-6 min-[900px]:left-0 select-none"
-                style={{ bottom: "-34px", width: "190px", background: "#F4EEE2", padding: "16px 18px 14px" }}
+                style={{
+                  bottom: "-28px",
+                  minWidth: "150px",
+                  background: "#F4EEE2",
+                  padding: "14px 16px 12px",
+                  fontFamily: "var(--font-jost), system-ui, sans-serif",
+                  color: "#0E233C",
+                  textTransform: "uppercase",
+                }}
               >
                 <div className="brot-rule" />
-                <div className="mt-3" style={{ fontSize: "84px", fontWeight: 300, lineHeight: 0.9, letterSpacing: "-.03em", color: "#0E233C" }}>
+                <div style={{ marginTop: "12px", fontSize: "14px", fontWeight: 500, lineHeight: 1.55, letterSpacing: "1.76px" }}>
+                  {weekday}
+                </div>
+                <div style={{ marginTop: "4px", fontSize: "64px", fontWeight: 400, lineHeight: 0.94, letterSpacing: "-.02em", color: "#C8851A" }}>
                   {day}
                 </div>
-                <div className="brot-kick mt-2" style={{ color: "#C8851A" }}>
-                  {weekday} · {month}
+                <div style={{ marginTop: "8px", fontSize: "12px", fontWeight: 300, lineHeight: 1.55, letterSpacing: "1.76px" }}>
+                  {month}
                 </div>
               </div>
             </div>
 
             {/* ── Datos ── */}
-            <div className="brot-card-body pt-[52px]">
+            <div className="brot-card-body pt-[46px]">
               {slot.pickupTime && (
                 <InfoRow icon={<ClockIcon />} label="Horario de retiro" value={slot.pickupTime} />
               )}
