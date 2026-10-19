@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 const WAITLIST_RATE_LIMIT = { max: 10, windowMs: 60 * 60 * 1000 };
+const MAX_NAME_LENGTH = 40;
 
 export async function POST(req: NextRequest) {
   const { allowed, resetAt } = checkRateLimit(`waitlist:${getClientIp(req)}`, WAITLIST_RATE_LIMIT);
@@ -11,7 +12,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { phone } = await req.json();
+    const { phone, name } = await req.json();
+
+    // v57: el nombre es obligatorio (se muestra en el admin y en la confirmación).
+    const cleanedName = typeof name === "string" ? name.trim() : "";
+    if (!cleanedName) {
+      return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+    }
+    if (cleanedName.length > MAX_NAME_LENGTH) {
+      return NextResponse.json({ error: `El nombre puede tener hasta ${MAX_NAME_LENGTH} caracteres` }, { status: 400 });
+    }
 
     const cleaned = (phone ?? "").replace(/\D/g, "");
     if (cleaned.length < 7 || cleaned.length > 15) {
@@ -24,8 +34,8 @@ export async function POST(req: NextRequest) {
     // había avisado en una ronda anterior.
     await prisma.waitlistEntry.upsert({
       where: { phone: cleaned },
-      update: { notified: false, createdAt: new Date() },
-      create: { phone: cleaned },
+      update: { name: cleanedName, notified: false, createdAt: new Date() },
+      create: { phone: cleaned, name: cleanedName },
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });

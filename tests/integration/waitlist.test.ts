@@ -13,7 +13,7 @@ function postRequest(body: unknown, ip?: string) {
 
 describe("POST /api/waitlist", () => {
   it("crea la entrada limpiando el número a solo dígitos", async () => {
-    const res = await POST(postRequest({ phone: "+54 9 11 2233-4455" }));
+    const res = await POST(postRequest({ name: "Ana", phone: "+54 9 11 2233-4455" }));
     const json = await res.json();
 
     expect(res.status).toBe(201);
@@ -25,26 +25,26 @@ describe("POST /api/waitlist", () => {
   });
 
   it("devuelve 400 si el número tiene menos de 7 dígitos", async () => {
-    const res = await POST(postRequest({ phone: "12345" }));
+    const res = await POST(postRequest({ name: "Ana", phone: "12345" }));
     expect(res.status).toBe(400);
   });
 
   it("devuelve 400 si el número tiene más de 15 dígitos", async () => {
-    const res = await POST(postRequest({ phone: "1234567890123456" }));
+    const res = await POST(postRequest({ name: "Ana", phone: "1234567890123456" }));
     expect(res.status).toBe(400);
   });
 
   it("devuelve 400 si no llega ningún número", async () => {
-    const res = await POST(postRequest({}));
+    const res = await POST(postRequest({ name: "Ana" }));
     expect(res.status).toBe(400);
   });
 
   it("no duplica la fila si el mismo teléfono se envía dos veces (BRT-97)", async () => {
-    await POST(postRequest({ phone: "3513845646" }));
+    await POST(postRequest({ name: "Ana", phone: "3513845646" }));
     const first = await prisma.waitlistEntry.findFirstOrThrow({ where: { phone: "3513845646" } });
     await prisma.waitlistEntry.update({ where: { id: first.id }, data: { notified: true } });
 
-    const res = await POST(postRequest({ phone: "3513845646" }));
+    const res = await POST(postRequest({ name: "Ana", phone: "3513845646" }));
     expect(res.status).toBe(201);
 
     const entries = await prisma.waitlistEntry.findMany({ where: { phone: "3513845646" } });
@@ -55,17 +55,51 @@ describe("POST /api/waitlist", () => {
 
   it("responde 429 con Retry-After al pasar de 10 intentos por hora desde la misma IP, sin guardar el número", async () => {
     for (let i = 0; i < 10; i++) {
-      const res = await POST(postRequest({ phone: `35138456${String(i).padStart(2, "0")}` }, "203.0.113.7"));
+      const res = await POST(postRequest({ name: "Ana", phone: `35138456${String(i).padStart(2, "0")}` }, "203.0.113.7"));
       expect(res.status).toBe(201);
     }
 
-    const blocked = await POST(postRequest({ phone: "3513999999" }, "203.0.113.7"));
+    const blocked = await POST(postRequest({ name: "Ana", phone: "3513999999" }, "203.0.113.7"));
     expect(blocked.status).toBe(429);
     expect(Number(blocked.headers.get("Retry-After"))).toBeGreaterThan(0);
     expect(await prisma.waitlistEntry.findFirst({ where: { phone: "3513999999" } })).toBeNull();
 
     // Otra IP sigue pudiendo anotarse.
-    const other = await POST(postRequest({ phone: "3513999999" }, "198.51.100.9"));
+    const other = await POST(postRequest({ name: "Ana", phone: "3513999999" }, "198.51.100.9"));
     expect(other.status).toBe(201);
+  });
+
+  it("guarda el nombre (sin espacios sobrantes) junto con el número (v57)", async () => {
+    const res = await POST(postRequest({ name: "  Ana López  ", phone: "3511234567" }));
+
+    expect(res.status).toBe(201);
+    const entry = await prisma.waitlistEntry.findFirstOrThrow({ where: { phone: "3511234567" } });
+    expect(entry.name).toBe("Ana López");
+  });
+
+  it("al volver a anotarse el mismo número, actualiza el nombre sin duplicar la fila (v57)", async () => {
+    await POST(postRequest({ name: "Ana", phone: "3511234567" }));
+    await POST(postRequest({ name: "Ana María", phone: "3511234567" }));
+
+    const entries = await prisma.waitlistEntry.findMany({ where: { phone: "3511234567" } });
+    expect(entries).toHaveLength(1);
+    expect(entries[0].name).toBe("Ana María");
+  });
+
+  it.each([
+    ["falta", {}],
+    ["es solo espacios", { name: "   " }],
+    ["no es texto", { name: 123 }],
+    ["tiene más de 40 caracteres", { name: "a".repeat(41) }],
+  ])("devuelve 400 y no guarda nada si el nombre %s (v57)", async (_label, extra) => {
+    const res = await POST(postRequest({ phone: "3511234567", ...extra }));
+
+    expect(res.status).toBe(400);
+    expect(await prisma.waitlistEntry.count()).toBe(0);
+  });
+
+  it("acepta un nombre de exactamente 40 caracteres (v57)", async () => {
+    const res = await POST(postRequest({ name: "a".repeat(40), phone: "3511234567" }));
+    expect(res.status).toBe(201);
   });
 });
