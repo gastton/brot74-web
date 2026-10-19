@@ -6,6 +6,7 @@ import { Loader2, Bell, MessageCircle, ToggleLeft, ToggleRight, Trash2 } from "l
 interface WaitlistEntry {
   id: number;
   phone: string;
+  name: string | null;
   notified: boolean;
   createdAt: string;
 }
@@ -104,7 +105,10 @@ export default function WaitlistPage() {
               className={`bg-white rounded-2xl border-2 p-4 flex items-center gap-4 ${entry.notified ? "border-border opacity-60" : "border-border"}`}
             >
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-charcoal">{entry.phone}</p>
+                <p className="font-bold text-charcoal">
+                  {entry.name && <>{entry.name} <span className="font-normal text-muted">· </span></>}
+                  {entry.phone}
+                </p>
                 <p className="text-xs text-muted mt-0.5">
                   {new Date(entry.createdAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                 </p>

@@ -339,6 +339,9 @@ body {
   outline: none;
 }
 .brot-fl > input::placeholder { color: #6E7482; }
+/* v57 · campo vacío al enviar: línea 2px y rótulo en terracota */
+.brot-fl.is-err { border-bottom: 2px solid #A6442E; }
+.brot-fl.is-err > span { color: #A6442E; }
 
 /* ── Input base ── */
 .brot-input {

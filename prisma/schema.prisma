@@ -120,6 +120,7 @@ model OrderItem {
 model WaitlistEntry {
   id        Int      @id @default(autoincrement())
   phone     String   @unique
+  name      String? // v57: nombre de pila (≤40); las filas viejas no lo tienen
   notified  Boolean  @default(false)
   createdAt DateTime @default(now())
 

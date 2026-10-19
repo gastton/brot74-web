@@ -10,6 +10,7 @@ import DateSelector from "@/components/DateSelector";
 import HomeLanding from "@/components/home/HomeLanding";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 import PickupDateRow from "@/components/PickupDateRow";
+import NoSlotsScreen from "@/components/NoSlotsScreen";
 
 interface Slot {
   id: number | null;
@@ -324,6 +325,8 @@ function HomeContent() {
 
   /* ─── SLOTS VIEW ────────────────────────────────────────── */
   if (view === "slots") {
+    // v57: sin fechas abiertas → pantalla "Pedidos cerrados" con su propio encabezado y layout.
+    if (!loadingSlots && slots.every((s) => s.disabled)) return <NoSlotsScreen />;
     return (
       <div className="min-h-screen bg-white">
         <main className="w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto px-6 pt-5 pb-10">

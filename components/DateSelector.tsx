@@ -58,126 +58,12 @@ function InfoRow({ icon, label, value, last }: InfoRowProps) {
   );
 }
 
-function NoSlotsEmptyState() {
-  const [value, setValue] = useState("");
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!value.trim()) return;
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: value.trim() }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Error al guardar");
-      }
-      setSent(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al guardar. Intentá de nuevo.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <article
-      className="text-center"
-      style={{ background: "#fff", borderTop: "1px solid #0E233C", padding: "38px 6px 32px" }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/ramillete-mono-navy.png" alt="" style={{ width: "74px", height: "auto", display: "block", margin: "0 auto", opacity: 0.92 }} />
-
-      {/* Chip de estado */}
-      <div className="inline-flex items-center gap-[7px] mt-5 font-bold text-[11px] tracking-[.14em] uppercase" style={{ color: "#B86A3D" }}>
-        <span className="w-2 h-2 rounded-full flex-none" style={{ background: "#B86A3D" }} />
-        Pedidos cerrados
-      </div>
-
-      <h3 className="font-bold text-[22px] leading-[1.18] tracking-[-0.01em] text-navy mx-auto mt-[10px] mb-0" style={{ maxWidth: "18ch", textWrap: "balance" as React.CSSProperties["textWrap"] }}>
-        Tu próximo BROT está en el horno
-      </h3>
-      <p className="font-medium text-[15px] leading-[1.5] text-stone mx-auto mt-[11px] mb-0" style={{ maxWidth: "30ch", textWrap: "pretty" as React.CSSProperties["textWrap"] }}>
-        Horneamos por tandas, en cantidades limitadas. Dejanos tu contacto y te avisamos apenas se abra la próxima fecha.
-      </p>
-
-      {/* Formulario / confirmación */}
-      {sent ? (
-        <div className="flex flex-col items-center gap-2 mt-6 rounded-[4px] py-5 px-4" style={{ background: "#F4EEE2" }}>
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#C8851A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>
-          </svg>
-          <div className="font-bold text-[16px] text-navy">Listo, te avisamos</div>
-          <div className="font-medium text-[15px] leading-[1.45] text-stone text-center" style={{ maxWidth: "28ch" }}>
-            Apenas abramos la próxima tanda, sos de los primeros en enterarte.
-          </div>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-[10px] text-left">
-          <input
-            type="text"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="Tu WhatsApp"
-            aria-label="Tu WhatsApp"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            required
-            className="brot-input"
-            style={{ fontWeight: 500 }}
-          />
-          {error && (
-            <p className="text-[15px] text-center m-0" style={{ color: "#A6442E" }}>{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="brot-pill"
-            style={{ opacity: loading ? 0.6 : 1 }}
-          >
-            {loading ? "Enviando…" : "Avisame cuando abra"}
-          </button>
-          <p className="font-medium text-[14px] leading-[1.4] text-center m-0" style={{ color: "#6E7482" }}>
-            Te escribimos una sola vez, para la próxima fecha. Sin spam.
-          </p>
-        </form>
-      )}
-
-      {/* Instagram */}
-      <div className="mt-[22px] pt-5" style={{ borderTop: "1px solid rgba(14,35,60,.09)" }}>
-        <a
-          href="https://www.instagram.com/brot.74"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 no-underline font-semibold text-[15px] tracking-[.01em] text-stone"
-          style={{ transition: "color .16s" }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#8A5A0E"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = ""; }}
-        >
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-          </svg>
-          Seguinos en Instagram · @brot.74
-        </a>
-      </div>
-    </article>
-  );
-}
-
 export default function DateSelector({ slots, onChange }: DateSelectorProps) {
   const [showHow, setShowHow] = useState(false);
   const visibleSlots = slots.filter((s) => !s.disabled);
 
-  if (visibleSlots.length === 0) {
-    return <NoSlotsEmptyState />;
-  }
+  // Sin fechas abiertas, page.tsx muestra <NoSlotsScreen /> (v57).
+  if (visibleSlots.length === 0) return null;
 
   return (
     <div className="space-y-10 w-full max-w-[430px] min-[900px]:max-w-[780px] mx-auto">
