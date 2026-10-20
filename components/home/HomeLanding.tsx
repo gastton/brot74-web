@@ -5,9 +5,8 @@ import { useEffect, useRef } from "react";
 import "./HomeLanding.css";
 
 // v59: estado de pedidos, calculado en el servidor (app/page.tsx) con la misma
-// fuente que el flujo de pedidos. Abierto: hay una fecha para pedir (pickupLabel,
-// ej. "sábado 27"). Cerrado: no la hay.
-export type LandingStatus = { open: true; pickupLabel: string } | { open: false };
+// fuente que el flujo de pedidos. open = hay una fecha para pedir.
+export type LandingStatus = { open: boolean };
 
 interface HomeLandingProps {
   onReservar: () => void;
@@ -32,7 +31,7 @@ function StatusButton({ open, onClick, btnRef }: { open: boolean; onClick: () =>
   return (
     <button type="button" className="btn st" onClick={onClick} ref={btnRef}>
       <span className="st-dot" aria-hidden="true" />
-      {open ? "Elegí tu BROT" : "Avisame cuando abra"}
+      {open ? "Elegí tu BROT" : "Tu próximo BROT"}
     </button>
   );
 }
@@ -136,18 +135,10 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
         </div>
         <div className="hero-card">
           <div className="rule"></div>
-          <div className="eyebrow">Micropanadería de masa madre · Mendiolaza</div>
+          <div className="eyebrow">Micropanadería de masa madre</div>
           <h1>Panes de fermentación natural, <i>como debe ser.</i></h1>
           <div className="hero-actions">
             <StatusButton open={status.open} onClick={onReservar} btnRef={heroBtnRef} />
-            <a className="link" href="#pedir">Cómo funciona</a>
-          </div>
-          <div className="st-meta">
-            {status.open ? (
-              <span><b>Pedidos abiertos</b> · Retiro {status.pickupLabel}</span>
-            ) : (
-              <span><b>Pedidos cerrados</b> · Próxima fecha a confirmar</span>
-            )}
           </div>
         </div>
       </div>
@@ -259,29 +250,24 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer id="contacto">
+      {/* Footer (v60): crema, sello navy, "Dónde" + "Seguinos" */}
+      <footer className="ft" id="contacto">
         <div className="wrap">
-          <div className="grid">
-            <div className="f-brand">
-              <Image src="/assets/ramillete-mono-cream.png" alt="BROT 74" width={832} height={1295} />
+          <div className="ft-top">
+            <div className="ft-brand">
+              <Image src="/ramillete-mono-navy.png" alt="BROT 74" width={832} height={1295} />
               <p>Micropanadería de masa madre.</p>
             </div>
-            <div className="f-col">
-              <h3>Entregas</h3>
-              <ul><li>Miércoles, 18:00</li><li>Sábados, 18:00</li></ul>
-            </div>
-            <div className="f-col">
-              <h3>Retiro</h3>
-              <ul><li>Mendiolaza</li><li>Córdoba</li></ul>
-            </div>
-            <div className="f-col">
-              <h3>Seguinos</h3>
-              <ul>
-                <li><a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a></li>
-                <li><a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">@brot.74</a></li>
-              </ul>
-            </div>
+            <dl className="ft-info">
+              <div>
+                <dt>Dónde</dt>
+                <dd>Mendiolaza · Córdoba</dd>
+              </div>
+              <div>
+                <dt>Seguinos</dt>
+                <dd><a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">@brot.74</a></dd>
+              </div>
+            </dl>
           </div>
           <div className="f-legal">
             <span>© 2026 BROT 74</span>
