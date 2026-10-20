@@ -87,23 +87,14 @@ html:has(.brot-landing){scroll-behavior:smooth;scroll-padding-top:72px}
 .brot-landing footer{background:var(--navy);color:var(--cream);padding:clamp(64px,8vw,120px) 0 40px}
 .brot-landing footer a{color:var(--cream)}
 .brot-landing footer a:hover{color:var(--amber)}
-.brot-landing .f-brand{grid-column:1 / span 5}
-.brot-landing .f-brand img{width:clamp(88px,8vw,112px);display:block;margin-bottom:24px}
-.brot-landing .f-brand p{font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(26px,2.4vw,36px);line-height:1.15;letter-spacing:-.02em;max-width:18ch}
-.brot-landing .f-col{grid-column:span 2}
-.brot-landing .f-col:first-of-type{grid-column:7 / span 2}
-.brot-landing .f-col h3{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:color-mix(in srgb,var(--cream) 70%,transparent);margin-bottom:14px}
-.brot-landing .f-col ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .brot-landing .f-legal{margin-top:clamp(56px,7vw,96px);padding-top:24px;border-top:1px solid color-mix(in srgb,var(--cream) 22%,transparent);display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--cream) 70%,transparent)}
 .brot-landing .mbar{display:none}
-@media (max-width:1100px){.brot-landing .f-brand{grid-column:1 / -1;margin-bottom:24px}
-.brot-landing .f-col,.brot-landing .f-col:first-of-type{grid-column:span 4}}
 @media (max-width:860px){
 .brot-landing .nav .hide-m{display:none}
 .brot-landing .grid>*{grid-column:1 / -1!important}
 .brot-landing .hero{height:auto;min-height:0}
-.brot-landing .hero .media{position:relative;height:62vh;min-height:360px}
-.brot-landing .hero-card{position:relative;left:auto;bottom:auto;width:auto;margin:-64px 16px 0}
+.brot-landing .hero .media{position:relative;height:56vh;min-height:340px}
+.brot-landing .hero-card{position:relative;left:auto;bottom:auto;width:auto;margin:-96px 16px 0}
 .brot-landing .idea-b{margin-top:clamp(32px,6vw,56px)}
 .brot-landing .idea-b .media{aspect-ratio:4/5}
 .brot-landing .porque-img .media{aspect-ratio:1016/1200}
@@ -119,5 +110,46 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 .brot-landing .mbar .ig svg{width:22px;height:22px}
 .brot-landing footer{padding-bottom:104px}
 }
-@media (max-width:560px){.brot-landing .f-col,.brot-landing .f-col:first-of-type{grid-column:1 / -1!important}
-.brot-landing .nav .btn{display:none}}
+@media (max-width:560px){.brot-landing .nav .btn{display:none}}
+
+/* v59 · Estado de pedidos: pill con punto (abierto = ámbar que late, cerrado = terracota
+   fijo). `.cerrado` en la raíz cuando no hay fecha abierta. (v60 quitó la línea de estado
+   del hero y el link "Cómo funciona"; el pill cerrado dice "Tu próximo BROT".) */
+.brot-landing{--terra:#A6442E;--terra-l:#E0806A}
+.brot-landing .st{gap:10px}
+.brot-landing .st-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--amber);position:relative}
+.brot-landing .st-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:inherit;animation:stPulse 2s ease-out infinite}
+@keyframes stPulse{0%{transform:scale(1);opacity:.7}80%,100%{transform:scale(2.6);opacity:0}}
+.brot-landing.cerrado .st-dot{background:var(--terra-l)}
+.brot-landing.cerrado .st-dot::after{animation:none;display:none}
+/* sobre la pill crema del menú transparente (sobre el hero) el punto cambia de tono */
+.brot-landing .bar:not(.solid) .st-dot{background:var(--amber)}
+.brot-landing.cerrado .bar:not(.solid) .st-dot{background:var(--terra)}
+@media (prefers-reduced-motion:reduce){.brot-landing .st-dot::after{animation:none;display:none}}
+
+/* v60 · landing v3.5 — mobile editorial: ritmo full-bleed / asimétrico. Solo el hero va de
+   borde a borde; el resto a 20 px del borde alternando centro / derecha / izquierda / derecha. */
+@media (max-width:860px){
+.brot-landing{--gut:clamp(20px,4vw,64px)}
+.brot-landing .idea-a .media{margin:0;aspect-ratio:4/5}
+.brot-landing .idea-b{display:grid;grid-template-columns:minmax(0,1fr) 66%;gap:14px;align-items:end;margin-top:clamp(48px,12vw,80px)}
+.brot-landing .idea-b .media{grid-column:2;aspect-ratio:3/4}
+.brot-landing .porque-img .media{width:84%;aspect-ratio:4/5}
+.brot-landing .porque-txt{margin-top:40px}
+.brot-landing .pedir-img{display:flex;justify-content:flex-end;margin-top:56px}
+.brot-landing .pedir-img .media{width:78%;aspect-ratio:3/4}
+.brot-landing .quote blockquote{font-size:clamp(64px,19vw,120px)}
+}
+
+/* v60 · footer crema, distinto de la barra fija navy */
+.brot-landing footer.ft{background:var(--cream);color:var(--navy);border-top:1px solid var(--hair)}
+.brot-landing footer.ft a{color:var(--navy);border-bottom:1px solid var(--navy);padding-bottom:2px}
+.brot-landing footer.ft a:hover{color:var(--amber);border-color:var(--amber)}
+.brot-landing .ft-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px 64px;align-items:end}
+.brot-landing .ft-brand img{width:clamp(80px,7vw,104px);height:auto;display:block;margin-bottom:20px}
+.brot-landing .ft-brand p{margin:0;font-weight:300;font-size:clamp(26px,2.4vw,36px);line-height:1.15;letter-spacing:-.02em;max-width:18ch}
+.brot-landing .ft-info{margin:0;display:grid;grid-template-columns:repeat(2,auto);gap:24px clamp(40px,5vw,80px)}
+.brot-landing .ft-info dt{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone);margin-bottom:8px}
+.brot-landing .ft-info dd{margin:0;font-size:17px}
+.brot-landing footer.ft .f-legal{border-top:1px solid var(--hair);color:var(--stone)}
+@media (max-width:860px){.brot-landing .ft-top{grid-template-columns:minmax(0,1fr);gap:40px}.brot-landing .ft-info{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:24px;border-top:1px solid var(--hair)}.brot-landing footer.ft .f-legal{margin-top:40px}}

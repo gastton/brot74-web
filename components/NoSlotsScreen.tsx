@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 // v57 · "Tu próximo BROT" sin fechas abiertas (Pedidos cerrados / "Avisame cuando
 // abra"). Reemplaza a la card crema con sombra del v31: ahora usa el lenguaje de
 // la landing y del flujo de pedidos (Jost, fondo blanco, filetes navy), con la foto
-// del hero y la hoja crema "Próxima fecha / A confirmar" (misma pieza que la fecha,
+// de masa y la hoja crema "Próxima fecha / A confirmar" (misma pieza que la fecha,
 // v55). Guarda { name, phone } en la lista de aviso.
 const TERRA = "#A6442E";
 
@@ -76,14 +76,16 @@ export default function NoSlotsScreen() {
 
         <div className="mt-[22px] grid grid-cols-1 min-[900px]:mt-10 min-[900px]:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] min-[900px]:items-start min-[900px]:gap-[clamp(40px,6vw,96px)]">
           {/* Foto + hoja crema */}
-          <div className="relative -mx-5 h-[300px] min-[900px]:mx-0 min-[900px]:h-auto min-[900px]:aspect-[4/5]">
+          <div className="relative -mx-5 h-[300px] min-[900px]:mx-0 min-[900px]:h-auto min-[900px]:aspect-square">
+            {/* v59: foto de masa (antes el hero), encuadrada para que se vean las manos:
+               mobile 45% 50%, desktop (cuadrada) 36% 50%. */}
             <Image
-              src="/assets/landing-hero.webp"
-              alt="Pan de masa madre recién horneado"
+              src="/assets/pedidos-cerrados-masa.jpg"
+              alt="Manos amasando sobre una mesa enharinada"
               fill
               priority
               sizes="(min-width: 900px) 600px, 100vw"
-              style={{ objectFit: "cover" }}
+              className="object-cover object-[45%_50%] min-[900px]:object-[36%_50%]"
             />
             <div
               className="absolute left-5 -bottom-7 min-[900px]:left-6 min-[900px]:bottom-6 select-none"
