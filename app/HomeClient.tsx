@@ -128,6 +128,8 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
     fetch("/api/delivery-slots")
       .then((r) => r.json())
       .then((data) => setSlots(data))
+      // Si falla la red, la lista queda vacía (antes la promesa rechazada no se manejaba).
+      .catch(() => setSlots([]))
       .finally(() => setLoadingSlots(false));
   }, []);
 
@@ -136,6 +138,7 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
     fetch(`/api/products?slotId=${slotId}`)
       .then((r) => r.json())
       .then(setProducts)
+      .catch(() => setProducts([]))
       .finally(() => setLoadingProducts(false));
   }, []);
 
