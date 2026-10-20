@@ -121,3 +121,21 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 }
 @media (max-width:560px){.brot-landing .f-col,.brot-landing .f-col:first-of-type{grid-column:1 / -1!important}
 .brot-landing .nav .btn{display:none}}
+
+/* v59 · Estado de pedidos: pill con punto (abierto = ámbar que late, cerrado = terracota
+   fijo) y línea de estado bajo los botones del hero. `.cerrado` en la raíz cuando no hay
+   fecha abierta. */
+.brot-landing{--terra:#A6442E;--terra-l:#E0806A}
+.brot-landing .st{gap:10px}
+.brot-landing .st-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--amber);position:relative}
+.brot-landing .st-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:inherit;animation:stPulse 2s ease-out infinite}
+@keyframes stPulse{0%{transform:scale(1);opacity:.7}80%,100%{transform:scale(2.6);opacity:0}}
+.brot-landing.cerrado .st-dot{background:var(--terra-l)}
+.brot-landing.cerrado .st-dot::after{animation:none;display:none}
+/* sobre la pill crema del menú transparente (sobre el hero) el punto cambia de tono */
+.brot-landing .bar:not(.solid) .st-dot{background:var(--amber)}
+.brot-landing.cerrado .bar:not(.solid) .st-dot{background:var(--terra)}
+.brot-landing .st-meta{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone)}
+.brot-landing .st-meta b{font-weight:500;color:var(--navy)}
+.brot-landing.cerrado .st-meta b{color:var(--terra)}
+@media (prefers-reduced-motion:reduce){.brot-landing .st-dot::after{animation:none;display:none}}

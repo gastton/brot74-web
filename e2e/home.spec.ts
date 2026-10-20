@@ -20,6 +20,15 @@ test("la home carga y muestra el hero de la landing", async ({ page }) => {
 test("el CTA 'Elegí tu BROT' navega al flujo de selección de fecha", async ({ page }) => {
   await page.goto("/");
 
-  await page.locator(".hero-card").getByRole("button", { name: "Elegí tu BROT" }).click();
+  // v59: el texto depende del estado de pedidos ("Elegí tu BROT" con fecha abierta,
+  // "Avisame cuando abra" sin ella); el flujo al que lleva es el mismo.
+  await page.locator(".hero-card").getByRole("button", { name: /Elegí tu BROT|Avisame cuando abra/ }).click();
   await expect(page).toHaveURL(/[?&]step=slots/);
+});
+
+// v59: la landing dice si hay fecha abierta (línea de estado bajo los botones del hero).
+test("la landing muestra el estado de pedidos", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.locator(".st-meta")).toContainText(/Pedidos (abiertos|cerrados)/i);
 });

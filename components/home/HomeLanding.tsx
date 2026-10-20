@@ -4,8 +4,14 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import "./HomeLanding.css";
 
+// v59: estado de pedidos, calculado en el servidor (app/page.tsx) con la misma
+// fuente que el flujo de pedidos. Abierto: hay una fecha para pedir (pickupLabel,
+// ej. "sábado 27"). Cerrado: no la hay.
+export type LandingStatus = { open: true; pickupLabel: string } | { open: false };
+
 interface HomeLandingProps {
   onReservar: () => void;
+  status: LandingStatus;
 }
 
 const INSTAGRAM_URL = "https://www.instagram.com/brot.74";
@@ -18,6 +24,19 @@ const INSTAGRAM_URL = "https://www.instagram.com/brot.74";
 //   router del sitio (buildFlowUrl de BRT-95), no un <a href> a un anchor.
 // - Las fotos van con next/image en vez de <img> planas.
 // - El script de scroll (menú + barra mobile) pasó a un useEffect.
+// Pill de estado (menú, hero y barra mobile): punto + texto. Abierto: "Elegí tu BROT"
+// con punto ámbar que late. Cerrado: "Avisame cuando abra" con punto terracota fijo.
+// Los dos llevan al flujo de pedidos, que con 0 fechas abiertas muestra "Pedidos
+// cerrados". El estado se dice con texto, no solo con color.
+function StatusButton({ open, onClick, btnRef }: { open: boolean; onClick: () => void; btnRef?: React.Ref<HTMLButtonElement> }) {
+  return (
+    <button type="button" className="btn st" onClick={onClick} ref={btnRef}>
+      <span className="st-dot" aria-hidden="true" />
+      {open ? "Elegí tu BROT" : "Avisame cuando abra"}
+    </button>
+  );
+}
+
 function InstagramIcon({ strokeWidth }: { strokeWidth: number }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" aria-hidden="true">
@@ -49,7 +68,7 @@ const STEPS = [
   { n: "03", t: "Retirá en tu horario", d: "Pasás a buscarlo en el lugar y la franja de la fecha. Horneamos por tandas, no hay local abierto." },
 ];
 
-export default function HomeLanding({ onReservar }: HomeLandingProps) {
+export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
   const barRef = useRef<HTMLElement>(null);
   const mbarRef = useRef<HTMLDivElement>(null);
   const heroBtnRef = useRef<HTMLButtonElement>(null);
@@ -85,7 +104,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
   }, []);
 
   return (
-    <div className="brot-landing">
+    <div className={`brot-landing${status.open ? "" : " cerrado"}`}>
       {/* Menú fijo */}
       <header className="bar" ref={barRef}>
         <div className="wrap">
@@ -98,7 +117,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
             <a className="ig hide-m" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <InstagramIcon strokeWidth={1.6} />
             </a>
-            <button type="button" className="btn" onClick={onReservar}>Elegí tu BROT</button>
+            <StatusButton open={status.open} onClick={onReservar} />
           </nav>
         </div>
       </header>
@@ -120,8 +139,15 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
           <div className="eyebrow">Micropanadería de masa madre · Mendiolaza</div>
           <h1>Panes de fermentación natural, <i>como debe ser.</i></h1>
           <div className="hero-actions">
-            <button type="button" className="btn" onClick={onReservar} ref={heroBtnRef}>Elegí tu BROT</button>
+            <StatusButton open={status.open} onClick={onReservar} btnRef={heroBtnRef} />
             <a className="link" href="#pedir">Cómo funciona</a>
+          </div>
+          <div className="st-meta">
+            {status.open ? (
+              <span><b>Pedidos abiertos</b> · Retiro {status.pickupLabel}</span>
+            ) : (
+              <span><b>Pedidos cerrados</b> · Próxima fecha a confirmar</span>
+            )}
           </div>
         </div>
       </div>
@@ -269,7 +295,7 @@ export default function HomeLanding({ onReservar }: HomeLandingProps) {
         <a className="ig" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
           <InstagramIcon strokeWidth={1.8} />
         </a>
-        <button type="button" className="btn" onClick={onReservar}>Elegí tu BROT</button>
+        <StatusButton open={status.open} onClick={onReservar} />
       </div>
     </div>
   );
