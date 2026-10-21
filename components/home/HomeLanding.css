@@ -65,7 +65,7 @@ html:has(.brot-landing){scroll-behavior:smooth;scroll-padding-top:72px}
 .brot-landing .quote{padding:clamp(40px,6vw,96px) 0 clamp(80px,10vw,150px)}
 .brot-landing .quote .rule{margin-bottom:clamp(28px,3vw,44px)}
 .brot-landing .quote blockquote{margin:0;font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(56px,10.5vw,176px);line-height:.92;letter-spacing:-.05em}
-.brot-landing .quote figcaption{margin-top:clamp(20px,2.4vw,32px);font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone)}
+.brot-landing .quote figcaption{text-wrap:balance;margin-top:clamp(20px,2.4vw,32px);font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone)}
 .brot-landing .porque{background:var(--cream)}
 .brot-landing .porque-img{grid-column:1 / span 5}
 .brot-landing .porque-img .media{aspect-ratio:1/1.1;background:#fff}

@@ -178,7 +178,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
         <figure className="quote" style={{ margin: 0 }}>
           <div className="rule"></div>
           <blockquote>Harinas,<br />agua y sal.</blockquote>
-          <figcaption>Nada más. Nada menos.</figcaption>
+          <figcaption>El tiempo y la paciencia hacen el resto</figcaption>
         </figure>
       </div>
 
