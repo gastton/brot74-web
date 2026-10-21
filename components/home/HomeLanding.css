@@ -118,26 +118,26 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 .brot-landing{--terra:#A6442E;--terra-l:#E0806A}
 .brot-landing .st{gap:10px}
 .brot-landing .st-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--amber);position:relative}
-.brot-landing .st-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:inherit;animation:stPulse 2s ease-out infinite}
-@keyframes stPulse{0%{transform:scale(1);opacity:.7}80%,100%{transform:scale(2.6);opacity:0}}
+.brot-landing .st-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:inherit;animation:stPulse 1.4s ease-out infinite}.brot-landing:not(.cerrado) .st-dot{animation:stBlink 1.4s ease-in-out infinite}@keyframes stBlink{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes stPulse{0%{transform:scale(1);opacity:.9}75%,100%{transform:scale(3);opacity:0}}
 .brot-landing.cerrado .st-dot{background:var(--terra-l)}
 .brot-landing.cerrado .st-dot::after{animation:none;display:none}
 /* sobre la pill crema del menú transparente (sobre el hero) el punto cambia de tono */
 .brot-landing .bar:not(.solid) .st-dot{background:var(--amber)}
 .brot-landing.cerrado .bar:not(.solid) .st-dot{background:var(--terra)}
-@media (prefers-reduced-motion:reduce){.brot-landing .st-dot::after{animation:none;display:none}}
+@media (prefers-reduced-motion:reduce){.brot-landing .st-dot{animation:none!important}.brot-landing .st-dot::after{animation:none;display:none}}
 
-/* v60 · landing v3.5 — mobile editorial: ritmo full-bleed / asimétrico. Solo el hero va de
-   borde a borde; el resto a 20 px del borde alternando centro / derecha / izquierda / derecha. */
+/* v61 · landing v3.5 — mobile editorial (reemplaza el ritmo alternado de v60): todas las fotos
+   salvo el hero ocupan el 100% del ancho del contenido, a 20 px de cada lado. */
 @media (max-width:860px){
 .brot-landing{--gut:clamp(20px,4vw,64px)}
 .brot-landing .idea-a .media{margin:0;aspect-ratio:4/5}
-.brot-landing .idea-b{display:grid;grid-template-columns:minmax(0,1fr) 66%;gap:14px;align-items:end;margin-top:clamp(48px,12vw,80px)}
-.brot-landing .idea-b .media{grid-column:2;aspect-ratio:3/4}
-.brot-landing .porque-img .media{width:84%;aspect-ratio:4/5}
+.brot-landing .idea-b{display:block;margin-top:clamp(48px,12vw,80px)}
+.brot-landing .idea-b .media{width:100%;aspect-ratio:3/4}
+.brot-landing .porque-img .media{width:100%;aspect-ratio:4/5}
 .brot-landing .porque-txt{margin-top:40px}
-.brot-landing .pedir-img{display:flex;justify-content:flex-end;margin-top:56px}
-.brot-landing .pedir-img .media{width:78%;aspect-ratio:3/4}
+.brot-landing .pedir-img{display:block;margin-top:56px}
+.brot-landing .pedir-img .media{width:100%;aspect-ratio:3/4}
 .brot-landing .quote blockquote{font-size:clamp(64px,19vw,120px)}
 }
 
@@ -153,3 +153,17 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 .brot-landing .ft-info dd{margin:0;font-size:17px}
 .brot-landing footer.ft .f-legal{border-top:1px solid var(--hair);color:var(--stone)}
 @media (max-width:860px){.brot-landing .ft-top{grid-template-columns:minmax(0,1fr);gap:40px}.brot-landing .ft-info{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:24px;border-top:1px solid var(--hair)}.brot-landing footer.ft .f-legal{margin-top:40px}}
+
+/* v61 · foto de masa madre */
+.brot-landing .mm{grid-column:7 / span 5;margin:clamp(40px,5vw,72px) 0 0}
+.brot-landing .mm .media{aspect-ratio:941/1342}
+.brot-landing .mm figcaption{margin-top:14px;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone)}
+@media (max-width:860px){.brot-landing .mm{grid-column:1 / -1;margin-top:40px}}
+/* v61 · cierre de "¿Por qué BROT 74?": frase sobria (la única frase gigante es "Harinas, agua y sal.") */
+.brot-landing .cierre{grid-column:7 / span 6;margin-top:clamp(56px,7vw,104px)}
+.brot-landing .cierre p{margin:0;display:flex;flex-wrap:wrap;column-gap:.32em;font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;font-size:clamp(28px,2.6vw,42px);line-height:1.15;letter-spacing:-.025em;color:var(--navy)}
+.brot-landing .cierre p span+span{color:var(--stone)}
+@media (max-width:860px){.brot-landing .cierre{margin-top:56px}.brot-landing .cierre p{flex-direction:column;font-size:clamp(28px,8vw,36px)}}
+/* v61 · desktop: bloque 74% junto a la foto de masa madre */
+@media (min-width:861px){.brot-landing .porque-num{grid-column:1 / span 5;grid-row:2;align-self:start;margin-top:clamp(40px,5vw,72px);padding-top:clamp(64px,7vw,112px)}.brot-landing .mm{grid-row:2}.brot-landing .cierre{grid-column:1 / span 6;grid-row:2;align-self:end;margin:0;padding-bottom:clamp(80px,8vw,128px)}.brot-landing .cierre p{flex-direction:row;flex-wrap:nowrap;justify-content:flex-end}.brot-landing .porque-num .num{margin:0;grid-template-columns:minmax(0,1fr);gap:clamp(20px,2vw,32px)}.brot-landing .porque-num .num strong{font-size:clamp(170px,18vw,280px)}.brot-landing .porque-num .num p{max-width:32ch;font-size:clamp(18px,1.5vw,22px)}}
+@media (max-width:860px){.brot-landing .porque-num .num{margin:12px 0 32px}}

@@ -197,20 +197,28 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
               <div className="eyebrow"><b>02</b>El nombre</div>
               <h2>¿Por qué BROT 74?</h2>
               <p>
-                BROT 74 nace de una idea simple: encontrar una palabra que conectara con la cultura del pan y que,
-                al mismo tiempo, tuviera una identidad propia.
+                Buscábamos una palabra que hablara de pan y tuviera identidad propia. Brot significa pan en alemán,
+                y en Alemania el pan es cultura, tradición y vida cotidiana.
               </p>
-              <p>
-                Brot significa pan en alemán. Y si hay un país donde el pan forma parte de la cultura, la tradición
-                y la vida cotidiana, ese es Alemania.
-              </p>
+            </div>
+            {/* v61: el 74% sale del texto y pasa a ser hermano en la grilla (junto a la foto de masa madre
+               en desktop); el cierre "Así de simple. Como el pan." va aparte, sobrio. */}
+            <div className="porque-num">
               <div className="num">
                 <strong>74<small>%</small></strong>
                 <p>Nuestra identidad está en ese número: es la hidratación de nuestra masa madre.</p>
               </div>
-              <p style={{ fontSize: "clamp(22px,1.8vw,28px)", fontWeight: 300, letterSpacing: "-.01em" }}>
-                Así de simple. Como el pan.
-              </p>
+            </div>
+            <figure className="mm">
+              <Media
+                src="/assets/landing-masamadre.webp"
+                alt="Masa madre estirándose en hilos al levantar la tapa del frasco"
+                sizes="(min-width: 861px) 40vw, 100vw"
+              />
+              <figcaption>Nuestra masa madre</figcaption>
+            </figure>
+            <div className="cierre">
+              <p><span>Así de simple.</span><span>Como el pan.</span></p>
             </div>
           </div>
         </div>
