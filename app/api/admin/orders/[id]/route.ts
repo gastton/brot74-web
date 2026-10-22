@@ -100,3 +100,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   return NextResponse.json({ ok: true });
 }
+
+// Borrado definitivo, solo para pedidos cancelados (su stock ya se liberó al
+// cancelarlos, así que no hay nada que devolver). El chequeo de estado va en
+// el mismo DELETE para que no se cuele una reactivación concurrente entre la
+// lectura y el borrado.
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireAdmin(req);
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const { id } = await params;
+  const orderId = parseInt(id);
+  if (Number.isNaN(orderId)) {
+    return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+  }
+
+  const { count } = await prisma.order.deleteMany({
+    where: { id: orderId, status: "cancelled" },
+  });
+
+  if (count === 0) {
+    const exists = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true } });
+    if (!exists) {
+      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    }
+    return NextResponse.json({ error: "Solo se pueden borrar pedidos cancelados" }, { status: 409 });
+  }
+
+  return NextResponse.json({ ok: true });
+}

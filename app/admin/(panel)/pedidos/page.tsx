@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toastError } from "@/lib/toast";
 import { isPickupPast } from "@/lib/deliverySlots";
@@ -46,13 +46,34 @@ function PedidosContent() {
 
   const fetchOrders = useCallback(async () => {
     const url = slotFilter ? `/api/admin/orders?slotId=${slotFilter}` : "/api/admin/orders";
-    const res = await fetch(url);
-    const data = await res.json();
-    setOrders(data);
+    try {
+      const res = await fetch(url);
+      // Si falla (ej. sesión vencida en medio del refresco automático) se
+      // conserva la lista anterior en vez de pisarla con el error.
+      if (res.ok) setOrders(await res.json());
+    } catch {
+      // Sin conexión: se reintenta en el próximo refresco.
+    }
     setLoading(false);
   }, [slotFilter]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  // Refresco automático: los pedidos nuevos (y el total ganado) aparecen sin
+  // recargar. Cada 30 s con la pestaña visible, y al volver a ella.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") fetchOrders();
+    }, 30_000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchOrders();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [fetchOrders]);
 
   async function updateStatus(orderId: number, status: string) {
     setUpdating(orderId);
@@ -68,6 +89,23 @@ function PedidosContent() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         toastError(data.error ?? "No se pudo cambiar el estado del pedido.");
+      }
+    } catch {
+      toastError("Error de conexión. Probá de nuevo.");
+    }
+    await fetchOrders();
+    setUpdating(null);
+  }
+
+  // Solo pedidos cancelados (el servidor rechaza el resto con 409).
+  async function deleteOrder(orderId: number) {
+    if (!confirm("¿Borrar este pedido cancelado? No se puede deshacer.")) return;
+    setUpdating(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toastError(data.error ?? "No se pudo borrar el pedido.");
       }
     } catch {
       toastError("Error de conexión. Probá de nuevo.");
@@ -135,6 +173,16 @@ function PedidosContent() {
                         <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                       )}
                     </div>
+                    {order.status === "cancelled" && (
+                      <button
+                        onClick={() => deleteOrder(order.id)}
+                        disabled={updating === order.id}
+                        aria-label="Borrar pedido cancelado"
+                        className="p-2 text-muted hover:text-red-500 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -185,6 +233,19 @@ function PedidosContent() {
     const rows = [...byName.entries()].map(([name, v]) => ({ name, ...v })).sort((a, b) => a.name.localeCompare(b.name, "es"));
     return { rows, total: rows.reduce((n, r) => n + r.total, 0), paid: rows.reduce((n, r) => n + r.paid, 0) };
   })();
+
+  // Total ganado de la fecha: suma de order.total (el monto que cobró el
+  // servidor, con descuentos) de todos los pedidos menos los cancelados. Si un
+  // pedido se cancela, al refrescar la lista sale solo de la suma.
+  const earnings = orders.reduce(
+    (acc, o) => {
+      if (o.status === "cancelled") return acc;
+      acc.total += o.total;
+      if (PAID_STATUSES.includes(o.status)) acc.paid += o.total;
+      return acc;
+    },
+    { total: 0, paid: 0 }
+  );
 
   return (
     <div className="space-y-6">
@@ -245,7 +306,17 @@ function PedidosContent() {
                   </tfoot>
                 </table>
               )}
-              <p className="text-xs text-muted mt-3">Sin contar pedidos cancelados. “Pagados” incluye pagado, preparando, listo y entregado.</p>
+              <div className="mt-4 pt-3 border-t-2 border-border">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-serif text-lg font-bold text-brown">Total ganado</span>
+                  <span className="font-serif text-2xl font-bold text-brown">{formatCurrency(earnings.total)}</span>
+                </div>
+                <div className="flex justify-between text-sm text-muted mt-1">
+                  <span>Pagado {formatCurrency(earnings.paid)}</span>
+                  <span>Pendiente de pago {formatCurrency(earnings.total - earnings.paid)}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted mt-3">Sin contar pedidos cancelados. “Pagados” incluye pagado, preparando, listo y entregado. Se actualiza solo cada 30 segundos.</p>
               <button
                 onClick={() => setShowDetail((v) => !v)}
                 className="mt-3 flex items-center gap-2 text-sm text-amber hover:underline"

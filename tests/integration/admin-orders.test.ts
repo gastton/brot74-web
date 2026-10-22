@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "@/app/api/admin/orders/route";
-import { PATCH } from "@/app/api/admin/orders/[id]/route";
+import { PATCH, DELETE } from "@/app/api/admin/orders/[id]/route";
 import { prisma } from "@/lib/db";
 import { createProduct, createDeliverySlot, createProductStock, createOrder, getStock } from "../helpers/factories";
 import { adminCookieHeader } from "../helpers/auth";
@@ -206,5 +206,49 @@ describe("PATCH /api/admin/orders/[id]", () => {
     const stock = await getStock(product.id, slot.id);
     // Si no serializara, quedaría en 6 (reservado dos veces).
     expect(stock?.reservedStock).toBe(3);
+  });
+});
+
+function deleteRequest(headers: Record<string, string> = {}) {
+  return new NextRequest("http://localhost/api/admin/orders/1", { method: "DELETE", headers });
+}
+
+describe("DELETE /api/admin/orders/[id]", () => {
+  it("devuelve 401 sin sesión de admin", async () => {
+    const res = await DELETE(deleteRequest(), { params: Promise.resolve({ id: "1" }) });
+    expect(res.status).toBe(401);
+  });
+
+  it("borra un pedido cancelado con sus items, sin tocar el stock", async () => {
+    const { product, slot, order } = await createCancelledOrderWithStock(10);
+
+    const headers = await adminCookieHeader();
+    const res = await DELETE(deleteRequest(headers), { params: Promise.resolve({ id: String(order.id) }) });
+
+    expect(res.status).toBe(200);
+    expect(await prisma.order.findUnique({ where: { id: order.id } })).toBeNull();
+    expect(await prisma.orderItem.count({ where: { orderId: order.id } })).toBe(0);
+    const stock = await getStock(product.id, slot.id);
+    expect(stock?.reservedStock).toBe(0);
+  });
+
+  it("devuelve 409 y no borra un pedido que no está cancelado", async () => {
+    const product = await createProduct();
+    const slot = await createDeliverySlot();
+    const order = await createOrder(slot.id, [{ productId: product.id, quantity: 1, unitPrice: 1000 }], {
+      status: "paid",
+    });
+
+    const headers = await adminCookieHeader();
+    const res = await DELETE(deleteRequest(headers), { params: Promise.resolve({ id: String(order.id) }) });
+
+    expect(res.status).toBe(409);
+    expect(await prisma.order.findUnique({ where: { id: order.id } })).not.toBeNull();
+  });
+
+  it("devuelve 404 si el pedido no existe", async () => {
+    const headers = await adminCookieHeader();
+    const res = await DELETE(deleteRequest(headers), { params: Promise.resolve({ id: "999999" }) });
+    expect(res.status).toBe(404);
   });
 });
