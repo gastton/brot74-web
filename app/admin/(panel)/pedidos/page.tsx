@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toastError } from "@/lib/toast";
 import { isPickupPast } from "@/lib/deliverySlots";
@@ -97,6 +97,23 @@ function PedidosContent() {
     setUpdating(null);
   }
 
+  // Solo pedidos cancelados (el servidor rechaza el resto con 409).
+  async function deleteOrder(orderId: number) {
+    if (!confirm("¿Borrar este pedido cancelado? No se puede deshacer.")) return;
+    setUpdating(orderId);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toastError(data.error ?? "No se pudo borrar el pedido.");
+      }
+    } catch {
+      toastError("Error de conexión. Probá de nuevo.");
+    }
+    await fetchOrders();
+    setUpdating(null);
+  }
+
   const grouped = orders.reduce<Record<string, Order[]>>((acc, o) => {
     const key = `${o.slotDate}|${o.slotLabel}`;
     if (!acc[key]) acc[key] = [];
@@ -156,6 +173,16 @@ function PedidosContent() {
                         <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                       )}
                     </div>
+                    {order.status === "cancelled" && (
+                      <button
+                        onClick={() => deleteOrder(order.id)}
+                        disabled={updating === order.id}
+                        aria-label="Borrar pedido cancelado"
+                        className="p-2 text-muted hover:text-red-500 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
