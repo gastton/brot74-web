@@ -14,6 +14,7 @@ interface HomeLandingProps {
 }
 
 const INSTAGRAM_URL = "https://www.instagram.com/brot.74";
+const SPOTIFY_URL = "https://open.spotify.com/playlist/5THFMx0y0L6i4edzPFUk1b";
 
 // v50: landing v3.3 (nórdico editorial). Conversión a React de
 // _design/design_cambios_v50/pantallas_actualizadas/landing.html (fuente de
@@ -154,7 +155,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
                 sizes="(min-width: 861px) 40vw, 100vw"
               />
               <div className="idea-txt">
-                <div className="eyebrow"><b>01</b>Idea</div>
+                <div className="eyebrow">Idea</div>
                 <h2>Pocos panes, mucho tiempo.</h2>
                 <p>
                   El concepto es básico: pocos panes, elaborados con productos naturales, sin conservantes ni
@@ -194,7 +195,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
               />
             </div>
             <div className="porque-txt">
-              <div className="eyebrow"><b>02</b>El nombre</div>
+              <div className="eyebrow">El nombre</div>
               <h2>¿Por qué BROT 74?</h2>
               <p>
                 Buscábamos una palabra que hablara de pan y tuviera identidad propia. Brot significa pan en alemán,
@@ -215,7 +216,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
                 alt="Masa madre estirándose en hilos al levantar la tapa del frasco"
                 sizes="(min-width: 861px) 40vw, 100vw"
               />
-              <figcaption>Nuestra masa madre</figcaption>
+              <figcaption>La reina madre</figcaption>
             </figure>
             <div className="cierre">
               <p><span>Así de simple.</span><span>Como el pan.</span></p>
@@ -229,7 +230,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
         <div className="wrap">
           <div className="grid">
             <div className="pedir-txt">
-              <div className="eyebrow"><b>03</b>Cómo pedir</div>
+              <div className="eyebrow">Cómo pedir</div>
               <h2>Pedís hoy, retirás cuando esté listo.</h2>
               <p>
                 Somos una micropanadería: horneamos pocos panes, por tandas y para fechas fijas. Por eso trabajamos
@@ -258,7 +259,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
         </div>
       </section>
 
-      {/* Footer (v60): crema, sello navy, "Dónde" + "Seguinos" */}
+      {/* Footer (v60): crema, sello navy. v62: "Mientras horneamos" (playlist) e íconos */}
       <footer className="ft" id="contacto">
         <div className="wrap">
           <div className="ft-top">
@@ -269,11 +270,39 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
             <dl className="ft-info">
               <div>
                 <dt>Dónde</dt>
-                <dd>Mendiolaza · Córdoba</dd>
+                <dd className="ico">
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                  </svg>
+                  <span>Mendiolaza · Córdoba</span>
+                </dd>
               </div>
               <div>
                 <dt>Seguinos</dt>
-                <dd><a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">@brot.74</a></dd>
+                <dd>
+                  <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                      <rect x="2.1" y="2.1" width="19.8" height="19.8" rx="5.6" />
+                      <circle cx="12" cy="12" r="4.6" />
+                      <circle cx="17.9" cy="6.1" r="1.45" fill="currentColor" stroke="none" />
+                    </svg>
+                    <span>@brot.74</span>
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt>Mientras horneamos</dt>
+                <dd>
+                  <a href={SPOTIFY_URL} target="_blank" rel="noopener noreferrer" className="ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9.9" />
+                      <path d="M6.9 9.2c3.4-1 7.2-.7 10.2 1" />
+                      <path d="M7.6 12.5c2.8-.8 5.8-.5 8.3.9" />
+                      <path d="M8.3 15.7c2.2-.6 4.4-.4 6.3.7" />
+                    </svg>
+                    <span>Nuestra playlist</span>
+                  </a>
+                </dd>
               </div>
             </dl>
           </div>
