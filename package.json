@@ -20,7 +20,7 @@
     "dependabot:triage": "tsx scripts/dependabot-triage/index.ts"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.0",
     "@vercel/blob": "^2.8.2",
     "bcryptjs": "^3.0.3",
