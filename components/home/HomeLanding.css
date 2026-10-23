@@ -19,7 +19,6 @@ html:has(.brot-landing){scroll-behavior:smooth;scroll-padding-top:72px}
 .brot-landing p{margin:0 0 18px;max-width:52ch;text-wrap:pretty}
 .brot-landing p:last-child{margin-bottom:0}
 .brot-landing .eyebrow{display:flex;gap:14px;align-items:baseline;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone);margin-bottom:clamp(20px,2.4vw,32px)}
-.brot-landing .eyebrow b{font-weight:500;color:var(--amber);letter-spacing:.06em}
 .brot-landing .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 26px;border-radius:999px;background:var(--navy);color:var(--cream);font-family:inherit;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;border:none;cursor:pointer;white-space:nowrap;transition:background .15s}
 .brot-landing .btn:hover{background:var(--navy-h);color:var(--cream)}
 .brot-landing .link{white-space:nowrap;font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;border-bottom:1px solid var(--navy);padding-bottom:3px}
@@ -78,9 +77,10 @@ html:has(.brot-landing){scroll-behavior:smooth;scroll-padding-top:72px}
 .brot-landing .pedir-img{grid-column:8 / span 5}
 .brot-landing .pedir-img .media{aspect-ratio:481/760}
 .brot-landing .steps{list-style:none;margin:clamp(36px,4vw,56px) 0 0;padding:0;display:grid}
-.brot-landing .step{display:grid;grid-template-columns:clamp(56px,6vw,88px) minmax(0,1fr);gap:16px;padding:clamp(20px,2.2vw,28px) 0;border-top:1px solid var(--hair)}
+.brot-landing .step{display:grid;grid-template-columns:28px minmax(0,1fr);gap:16px;padding:clamp(20px,2.2vw,28px) 0;border-top:1px solid var(--hair)}
 .brot-landing .step:last-child{border-bottom:1px solid var(--hair)}
-.brot-landing .step-n{font-family:var(--font-jost),system-ui,sans-serif;font-weight:300;letter-spacing:-.03em;font-size:clamp(28px,2.6vw,38px);line-height:1;color:var(--amber)}
+/* v62 · número de paso chico, en stone */
+.brot-landing .step-n{font-size:13px;font-weight:500;letter-spacing:.06em;line-height:1.7;color:var(--stone)}
 .brot-landing .step h3{font-size:clamp(19px,1.5vw,22px);font-weight:500;margin-bottom:4px;letter-spacing:-.005em}
 .brot-landing .step p{margin:0;color:var(--stone)}
 /* footer */
@@ -108,6 +108,8 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 .brot-landing .mbar .btn{flex:1;min-height:56px;font-size:16px;letter-spacing:.01em;text-transform:none;box-shadow:0 4px 14px rgba(14,35,60,.3)}
 .brot-landing .mbar .ig{width:56px;height:56px;background:var(--navy);color:var(--cream);border:none;box-shadow:0 4px 14px rgba(14,35,60,.3)}
 .brot-landing .mbar .ig svg{width:22px;height:22px}
+/* v62 · en la barra mobile el punto queda quieto (el del hero sigue latiendo) */
+.brot-landing .mbar .st-dot{animation:none!important}.brot-landing .mbar .st-dot::after{animation:none;display:none}
 .brot-landing footer{padding-bottom:104px}
 }
 @media (max-width:560px){.brot-landing .nav .btn{display:none}}
@@ -151,6 +153,8 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 .brot-landing .ft-info{margin:0;display:grid;grid-template-columns:repeat(2,auto);gap:24px clamp(40px,5vw,80px)}
 .brot-landing .ft-info dt{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone);margin-bottom:8px}
 .brot-landing .ft-info dd{margin:0;font-size:17px}
+/* v62 · íconos del footer; el subrayado del link queda solo bajo el texto */
+.brot-landing .ft-info .ico{display:inline-flex;align-items:center;gap:8px}.brot-landing .ft-info .ico svg{width:18px;height:18px;flex:none}.brot-landing footer.ft .ft-info a.ico{border-bottom:none;padding-bottom:0}.brot-landing footer.ft .ft-info a.ico span{border-bottom:1px solid currentColor;padding-bottom:2px}
 .brot-landing footer.ft .f-legal{border-top:1px solid var(--hair);color:var(--stone)}
 @media (max-width:860px){.brot-landing .ft-top{grid-template-columns:minmax(0,1fr);gap:40px}.brot-landing .ft-info{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:24px;border-top:1px solid var(--hair)}.brot-landing footer.ft .f-legal{margin-top:40px}}
 
