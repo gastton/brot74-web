@@ -1,16 +1,22 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, CalendarDays, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
+import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, CalendarDays, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { isSlotArchived } from "@/lib/deliverySlots";
+import { deliveryModeLabels, type DeliveryMode } from "@/lib/deliveryMode";
+
+// El lugar por defecto es el del local: solo tiene sentido para retiro.
+const PICKUP_LOCATION = "Las Zinnias 154 - El Talar";
+const EMPTY_FORM = { date: "", dayLabel: "", deliveryMode: "pickup" as DeliveryMode, pickupTime: "8:00 - 17:00", location: PICKUP_LOCATION, orderCutoff: "", active: true };
 
 interface Slot {
   id: number;
   date: string;
   dayLabel: string;
+  deliveryMode: string;
   pickupTime: string;
   location: string;
   imageUrl: string;
@@ -39,7 +45,7 @@ export default function FechasPage() {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<{ created: number; skipped: number } | null>(null);
-  const [form, setForm] = useState({ date: "", dayLabel: "", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [stockEdits, setStockEdits] = useState<Record<string, string>>({});
 
   // Default generate month: next month
@@ -89,18 +95,29 @@ export default function FechasPage() {
     setForm((f) => ({ ...f, date: dateStr, dayLabel: label, orderCutoff: cutoff }));
   }
 
+  // La dirección del local no sirve como zona de delivery: al cambiar de tipo
+  // se limpia (o se vuelve a poner) si nadie la editó.
+  function setDeliveryMode(mode: DeliveryMode) {
+    setForm((f) => {
+      let location = f.location;
+      if (mode === "delivery" && location === PICKUP_LOCATION) location = "";
+      if (mode === "pickup" && location === "") location = PICKUP_LOCATION;
+      return { ...f, deliveryMode: mode, location };
+    });
+  }
+
   async function handleCreate() {
     if (!form.date || !form.dayLabel) return;
     setSaving(true);
     await fetch("/api/admin/slots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff || null, active: form.active }),
+      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff || null, active: form.active }),
     });
     await fetchAll();
     setShowForm(false);
     setSaving(false);
-    setForm({ date: "", dayLabel: "", pickupTime: "8:00 - 17:00", location: "Las Zinnias 154 - El Talar", orderCutoff: "", active: true });
+    setForm(EMPTY_FORM);
   }
 
   async function handleGenerate() {
@@ -296,15 +313,32 @@ export default function FechasPage() {
                   className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-charcoal mb-1">Horario de retiro</label>
+                <label className="block text-sm font-semibold text-charcoal mb-1">¿Cómo recibe el cliente su pedido?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["pickup", "delivery"] as const).map((mode) => {
+                    const Icon = mode === "delivery" ? Truck : Home;
+                    const selected = form.deliveryMode === mode;
+                    return (
+                      <button key={mode} type="button" onClick={() => setDeliveryMode(mode)} aria-pressed={selected}
+                        className={`flex items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-colors ${selected ? "border-amber bg-amber/10 text-brown" : "border-border bg-white text-muted hover:text-charcoal"}`}>
+                        <Icon className="w-4 h-4" />
+                        {deliveryModeLabels(mode).name}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted mt-1">No se puede cambiar después de crear la fecha.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-charcoal mb-1">{deliveryModeLabels(form.deliveryMode).time}</label>
                 <input type="text" value={form.pickupTime} onChange={(e) => setForm({ ...form, pickupTime: e.target.value })}
                   placeholder="Ej: 10:00 - 13:00"
                   className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-charcoal mb-1">Lugar de retiro</label>
+                <label className="block text-sm font-semibold text-charcoal mb-1">{deliveryModeLabels(form.deliveryMode).place}</label>
                 <input type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}
-                  placeholder="Ej: Av. Corrientes 1234, CABA"
+                  placeholder={deliveryModeLabels(form.deliveryMode).placePlaceholder}
                   className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
               </div>
               <div>
@@ -436,11 +470,11 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
           <div key={slot.id} className={`bg-white rounded-2xl border-2 p-5 ${muted ? "border-border opacity-70" : "border-border"}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <Home className="w-5 h-5 text-amber" />
+                {slot.deliveryMode === "delivery" ? <Truck className="w-5 h-5 text-amber" /> : <Home className="w-5 h-5 text-amber" />}
                 <div>
                   <p className="font-semibold text-charcoal">{slot.dayLabel}</p>
                   <p className="text-xs text-muted">
-                    Retiro
+                    {deliveryModeLabels(slot.deliveryMode).name}
                     {!slot.active && " · Inactivo"}
                   </p>
                 </div>
@@ -468,9 +502,9 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
 
             <div className={!slot.active ? "opacity-40 pointer-events-none" : ""}>
             <div className="border-t border-border pt-4 mb-4 space-y-3">
-              <SlotDetailField label="Horario de retiro" placeholder="Ej: 10:00 - 13:00" initial={slot.pickupTime}
+              <SlotDetailField label={deliveryModeLabels(slot.deliveryMode).time} placeholder="Ej: 10:00 - 13:00" initial={slot.pickupTime}
                 onSave={(v) => onUpdateDetails(slot, v, slot.location)} />
-              <SlotDetailField label="Lugar de retiro" placeholder="Ej: Av. Corrientes 1234, CABA" initial={slot.location}
+              <SlotDetailField label={deliveryModeLabels(slot.deliveryMode).place} placeholder={deliveryModeLabels(slot.deliveryMode).placePlaceholder} initial={slot.location}
                 onSave={(v) => onUpdateDetails(slot, slot.pickupTime, v)} />
 
               {/* Cutoff */}
