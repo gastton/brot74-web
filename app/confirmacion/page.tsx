@@ -4,7 +4,8 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { CalendarIcon, PinIcon } from "@/components/FlowIcons";
+import { CalendarIcon, PinIcon, TruckIcon } from "@/components/FlowIcons";
+import { deliveryModeLabels } from "@/lib/deliveryMode";
 
 function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; label: string; value: string; last?: boolean }) {
   return (
@@ -23,6 +24,7 @@ function ConfirmacionContent() {
   const orderId = params.get("order");
   const pickup  = params.get("pickup");
   const place   = params.get("place");
+  const isDelivery = params.get("mode") === "delivery";
 
   // v45 editorial: sin tarjeta, composición a la izquierda y el CTA anclado
   // abajo; v48: sin el filete suelto de arriba.
@@ -56,8 +58,8 @@ function ConfirmacionContent() {
 
           {(pickup || place) && (
             <div className="mt-[18px]">
-              {pickup && <InfoRow icon={<CalendarIcon />} label="Retiro" value={pickup} last={!place} />}
-              {place && <InfoRow icon={<PinIcon />} label="Lugar" value={place} last />}
+              {pickup && <InfoRow icon={<CalendarIcon />} label={isDelivery ? deliveryModeLabels("delivery").name : "Retiro"} value={pickup} last={!place} />}
+              {place && <InfoRow icon={isDelivery ? <TruckIcon /> : <PinIcon />} label={isDelivery ? deliveryModeLabels("delivery").place : "Lugar"} value={place} last />}
             </div>
           )}
         </div>

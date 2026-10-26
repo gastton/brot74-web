@@ -8,6 +8,7 @@ export async function GET() {
     dayLabel: slot.dayLabel,
     pickupTime: slot.pickupTime,
     location: slot.location,
+    deliveryMode: slot.deliveryMode,
     imageUrl: slot.imageUrl,
     imageFocalX: slot.imageFocalX,
     imageFocalY: slot.imageFocalY,
