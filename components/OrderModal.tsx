@@ -239,7 +239,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
         {/* Header — v46: "pedido" y "transferencia" en ámbar. v49: en "Tu pedido"
            la fila de fecha va arriba del título y un filete navy lo separa de la lista. */}
         <div className="px-5 min-[900px]:px-[30px]" style={{ paddingTop: showDateRow ? "14px" : "26px" }}>
-          {showDateRow && <PickupDateRow date={slotDate} pickupTime={pickupTime} />}
+          {showDateRow && <PickupDateRow date={slotDate} pickupTime={pickupTime} isDelivery={isDelivery} />}
           <div className="flex items-start justify-between gap-[14px]" style={{ marginTop: showDateRow ? "16px" : 0 }}>
             <h3 className="brot-h brot-h--modal">
               {step === "payment" ? (

@@ -384,7 +384,7 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
                 className="block min-h-[44px] -my-[11px] bg-transparent border-none p-0 cursor-pointer text-left"
               >
                 {selectedSlot
-                  ? <PickupDateRow date={selectedSlot.date} pickupTime={selectedSlot.pickupTime} />
+                  ? <PickupDateRow date={selectedSlot.date} pickupTime={selectedSlot.pickupTime} isDelivery={selectedSlot.deliveryMode === "delivery"} />
                   : <span className="brot-kick">Cambiar fecha</span>}
               </button>
               {/* v49: fila de fecha (toca para cambiar de fecha) arriba del título */}
