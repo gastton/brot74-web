@@ -262,9 +262,9 @@ describe("DELETE /api/admin/slots/[id]", () => {
 });
 
 describe("Pedidos hasta (orderCutoff): día y hora de Argentina", () => {
-  // Solo día → 13:00 AR; día + hora → esa hora AR (UTC-3).
+  // Día + hora → esa hora AR (UTC-3). La hora es obligatoria.
   const cases = [
-    { value: "2026-10-28", iso: "2026-10-28T16:00:00.000Z", desc: "el 28/10 a las 13:00" },
+    { value: "2026-10-28T13:00", iso: "2026-10-28T16:00:00.000Z", desc: "el 28/10 a las 13:00" },
     { value: "2026-10-28T18:30", iso: "2026-10-28T21:30:00.000Z", desc: "el 28/10 a las 18:30" },
     { value: "2026-10-28T09:15", iso: "2026-10-28T12:15:00.000Z", desc: "el 28/10 a las 9:15" },
   ];
@@ -292,7 +292,7 @@ describe("Pedidos hasta (orderCutoff): día y hora de Argentina", () => {
     expect(new Date(json.orderCutoff).toISOString()).toBe(iso);
   });
 
-  it.each(["28 de octubre", "2026-10-28T25:00"])("devuelve 400 con \"%s\", y no toca la fecha guardada", async (value) => {
+  it.each(["28 de octubre", "2026-10-28T25:00", "2026-10-28"])("devuelve 400 con \"%s\", y no toca la fecha guardada", async (value) => {
     const cutoff = new Date("2026-10-28T16:00:00.000Z");
     const slot = await createDeliverySlot({ orderCutoff: cutoff });
 
@@ -306,9 +306,9 @@ describe("Pedidos hasta (orderCutoff): día y hora de Argentina", () => {
     expect(saved?.orderCutoff?.toISOString()).toBe(cutoff.toISOString());
   });
 
-  it("devuelve 400 al crear con un Pedidos hasta inválido, sin crear la fecha", async () => {
+  it.each(["mañana", "2026-10-28"])("devuelve 400 al crear con \"%s\" (sin hora o inválido), sin crear la fecha", async (value) => {
     const res = await POST(
-      postRequest({ date: "2026-10-29", dayLabel: "Jueves 29 de octubre", orderCutoff: "mañana" }, await adminCookieHeader())
+      postRequest({ date: "2026-10-29", dayLabel: "Jueves 29 de octubre", orderCutoff: value }, await adminCookieHeader())
     );
 
     expect(res.status).toBe(400);

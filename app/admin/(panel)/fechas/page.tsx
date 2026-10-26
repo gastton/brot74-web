@@ -5,12 +5,12 @@ import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, 
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import { toastError, toastSuccess } from "@/lib/toast";
-import { isSlotArchived, orderCutoffDay, orderCutoffTime, DEFAULT_CUTOFF_TIME } from "@/lib/deliverySlots";
+import { isSlotArchived, orderCutoffDay, orderCutoffTime } from "@/lib/deliverySlots";
 import { deliveryModeLabels, type DeliveryMode } from "@/lib/deliveryMode";
 
 // El lugar por defecto es el del local: solo tiene sentido para retiro.
 const PICKUP_LOCATION = "Las Zinnias 154 - El Talar";
-const EMPTY_FORM = { date: "", dayLabel: "", deliveryMode: "pickup" as DeliveryMode, pickupTime: "8:00 - 17:00", location: PICKUP_LOCATION, orderCutoff: "", orderCutoffTime: DEFAULT_CUTOFF_TIME, active: true };
+const EMPTY_FORM = { date: "", dayLabel: "", deliveryMode: "pickup" as DeliveryMode, pickupTime: "8:00 - 17:00", location: PICKUP_LOCATION, orderCutoff: "", orderCutoffTime: "", active: true };
 
 interface Slot {
   id: number;
@@ -106,13 +106,16 @@ export default function FechasPage() {
     });
   }
 
+  // "Pedidos hasta": si hay día, la hora es obligatoria (sin hora sugerida).
+  const cutoffMissingTime = !!form.orderCutoff && !form.orderCutoffTime;
+
   async function handleCreate() {
-    if (!form.date || !form.dayLabel) return;
+    if (!form.date || !form.dayLabel || cutoffMissingTime) return;
     setSaving(true);
     await fetch("/api/admin/slots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff ? `${form.orderCutoff}T${form.orderCutoffTime || DEFAULT_CUTOFF_TIME}` : null, active: form.active }),
+      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff ? `${form.orderCutoff}T${form.orderCutoffTime}` : null, active: form.active }),
     });
     await fetchAll();
     setShowForm(false);
@@ -348,14 +351,14 @@ export default function FechasPage() {
                     aria-label="Día de Pedidos hasta"
                     className="flex-1 min-w-0 border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
                   <input type="time" value={form.orderCutoffTime} onChange={(e) => setForm({ ...form, orderCutoffTime: e.target.value })}
-                    aria-label="Hora de Pedidos hasta"
-                    className="w-32 border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
+                    aria-label="Hora de Pedidos hasta" aria-invalid={cutoffMissingTime} required={!!form.orderCutoff}
+                    className={`w-32 border-2 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white ${cutoffMissingTime ? "border-red-400" : "border-border"}`} />
                 </div>
-                <p className="text-xs text-muted mt-1">Hora de Argentina.</p>
+                <p className={`text-xs mt-1 ${cutoffMissingTime ? "text-red-600" : "text-muted"}`}>{cutoffMissingTime ? "Elegí la hora de cierre." : "Hora de Argentina."}</p>
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowForm(false)} className="flex-1 btn-secondary rounded-xl py-3 text-sm">Cancelar</button>
-                <button onClick={handleCreate} disabled={saving || !form.date} className="flex-1 btn-primary flex items-center justify-center gap-2 rounded-xl py-3 text-sm">
+                <button onClick={handleCreate} disabled={saving || !form.date || cutoffMissingTime} className="flex-1 btn-primary flex items-center justify-center gap-2 rounded-xl py-3 text-sm">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Crear
                 </button>
@@ -678,13 +681,17 @@ function SlotImageTrigger({ slot, onSave }: {
   );
 }
 
-// "Pedidos hasta" de la tarjeta: día + hora (AR). El día se guarda al elegirlo
-// (vacío = sin cierre propio); la hora, al salir del campo, para no mandar un
-// PUT por cada dígito.
+// "Pedidos hasta" de la tarjeta: día + hora (AR), los dos obligatorios. Se
+// guarda recién con los dos cargados (al elegir el día, o al salir del campo
+// de hora, para no mandar un PUT por cada dígito). Día vacío = sin cierre propio.
 function CutoffField({ slot, onSave }: { slot: Slot; onSave: (v: string | null) => void }) {
   const [day, setDay] = useState(slot.orderCutoff ? orderCutoffDay(slot.orderCutoff) : "");
-  const [time, setTime] = useState(slot.orderCutoff ? orderCutoffTime(slot.orderCutoff) : DEFAULT_CUTOFF_TIME);
-  const save = (d: string, t: string) => onSave(d ? `${d}T${t || DEFAULT_CUTOFF_TIME}` : null);
+  const [time, setTime] = useState(slot.orderCutoff ? orderCutoffTime(slot.orderCutoff) : "");
+  const missingTime = !!day && !time;
+  const save = (d: string, t: string) => {
+    if (!d) onSave(null);
+    else if (t) onSave(`${d}T${t}`);
+  };
   return (
     <div>
       <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Pedidos hasta</p>
@@ -701,12 +708,14 @@ function CutoffField({ slot, onSave }: { slot: Slot; onSave: (v: string | null) 
           value={time}
           aria-label="Hora de Pedidos hasta"
           disabled={!day}
+          required={!!day}
+          aria-invalid={missingTime}
           onChange={(e) => setTime(e.target.value)}
-          onBlur={() => { if (day && time !== (slot.orderCutoff ? orderCutoffTime(slot.orderCutoff) : "")) save(day, time); }}
-          className="w-28 border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white disabled:opacity-50"
+          onBlur={() => { if (day && time && time !== (slot.orderCutoff ? orderCutoffTime(slot.orderCutoff) : "")) save(day, time); }}
+          className={`w-28 border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white disabled:opacity-50 ${missingTime ? "border-red-400" : "border-border"}`}
         />
       </div>
-      <p className="text-xs text-muted mt-1">Hora de Argentina.</p>
+      <p className={`text-xs mt-1 ${missingTime ? "text-red-600" : "text-muted"}`}>{missingTime ? "Elegí la hora de cierre." : "Hora de Argentina."}</p>
     </div>
   );
 }
