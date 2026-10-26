@@ -21,6 +21,8 @@ export function buildOrderMessage(order: {
   customerPhone: string;
   total: number;
   slotLabel: string;
+  // Solo en fechas de delivery: adónde llevar el pedido.
+  deliveryAddress?: string;
   items: { name: string; quantity: number; unitPrice: number }[];
 }): string {
   const lines = [
@@ -29,6 +31,7 @@ export function buildOrderMessage(order: {
     `*Cliente*`,
     `• Nombre: ${order.customerName}`,
     `• Teléfono: ${order.customerPhone}`,
+    ...(order.deliveryAddress ? [`• Delivery a: ${order.deliveryAddress}`] : []),
     ``,
     `*Productos:*`,
     ...order.items.map((i) => `• ${i.name} x${i.quantity}`),

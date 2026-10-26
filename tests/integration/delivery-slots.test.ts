@@ -16,6 +16,21 @@ describe("GET /api/delivery-slots", () => {
     expect(json.map((s: { id: number }) => s.id)).toContain(slot.id);
   });
 
+  it("devuelve el tipo de entrega de cada fecha", async () => {
+    const product = await createProduct();
+    const pickup = await createDeliverySlot({ date: new Date(Date.now() + 30 * HOUR) });
+    const delivery = await createDeliverySlot({ date: new Date(Date.now() + 40 * HOUR), deliveryMode: "delivery" });
+    await createProductStock(product.id, pickup.id, { totalStock: 5 });
+    await createProductStock(product.id, delivery.id, { totalStock: 5 });
+
+    const res = await GET();
+    const json = await res.json();
+
+    const byId = Object.fromEntries(json.map((s: { id: number; deliveryMode: string }) => [s.id, s.deliveryMode]));
+    expect(byId[pickup.id]).toBe("pickup");
+    expect(byId[delivery.id]).toBe("delivery");
+  });
+
   it("no devuelve un slot cuyo cutoff por defecto (20hs antes) ya pasó", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot({ date: new Date(Date.now() + 5 * HOUR) });

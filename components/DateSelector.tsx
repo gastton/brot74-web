@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { ClockIcon, PinIcon, CalendarIcon } from "./FlowIcons";
+import { ClockIcon, PinIcon, CalendarIcon, TruckIcon } from "./FlowIcons";
 import HowItWorksSheet from "./HowItWorksSheet";
+import { deliveryModeLabels } from "@/lib/deliveryMode";
 
 interface Slot {
   id: number | null;
@@ -11,6 +12,7 @@ interface Slot {
   dayLabel: string;
   pickupTime: string;
   location: string;
+  deliveryMode: string;
   imageUrl: string;
   imageFocalX: number;
   imageFocalY: number;
@@ -73,6 +75,9 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
         const month = date.toLocaleDateString("es-AR", { month: "long" }).toUpperCase();
         const day = date.getDate();
         const isOpen = slot.id !== null;
+        // Fechas de delivery: "Horario/Zona de delivery" y camión; retiro (y las viejas "both") como siempre.
+        const labels = deliveryModeLabels(slot.deliveryMode);
+        const isDelivery = slot.deliveryMode === "delivery";
 
         const cutoffLabel = slot.orderCutoff
           ? new Date(slot.orderCutoff).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
@@ -125,10 +130,10 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
             {/* ── Datos ── */}
             <div className="brot-card-body pt-[46px]">
               {slot.pickupTime && (
-                <InfoRow icon={<ClockIcon />} label="Horario de retiro" value={slot.pickupTime} />
+                <InfoRow icon={<ClockIcon />} label={labels.time} value={slot.pickupTime} />
               )}
               {slot.location && (
-                <InfoRow icon={<PinIcon />} label="Lugar de retiro" value={slot.location} />
+                <InfoRow icon={isDelivery ? <TruckIcon /> : <PinIcon />} label={labels.place} value={slot.location} />
               )}
               <InfoRow icon={<CalendarIcon />} label="Pedidos hasta" value={cutoffLabel} last />
 

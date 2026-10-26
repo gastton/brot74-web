@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { customerName, customerPhone, deliverySlotId, items: rawItems, notes } = body;
+    const { customerName, customerPhone, customerAddress, deliverySlotId, items: rawItems, notes } = body;
 
     if (!customerName || !customerPhone || !deliverySlotId) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
@@ -49,6 +49,15 @@ export async function POST(req: NextRequest) {
     const slot = await prisma.deliverySlot.findUnique({ where: { id: deliverySlotId } });
     if (!slot || !slot.active) {
       return NextResponse.json({ error: "Fecha no disponible" }, { status: 400 });
+    }
+
+    // El tipo de entrega lo define la fecha (admin, Nueva fecha), no el
+    // cliente: en una fecha de delivery la dirección es obligatoria; en una
+    // de retiro (o las viejas "both") se ignora lo que venga.
+    const isDelivery = slot.deliveryMode === "delivery";
+    const address = isDelivery && typeof customerAddress === "string" ? customerAddress.trim() : "";
+    if (isDelivery && !address) {
+      return NextResponse.json({ error: "La dirección es requerida para delivery" }, { status: 400 });
     }
 
     const now = new Date();
@@ -117,6 +126,7 @@ export async function POST(req: NextRequest) {
           data: {
             customerName,
             customerPhone,
+            customerAddress: address,
             deliverySlotId,
             total,
             notes: notes ?? "",
@@ -173,6 +183,7 @@ export async function POST(req: NextRequest) {
         customerPhone,
         total,
         slotLabel: slot.dayLabel,
+        deliveryAddress: isDelivery ? address : undefined,
         items: enrichedItems,
       });
       await sendWhatsAppNotification(msg);

@@ -1,4 +1,5 @@
 // Íconos de línea ámbar, sin círculo (v46): Retiro / Lugar / Pedidos hasta.
+// TruckIcon: zona de las fechas de delivery (en vez del pin del lugar de retiro).
 const common = {
   width: 22,
   height: 22,
@@ -27,6 +28,17 @@ export function PinIcon() {
     <svg {...common}>
       <path d="M12 21.5s-6.5-5.6-6.5-11.2a6.5 6.5 0 0 1 13 0c0 5.6-6.5 11.2-6.5 11.2z" />
       <circle cx="12" cy="10.2" r="2.4" fill="#C8851A" stroke="none" />
+    </svg>
+  );
+}
+
+export function TruckIcon() {
+  return (
+    <svg {...common}>
+      <path d="M2.5 6.5h11v10h-11z" />
+      <path d="M13.5 9.5h4l3 3.2v3.8h-7" />
+      <circle cx="7" cy="17.8" r="1.9" fill="#fff" />
+      <circle cx="17" cy="17.8" r="1.9" fill="#fff" />
     </svg>
   );
 }

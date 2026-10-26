@@ -21,6 +21,8 @@ interface OrderModalProps {
   slotId: number;
   slotDate: string;
   pickupTime: string;
+  // Fecha de delivery: pide la dirección (obligatoria). El tipo lo define la fecha.
+  isDelivery: boolean;
   // v46: "Sumar más panes" se oculta cuando ya están todos los panes de la fecha en el pedido
   canAddMore: boolean;
   // BRT-95: el paso ahora lo controla la URL (page.tsx) en vez de un
@@ -83,9 +85,10 @@ function saveContact(name: string, phone: string) {
   }
 }
 
-export default function OrderModal({ items, slotId, slotDate, pickupTime, step, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotDate, pickupTime, isDelivery, step, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
   const [name, setName]       = useState(() => loadSavedContact().name);
   const [phone, setPhone]     = useState(() => loadSavedContact().phone);
+  const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
@@ -119,7 +122,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
   // vez de crear otro.
   function currentSignature() {
     const lines = items.map((i) => `${i.id}x${i.quantity}`).join(",");
-    return `${slotId}|${name.trim()}|${phone.replace(/\D/g, "")}|${lines}`;
+    return `${slotId}|${name.trim()}|${phone.replace(/\D/g, "")}|${address.trim()}|${lines}`;
   }
 
   // Crea el pedido (pending) al tocar "Pagar", antes de mostrar los datos
@@ -136,6 +139,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
         body: JSON.stringify({
           customerName: name.trim(),
           customerPhone: phone.replace(/\D/g, ""),
+          customerAddress: isDelivery ? address.trim() : "",
           deliverySlotId: slotId,
           items: items.map((i) => ({ productId: i.id, quantity: i.quantity })),
         }),
@@ -166,6 +170,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
+    if (isDelivery && !address.trim()) { setError("La dirección es requerida para delivery"); return; }
     const id = await createOrder();
     if (id != null) onAdvanceToPayment();
   }
@@ -421,6 +426,9 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, step, 
                 {[
                   { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },
                   { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
+                  ...(isDelivery
+                    ? [{ label: "Dirección de entrega", id: "address", type: "text", value: address, onChange: (v: string) => setAddress(v), placeholder: "Calle 1234, piso/depto, localidad", required: true }]
+                    : []),
                 ].map((field) => (
                   <label key={field.id} className="brot-fl">
                     <span>{field.label}</span>

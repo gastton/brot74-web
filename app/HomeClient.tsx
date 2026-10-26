@@ -18,6 +18,7 @@ interface Slot {
   dayLabel: string;
   pickupTime: string;
   location: string;
+  deliveryMode: string;
   imageUrl: string;
   imageFocalX: number;
   imageFocalY: number;
@@ -322,7 +323,8 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
     const retiro = [selectedSlot?.dayLabel, selectedSlot?.pickupTime].filter(Boolean).join(" · ");
     const extra =
       (retiro ? `&pickup=${encodeURIComponent(retiro)}` : "") +
-      (selectedSlot?.location ? `&place=${encodeURIComponent(selectedSlot.location)}` : "");
+      (selectedSlot?.location ? `&place=${encodeURIComponent(selectedSlot.location)}` : "") +
+      (selectedSlot?.deliveryMode === "delivery" ? "&mode=delivery" : "");
     window.location.href = `/confirmacion?order=${orderId}&status=pending${extra}`;
   }
 
@@ -455,6 +457,7 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
             slotId={selectedSlotId}
             slotDate={selectedSlot.date}
             pickupTime={selectedSlot.pickupTime}
+            isDelivery={selectedSlot.deliveryMode === "delivery"}
             canAddMore={products.some((p) => p.hasStock && !((cart[p.id] ?? 0) > 0))}
             step={checkoutParam === "payment" ? "payment" : "form"}
             onRemoveItem={removeItemFromCart}
