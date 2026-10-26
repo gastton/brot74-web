@@ -25,6 +25,7 @@ export const ORDER_GRACE_HOURS = 24;
  */
 export const AR_TIME_ZONE = "America/Argentina/Buenos_Aires";
 const AR_OFFSET = "-03:00";
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_TIME_AR = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
 // "YYYY-MM-DDTHH:mm" (lo que manda el admin) → ese día y hora en AR. Un día
@@ -34,6 +35,7 @@ const DATE_TIME_AR = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 export function parseOrderCutoff(value: unknown): Date | null | undefined {
   if (value === null || value === "") return null;
   if (typeof value !== "string") return undefined;
+  if (DATE_ONLY.test(value)) return undefined; // falta la hora
   let iso = value;
   if (DATE_TIME_AR.test(value)) iso = `${value}:00${AR_OFFSET}`;
   const date = new Date(iso);
