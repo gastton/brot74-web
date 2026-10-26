@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { ShoppingBag, Package, Calendar, TrendingUp, ChevronDown } from "lucide-react";
 import { isPickupPast } from "@/lib/deliverySlots";
+import { deliveryModeLabels } from "@/lib/deliveryMode";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,7 @@ type DashboardSlot = {
   id: number;
   date: Date;
   dayLabel: string;
+  deliveryMode: string;
   orders: unknown[];
   stocks: { id: number; totalStock: number; reservedStock: number; product: { name: string } }[];
 };
@@ -107,7 +109,7 @@ function SlotCard({ slot }: { slot: DashboardSlot }) {
             <p className="font-semibold text-charcoal">{slot.dayLabel}</p>
             <p className="text-xs text-muted">
               {new Date(slot.date).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}
-              {" · Retiro"}
+              {` · ${deliveryModeLabels(slot.deliveryMode).name}`}
             </p>
           </div>
         </div>

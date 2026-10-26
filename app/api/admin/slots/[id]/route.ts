@@ -20,7 +20,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   // Antes, cualquier campo ausente se pisaba con su valor por defecto — por
   // ejemplo, habilitar/deshabilitar una fecha (que solo manda `active`)
   // dejaba vacíos "Pedidos hasta", el horario, el lugar y la imagen.
-  const update: Prisma.DeliverySlotUpdateInput = { deliveryMode: "pickup" };
+  // deliveryMode (retiro/delivery) no se toca acá: se elige solo al crear la fecha.
+  const update: Prisma.DeliverySlotUpdateInput = {};
   if (data.dayLabel !== undefined) update.dayLabel = data.dayLabel;
   if ("pickupTime" in data) update.pickupTime = data.pickupTime ?? "";
   if ("location" in data) update.location = data.location ?? "";

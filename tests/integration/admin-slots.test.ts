@@ -71,6 +71,38 @@ describe("POST /api/admin/slots", () => {
     expect(stocks[0].reservedStock).toBe(0);
   });
 
+  it("crea la fecha como retiro si no se manda el tipo de entrega", async () => {
+    const res = await POST(postRequest({ date: "2026-08-10", dayLabel: "Lunes" }, await adminCookieHeader()));
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(json.deliveryMode).toBe("pickup");
+  });
+
+  it("crea una fecha de delivery con su horario y zona", async () => {
+    const res = await POST(
+      postRequest(
+        { date: "2026-08-10", dayLabel: "Lunes", deliveryMode: "delivery", pickupTime: "18:00 - 21:00", location: "El Talar" },
+        await adminCookieHeader()
+      )
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    const slot = await prisma.deliverySlot.findUnique({ where: { id: json.id } });
+    expect(slot).toMatchObject({ deliveryMode: "delivery", pickupTime: "18:00 - 21:00", location: "El Talar" });
+  });
+
+  it("devuelve 400 y no crea la fecha con un tipo de entrega inválido", async () => {
+    for (const deliveryMode of ["both", "envio", 1]) {
+      const res = await POST(
+        postRequest({ date: "2026-08-10", dayLabel: "Lunes", deliveryMode }, await adminCookieHeader())
+      );
+      expect(res.status).toBe(400);
+    }
+    expect(await prisma.deliverySlot.count()).toBe(0);
+  });
+
   it("inicializa 20 unidades para todos los panes activos y ninguno para los inactivos", async () => {
     await createProduct({ active: true });
     await createProduct({ active: true });
@@ -105,16 +137,18 @@ describe("PUT /api/admin/slots/[id]", () => {
     expect(json.active).toBe(false);
   });
 
-  it("siempre deja el slot en modalidad pickup, sin importar qué se mande", async () => {
-    const slot = await createDeliverySlot({ dayLabel: "Viejo", active: true });
+  it("no cambia el tipo de entrega: se elige solo al crear la fecha", async () => {
+    const slot = await createDeliverySlot({ dayLabel: "Viejo", deliveryMode: "delivery", active: true });
 
     const res = await PUT(
-      putRequest({ dayLabel: "Actualizado", deliveryMode: "delivery", active: true }, await adminCookieHeader()),
+      putRequest({ dayLabel: "Actualizado", deliveryMode: "pickup", active: true }, await adminCookieHeader()),
       { params: Promise.resolve({ id: String(slot.id) }) }
     );
     const json = await res.json();
 
-    expect(json.deliveryMode).toBe("pickup");
+    expect(res.status).toBe(200);
+    expect(json.dayLabel).toBe("Actualizado");
+    expect(json.deliveryMode).toBe("delivery");
   });
 
   it("habilitar/deshabilitar (body solo con active) conserva Pedidos hasta, horario, lugar e imagen", async () => {

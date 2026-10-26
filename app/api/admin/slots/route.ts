@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { NEW_SLOT_STOCK } from "@/lib/productStock";
+import { isDeliveryMode } from "@/lib/deliveryMode";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin(req);
@@ -23,10 +24,18 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const data = await req.json();
+
+  // Retiro o delivery: se elige solo al crear la fecha (el PUT no lo cambia).
+  const deliveryMode = data.deliveryMode ?? "pickup";
+  if (!isDeliveryMode(deliveryMode)) {
+    return NextResponse.json({ error: "Tipo de entrega inválido" }, { status: 400 });
+  }
+
   const slot = await prisma.deliverySlot.create({
     data: {
       date: new Date(data.date + "T12:00:00Z"),
       dayLabel: data.dayLabel,
+      deliveryMode,
       pickupTime: data.pickupTime ?? "",
       location: data.location ?? "",
       imageUrl: data.imageUrl ?? "",
