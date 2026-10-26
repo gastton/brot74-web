@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { parseOrderCutoff } from "@/lib/deliverySlots";
 
 function parseId(id: string): number | null {
   const n = Number(id);
@@ -29,7 +30,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if ("imageFocalX" in data) update.imageFocalX = data.imageFocalX ?? 50;
   if ("imageFocalY" in data) update.imageFocalY = data.imageFocalY ?? 50;
   if ("imageScale" in data) update.imageScale = data.imageScale ?? 1;
-  if ("orderCutoff" in data) update.orderCutoff = data.orderCutoff ? new Date(data.orderCutoff) : null;
+  if ("orderCutoff" in data) {
+    const orderCutoff = parseOrderCutoff(data.orderCutoff);
+    if (orderCutoff === undefined) {
+      return NextResponse.json({ error: "\"Pedidos hasta\" inválido" }, { status: 400 });
+    }
+    update.orderCutoff = orderCutoff;
+  }
   if (data.active !== undefined) update.active = data.active;
 
   try {

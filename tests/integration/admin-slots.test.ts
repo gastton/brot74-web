@@ -260,3 +260,51 @@ describe("DELETE /api/admin/slots/[id]", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("Pedidos hasta (orderCutoff) con un día de calendario", () => {
+  it("al crear, \"2026-10-28\" cierra el 28/10 a las 13:00 de Argentina", async () => {
+    const res = await POST(
+      postRequest({ date: "2026-10-29", dayLabel: "Jueves 29 de octubre", orderCutoff: "2026-10-28" }, await adminCookieHeader())
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(new Date(json.orderCutoff).toISOString()).toBe("2026-10-28T16:00:00.000Z");
+  });
+
+  it("al editar, \"2026-10-28\" cierra el 28/10 a las 13:00 de Argentina", async () => {
+    const slot = await createDeliverySlot();
+
+    const res = await PUT(
+      putRequest({ orderCutoff: "2026-10-28" }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(slot.id) }) }
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(new Date(json.orderCutoff).toISOString()).toBe("2026-10-28T16:00:00.000Z");
+  });
+
+  it("devuelve 400 si Pedidos hasta no es una fecha, y no toca la fecha guardada", async () => {
+    const cutoff = new Date("2026-10-28T16:00:00.000Z");
+    const slot = await createDeliverySlot({ orderCutoff: cutoff });
+
+    const res = await PUT(
+      putRequest({ orderCutoff: "28 de octubre" }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(slot.id) }) }
+    );
+
+    expect(res.status).toBe(400);
+    const saved = await prisma.deliverySlot.findUnique({ where: { id: slot.id } });
+    expect(saved?.orderCutoff?.toISOString()).toBe(cutoff.toISOString());
+  });
+
+  it("devuelve 400 al crear con un Pedidos hasta inválido, sin crear la fecha", async () => {
+    const res = await POST(
+      postRequest({ date: "2026-10-29", dayLabel: "Jueves 29 de octubre", orderCutoff: "mañana" }, await adminCookieHeader())
+    );
+
+    expect(res.status).toBe(400);
+    expect(await prisma.deliverySlot.count()).toBe(0);
+  });
+});

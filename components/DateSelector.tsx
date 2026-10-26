@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ClockIcon, PinIcon, CalendarIcon, TruckIcon } from "./FlowIcons";
 import HowItWorksSheet from "./HowItWorksSheet";
 import { deliveryModeLabels } from "@/lib/deliveryMode";
+import { AR_TIME_ZONE } from "@/lib/deliverySlots";
 
 interface Slot {
   id: number | null;
@@ -32,7 +33,7 @@ const FALLBACK_IMAGE = "/products/fecha-default-basket.jpeg";
 function formatCutoff(dateStr: string): string {
   const d = new Date(dateStr);
   const cutoff = new Date(d.getTime() - 20 * 60 * 60 * 1000);
-  return cutoff.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+  return cutoff.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: AR_TIME_ZONE });
 }
 
 interface InfoRowProps {
@@ -80,7 +81,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
         const isDelivery = slot.deliveryMode === "delivery";
 
         const cutoffLabel = slot.orderCutoff
-          ? new Date(slot.orderCutoff).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
+          ? new Date(slot.orderCutoff).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: AR_TIME_ZONE })
           : formatCutoff(slot.date);
 
         return (

@@ -5,7 +5,7 @@ import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, 
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import { toastError, toastSuccess } from "@/lib/toast";
-import { isSlotArchived } from "@/lib/deliverySlots";
+import { isSlotArchived, orderCutoffDay } from "@/lib/deliverySlots";
 import { deliveryModeLabels, type DeliveryMode } from "@/lib/deliveryMode";
 
 // El lugar por defecto es el del local: solo tiene sentido para retiro.
@@ -512,8 +512,8 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
                 <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Pedidos hasta</p>
                 <input
                   type="date"
-                  defaultValue={slot.orderCutoff ? new Date(slot.orderCutoff).toISOString().slice(0, 10) : ""}
-                  onChange={(e) => onUpdateCutoff(slot, e.target.value ? new Date(e.target.value + "T12:00:00Z").toISOString() : null)}
+                  defaultValue={slot.orderCutoff ? orderCutoffDay(slot.orderCutoff) : ""}
+                  onChange={(e) => onUpdateCutoff(slot, e.target.value || null)}
                   className="w-full border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
                 />
               </div>
