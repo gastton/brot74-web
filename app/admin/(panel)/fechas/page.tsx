@@ -5,12 +5,12 @@ import { Plus, Trash2, Loader2, X, Check, ToggleLeft, ToggleRight, Home, Truck, 
 import FocalPicker from "@/components/FocalPicker";
 import ImageZoomModal from "@/components/ImageZoomModal";
 import { toastError, toastSuccess } from "@/lib/toast";
-import { isSlotArchived } from "@/lib/deliverySlots";
+import { isSlotArchived, orderCutoffDay, orderCutoffTime, DEFAULT_CUTOFF_TIME } from "@/lib/deliverySlots";
 import { deliveryModeLabels, type DeliveryMode } from "@/lib/deliveryMode";
 
 // El lugar por defecto es el del local: solo tiene sentido para retiro.
 const PICKUP_LOCATION = "Las Zinnias 154 - El Talar";
-const EMPTY_FORM = { date: "", dayLabel: "", deliveryMode: "pickup" as DeliveryMode, pickupTime: "8:00 - 17:00", location: PICKUP_LOCATION, orderCutoff: "", active: true };
+const EMPTY_FORM = { date: "", dayLabel: "", deliveryMode: "pickup" as DeliveryMode, pickupTime: "8:00 - 17:00", location: PICKUP_LOCATION, orderCutoff: "", orderCutoffTime: DEFAULT_CUTOFF_TIME, active: true };
 
 interface Slot {
   id: number;
@@ -112,7 +112,7 @@ export default function FechasPage() {
     await fetch("/api/admin/slots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff || null, active: form.active }),
+      body: JSON.stringify({ date: form.date, dayLabel: form.dayLabel, deliveryMode: form.deliveryMode, pickupTime: form.pickupTime, location: form.location, orderCutoff: form.orderCutoff ? `${form.orderCutoff}T${form.orderCutoffTime || DEFAULT_CUTOFF_TIME}` : null, active: form.active }),
     });
     await fetchAll();
     setShowForm(false);
@@ -343,8 +343,15 @@ export default function FechasPage() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-charcoal mb-1">Pedidos hasta</label>
-                <input type="date" value={form.orderCutoff} onChange={(e) => setForm({ ...form, orderCutoff: e.target.value })}
-                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
+                <div className="flex gap-2">
+                  <input type="date" value={form.orderCutoff} onChange={(e) => setForm({ ...form, orderCutoff: e.target.value })}
+                    aria-label="Día de Pedidos hasta"
+                    className="flex-1 min-w-0 border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
+                  <input type="time" value={form.orderCutoffTime} onChange={(e) => setForm({ ...form, orderCutoffTime: e.target.value })}
+                    aria-label="Hora de Pedidos hasta"
+                    className="w-32 border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white" />
+                </div>
+                <p className="text-xs text-muted mt-1">Hora de Argentina.</p>
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowForm(false)} className="flex-1 btn-secondary rounded-xl py-3 text-sm">Cancelar</button>
@@ -507,16 +514,7 @@ function SlotList({ title, slots, products, stockEdits, setStockEdits, onToggle,
               <SlotDetailField label={deliveryModeLabels(slot.deliveryMode).place} placeholder={deliveryModeLabels(slot.deliveryMode).placePlaceholder} initial={slot.location}
                 onSave={(v) => onUpdateDetails(slot, slot.pickupTime, v)} />
 
-              {/* Cutoff */}
-              <div>
-                <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Pedidos hasta</p>
-                <input
-                  type="date"
-                  defaultValue={slot.orderCutoff ? new Date(slot.orderCutoff).toISOString().slice(0, 10) : ""}
-                  onChange={(e) => onUpdateCutoff(slot, e.target.value ? new Date(e.target.value + "T12:00:00Z").toISOString() : null)}
-                  className="w-full border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
-                />
-              </div>
+              <CutoffField slot={slot} onSave={(v) => onUpdateCutoff(slot, v)} />
 
             </div>
 
@@ -677,6 +675,39 @@ function SlotImageTrigger({ slot, onSave }: {
 
       {zoomSrc && <ImageZoomModal src={zoomSrc} onClose={() => setZoomSrc(null)} />}
     </>
+  );
+}
+
+// "Pedidos hasta" de la tarjeta: día + hora (AR). El día se guarda al elegirlo
+// (vacío = sin cierre propio); la hora, al salir del campo, para no mandar un
+// PUT por cada dígito.
+function CutoffField({ slot, onSave }: { slot: Slot; onSave: (v: string | null) => void }) {
+  const [day, setDay] = useState(slot.orderCutoff ? orderCutoffDay(slot.orderCutoff) : "");
+  const [time, setTime] = useState(slot.orderCutoff ? orderCutoffTime(slot.orderCutoff) : DEFAULT_CUTOFF_TIME);
+  const save = (d: string, t: string) => onSave(d ? `${d}T${t || DEFAULT_CUTOFF_TIME}` : null);
+  return (
+    <div>
+      <p className="text-xs font-semibold text-muted uppercase tracking-wide mb-1">Pedidos hasta</p>
+      <div className="flex gap-2">
+        <input
+          type="date"
+          value={day}
+          aria-label="Día de Pedidos hasta"
+          onChange={(e) => { setDay(e.target.value); save(e.target.value, time); }}
+          className="flex-1 min-w-0 border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white"
+        />
+        <input
+          type="time"
+          value={time}
+          aria-label="Hora de Pedidos hasta"
+          disabled={!day}
+          onChange={(e) => setTime(e.target.value)}
+          onBlur={() => { if (day && time !== (slot.orderCutoff ? orderCutoffTime(slot.orderCutoff) : "")) save(day, time); }}
+          className="w-28 border-2 border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber bg-white disabled:opacity-50"
+        />
+      </div>
+      <p className="text-xs text-muted mt-1">Hora de Argentina.</p>
+    </div>
   );
 }
 

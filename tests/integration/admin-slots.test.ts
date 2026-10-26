@@ -260,3 +260,58 @@ describe("DELETE /api/admin/slots/[id]", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("Pedidos hasta (orderCutoff): día y hora de Argentina", () => {
+  // Solo día → 13:00 AR; día + hora → esa hora AR (UTC-3).
+  const cases = [
+    { value: "2026-10-28", iso: "2026-10-28T16:00:00.000Z", desc: "el 28/10 a las 13:00" },
+    { value: "2026-10-28T18:30", iso: "2026-10-28T21:30:00.000Z", desc: "el 28/10 a las 18:30" },
+    { value: "2026-10-28T09:15", iso: "2026-10-28T12:15:00.000Z", desc: "el 28/10 a las 9:15" },
+  ];
+
+  it.each(cases)("al crear, \"$value\" cierra $desc de Argentina", async ({ value, iso }) => {
+    const res = await POST(
+      postRequest({ date: "2026-10-29", dayLabel: "Jueves 29 de octubre", orderCutoff: value }, await adminCookieHeader())
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(201);
+    expect(new Date(json.orderCutoff).toISOString()).toBe(iso);
+  });
+
+  it.each(cases)("al editar, \"$value\" cierra $desc de Argentina", async ({ value, iso }) => {
+    const slot = await createDeliverySlot();
+
+    const res = await PUT(
+      putRequest({ orderCutoff: value }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(slot.id) }) }
+    );
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(new Date(json.orderCutoff).toISOString()).toBe(iso);
+  });
+
+  it.each(["28 de octubre", "2026-10-28T25:00"])("devuelve 400 con \"%s\", y no toca la fecha guardada", async (value) => {
+    const cutoff = new Date("2026-10-28T16:00:00.000Z");
+    const slot = await createDeliverySlot({ orderCutoff: cutoff });
+
+    const res = await PUT(
+      putRequest({ orderCutoff: value }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(slot.id) }) }
+    );
+
+    expect(res.status).toBe(400);
+    const saved = await prisma.deliverySlot.findUnique({ where: { id: slot.id } });
+    expect(saved?.orderCutoff?.toISOString()).toBe(cutoff.toISOString());
+  });
+
+  it("devuelve 400 al crear con un Pedidos hasta inválido, sin crear la fecha", async () => {
+    const res = await POST(
+      postRequest({ date: "2026-10-29", dayLabel: "Jueves 29 de octubre", orderCutoff: "mañana" }, await adminCookieHeader())
+    );
+
+    expect(res.status).toBe(400);
+    expect(await prisma.deliverySlot.count()).toBe(0);
+  });
+});

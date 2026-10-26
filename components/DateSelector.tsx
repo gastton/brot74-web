@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ClockIcon, PinIcon, CalendarIcon, TruckIcon } from "./FlowIcons";
 import HowItWorksSheet from "./HowItWorksSheet";
 import { deliveryModeLabels } from "@/lib/deliveryMode";
+import { AR_TIME_ZONE, CUTOFF_HOURS } from "@/lib/deliverySlots";
 
 interface Slot {
   id: number | null;
@@ -29,10 +30,15 @@ interface DateSelectorProps {
 
 const FALLBACK_IMAGE = "/products/fecha-default-basket.jpeg";
 
-function formatCutoff(dateStr: string): string {
-  const d = new Date(dateStr);
-  const cutoff = new Date(d.getTime() - 20 * 60 * 60 * 1000);
-  return cutoff.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+// "Pedidos hasta" con día y hora tal como se cargaron en el admin, en hora de
+// Argentina. Sin cutoff cargado, cierra CUTOFF_HOURS antes del retiro.
+function formatCutoff(slot: { date: string; orderCutoff: string | null }): string {
+  const cutoff = slot.orderCutoff
+    ? new Date(slot.orderCutoff)
+    : new Date(new Date(slot.date).getTime() - CUTOFF_HOURS * 60 * 60 * 1000);
+  const day = cutoff.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: AR_TIME_ZONE });
+  const time = cutoff.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: AR_TIME_ZONE });
+  return `${day} a las ${time}`;
 }
 
 interface InfoRowProps {
@@ -79,9 +85,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
         const labels = deliveryModeLabels(slot.deliveryMode);
         const isDelivery = slot.deliveryMode === "delivery";
 
-        const cutoffLabel = slot.orderCutoff
-          ? new Date(slot.orderCutoff).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
-          : formatCutoff(slot.date);
+        const cutoffLabel = formatCutoff(slot);
 
         return (
           <article key={slot.id ?? `slot-${i}`} className="brot-card-article">

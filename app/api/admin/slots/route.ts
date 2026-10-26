@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { NEW_SLOT_STOCK } from "@/lib/productStock";
 import { isDeliveryMode } from "@/lib/deliveryMode";
+import { parseOrderCutoff } from "@/lib/deliverySlots";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin(req);
@@ -30,6 +31,10 @@ export async function POST(req: NextRequest) {
   if (!isDeliveryMode(deliveryMode)) {
     return NextResponse.json({ error: "Tipo de entrega inválido" }, { status: 400 });
   }
+  const orderCutoff = parseOrderCutoff(data.orderCutoff ?? null);
+  if (orderCutoff === undefined) {
+    return NextResponse.json({ error: "\"Pedidos hasta\" inválido" }, { status: 400 });
+  }
 
   const slot = await prisma.deliverySlot.create({
     data: {
@@ -42,7 +47,7 @@ export async function POST(req: NextRequest) {
       imageFocalX: data.imageFocalX ?? 50,
       imageFocalY: data.imageFocalY ?? 50,
       imageScale: data.imageScale ?? 1,
-      orderCutoff: data.orderCutoff ? new Date(data.orderCutoff) : null,
+      orderCutoff,
       active: data.active ?? true,
     },
   });
