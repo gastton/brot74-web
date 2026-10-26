@@ -76,24 +76,24 @@ describe("POST /api/orders", () => {
     expect(order?.items).toHaveLength(1);
   });
 
-  it("en una fecha de delivery guarda la dirección del cliente", async () => {
-    const { res } = await placeSingleOrder({
-      slot: { deliveryMode: "delivery" },
-      extra: { customerAddress: "  Av. Siempreviva 742, El Talar  " },
-    });
+  // Pedido de un pan en una fecha del tipo dado, mandando esa dirección.
+  async function orderWithAddress(deliveryMode: string, customerAddress: unknown) {
+    const { res, product, slot } = await placeSingleOrder({ slot: { deliveryMode }, extra: { customerAddress } });
     const json = await res.json();
+    const order = res.status === 200 ? await prisma.order.findUnique({ where: { id: json.orderId } }) : null;
+    return { res, product, slot, order };
+  }
+
+  it("en una fecha de delivery guarda la dirección del cliente", async () => {
+    const { res, order } = await orderWithAddress("delivery", "  Av. Siempreviva 742, El Talar  ");
 
     expect(res.status).toBe(200);
-    const order = await prisma.order.findUnique({ where: { id: json.orderId } });
     expect(order?.customerAddress).toBe("Av. Siempreviva 742, El Talar");
   });
 
   it("devuelve 400 en una fecha de delivery sin dirección, sin crear el pedido ni tocar el stock", async () => {
     for (const customerAddress of [undefined, "", "   ", 123]) {
-      const { res, product, slot } = await placeSingleOrder({
-        slot: { deliveryMode: "delivery" },
-        extra: { customerAddress },
-      });
+      const { res, product, slot } = await orderWithAddress("delivery", customerAddress);
 
       expect(res.status).toBe(400);
       expect(await prisma.order.count({ where: { deliverySlotId: slot.id } })).toBe(0);
@@ -102,14 +102,9 @@ describe("POST /api/orders", () => {
   });
 
   it("en una fecha de retiro ignora la dirección que mande el cliente", async () => {
-    const { res } = await placeSingleOrder({
-      slot: { deliveryMode: "pickup" },
-      extra: { customerAddress: "Av. Siempreviva 742" },
-    });
-    const json = await res.json();
+    const { res, order } = await orderWithAddress("pickup", "Av. Siempreviva 742");
 
     expect(res.status).toBe(200);
-    const order = await prisma.order.findUnique({ where: { id: json.orderId } });
     expect(order?.customerAddress).toBe("");
   });
 
