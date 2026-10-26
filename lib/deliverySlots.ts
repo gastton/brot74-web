@@ -19,27 +19,23 @@ export const CUTOFF_HOURS = 20;
 export const ORDER_GRACE_HOURS = 24;
 
 /**
- * "Pedidos hasta" se elige en el admin como un día y una hora (hora de
- * Argentina, UTC-3, sin horario de verano). Sin hora, cierra ese día a las
- * 13:00. Antes se guardaba "YYYY-MM-DD" tal cual = 00:00 UTC = 21:00 del día
+ * "Pedidos hasta" se elige en el admin como un día y una hora, los dos
+ * obligatorios (hora de Argentina, UTC-3, sin horario de verano). Antes se guardaba "YYYY-MM-DD" tal cual = 00:00 UTC = 21:00 del día
  * anterior en Argentina, y la web mostraba un día menos que el admin.
  */
 export const AR_TIME_ZONE = "America/Argentina/Buenos_Aires";
 const AR_OFFSET = "-03:00";
-export const DEFAULT_CUTOFF_TIME = "13:00";
-const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_TIME_AR = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
-// "YYYY-MM-DD" → ese día a las 13:00 AR; "YYYY-MM-DDTHH:mm" (lo que manda el
-// admin con la hora cargada) → ese día y hora en AR. Un ISO completo (el valor
+// "YYYY-MM-DDTHH:mm" (lo que manda el admin) → ese día y hora en AR. Un día
+// sin hora se rechaza: la hora es obligatoria. Un ISO completo (el valor
 // ya guardado, que el admin reenvía al editar otros campos) se respeta tal
 // cual. Devuelve undefined si no es una fecha válida.
 export function parseOrderCutoff(value: unknown): Date | null | undefined {
   if (value === null || value === "") return null;
   if (typeof value !== "string") return undefined;
   let iso = value;
-  if (DATE_ONLY.test(value)) iso = `${value}T${DEFAULT_CUTOFF_TIME}:00${AR_OFFSET}`;
-  else if (DATE_TIME_AR.test(value)) iso = `${value}:00${AR_OFFSET}`;
+  if (DATE_TIME_AR.test(value)) iso = `${value}:00${AR_OFFSET}`;
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
