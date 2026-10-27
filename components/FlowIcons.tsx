@@ -35,10 +35,13 @@ export function PinIcon() {
 export function TruckIcon() {
   return (
     <svg {...common}>
-      <path d="M2.5 6.5h11v10h-11z" />
-      <path d="M13.5 9.5h4l3 3.2v3.8h-7" />
-      <circle cx="7" cy="17.8" r="1.9" fill="#fff" />
-      <circle cx="17" cy="17.8" r="1.9" fill="#fff" />
+      <path d="M4.5 6h7.5a1.5 1.5 0 0 1 1.5 1.5V16.5H3V7.5A1.5 1.5 0 0 1 4.5 6z" />
+      <path d="M13.5 9.5h3.6l3.4 3.6v3.4h-1.3" />
+      <path d="M8.9 16.5h6.2" />
+      <circle cx="6.9" cy="17.4" r="1.9" />
+      <circle cx="6.9" cy="17.4" r=".7" fill="#C8851A" stroke="none" />
+      <circle cx="17.1" cy="17.4" r="1.9" />
+      <circle cx="17.1" cy="17.4" r=".7" fill="#C8851A" stroke="none" />
     </svg>
   );
 }

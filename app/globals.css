@@ -163,18 +163,6 @@ body {
 @media (min-width: 768px) { .brot-h--web { font-size: 48px; } }
 .brot-h--modal { font-size: 36px; }
 @media (min-width: 900px) { .brot-h--modal { font-size: 40px; } }
-.brot-co-datos-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(14,35,60,.16);
-  font-size: 12px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  font-weight: 500;
-  color: #4A5463;
-}
 .brot-more {
   display: inline-flex;
   align-items: center;
@@ -326,7 +314,7 @@ body {
   cursor: text;
 }
 .brot-fl:focus-within { border-bottom: 2px solid #0E233C; }
-.brot-fl > span { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 500; color: #4A5463; }
+.brot-fl > span { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; font-weight: 500; color: #8A5A0E; }
 .brot-fl:focus-within > span { color: #0E233C; }
 .brot-fl > input {
   border: none;

@@ -313,7 +313,7 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
     }
   }
 
-  function handleOrderSuccess(orderId: number) {
+  function handleOrderSuccess(orderId: number, address?: string) {
     // No navegamos fuera del checkout acá (BRT-89): es una navegación dura
     // vía window.location.href, no instantánea — cerrar el modal antes de
     // que el navegador termine de irse dejaba ver un flash de la grilla de
@@ -323,7 +323,7 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
     const retiro = [selectedSlot?.dayLabel, selectedSlot?.pickupTime].filter(Boolean).join(" · ");
     const extra =
       (retiro ? `&pickup=${encodeURIComponent(retiro)}` : "") +
-      (selectedSlot?.location ? `&place=${encodeURIComponent(selectedSlot.location)}` : "") +
+      (address ? `&place=${encodeURIComponent(address)}` : selectedSlot?.location ? `&place=${encodeURIComponent(selectedSlot.location)}` : "") +
       (selectedSlot?.deliveryMode === "delivery" ? "&mode=delivery" : "");
     window.location.href = `/confirmacion?order=${orderId}&status=pending${extra}`;
   }
