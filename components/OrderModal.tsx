@@ -170,7 +170,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
-    if (isDelivery && !address.trim()) { setError("La dirección es requerida para delivery"); return; }
+    if (isDelivery && !address.trim()) { setError("La dirección de entrega es requerida"); return; }
     const id = await createOrder();
     if (id != null) onAdvanceToPayment();
   }

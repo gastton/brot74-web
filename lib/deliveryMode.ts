@@ -20,9 +20,9 @@ export const DELIVERY_MODE_LABELS: Record<DeliveryMode, { name: string; time: st
     placePlaceholder: "Ej: Av. Corrientes 1234, CABA",
   },
   delivery: {
-    name: "Delivery",
-    time: "Horario de delivery",
-    place: "Zona de delivery",
+    name: "Entrega",
+    time: "Horario de entrega",
+    place: "Zona de entrega",
     placePlaceholder: "Ej: El Talar y alrededores",
   },
 };
