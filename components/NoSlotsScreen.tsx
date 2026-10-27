@@ -108,7 +108,7 @@ export default function NoSlotsScreen() {
               Pedidos cerrados
             </div>
             <h3 className="text-[30px] min-[900px]:text-[36px]" style={{ fontWeight: 400, lineHeight: 1.05, letterSpacing: "-.02em", margin: "10px 0 0" }}>
-              Está en el horno
+              Estamos amasando
             </h3>
             <p className="text-pretty" style={{ fontSize: "16px", lineHeight: 1.5, color: "#4A5463", margin: "12px 0 0", maxWidth: "42ch" }}>
               Horneamos por tandas, en cantidades limitadas. Dejanos tu contacto y te avisamos apenas se abra la próxima fecha.

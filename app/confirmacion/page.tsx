@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CalendarIcon, PinIcon, TruckIcon } from "@/components/FlowIcons";
-import { deliveryModeLabels } from "@/lib/deliveryMode";
 
 function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; label: string; value: string; last?: boolean }) {
   return (
@@ -13,7 +12,7 @@ function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; label: s
       <span className="flex-none flex">{icon}</span>
       <div className="flex-1 min-w-0">
         <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>{label}</div>
-        <div className="text-[16px] leading-[1.25] text-navy whitespace-nowrap overflow-hidden text-ellipsis">{value}</div>
+        <div className="text-[16px] leading-[1.25] text-navy break-words">{value}</div>
       </div>
     </div>
   );
@@ -58,8 +57,8 @@ function ConfirmacionContent() {
 
           {(pickup || place) && (
             <div className="mt-[18px]">
-              {pickup && <InfoRow icon={<CalendarIcon />} label={isDelivery ? deliveryModeLabels("delivery").name : "Retiro"} value={pickup} last={!place} />}
-              {place && <InfoRow icon={isDelivery ? <TruckIcon /> : <PinIcon />} label={isDelivery ? deliveryModeLabels("delivery").place : "Lugar"} value={place} last />}
+              {pickup && <InfoRow icon={<CalendarIcon />} label={isDelivery ? "Entrega" : "Retiro"} value={pickup} last={!place} />}
+              {place && <InfoRow icon={isDelivery ? <TruckIcon /> : <PinIcon />} label={isDelivery ? "Dirección de entrega" : "Lugar"} value={place} last />}
             </div>
           )}
         </div>

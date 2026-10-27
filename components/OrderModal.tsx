@@ -33,7 +33,7 @@ interface OrderModalProps {
   onChangeQuantity: (productId: number, newQuantity: number) => void;
   onAdvanceToPayment: () => void;
   onClose: (clearCart?: boolean) => void;
-  onSuccess: (orderId: number) => void;
+  onSuccess: (orderId: number, address?: string) => void;
 }
 
 const MODAL_STYLE = {
@@ -217,7 +217,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
     }
     successScheduledRef.current = true;
     setLoading(true);
-    onSuccess(orderId);
+    onSuccess(orderId, isDelivery ? address.trim() : undefined);
   }
 
   return (
@@ -421,7 +421,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
 
             {/* Tus datos — campos con rótulo interno (solo subrayado) */}
             <div className="brot-co-form" style={{ marginTop: "auto" }}>
-              <div className="brot-co-datos-title">Tus datos</div>
+              <div style={{ borderTop: "1px solid rgba(14,35,60,.16)" }} />
               <div className="flex flex-col gap-[6px]" style={{ marginTop: "10px" }}>
                 {[
                   { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },

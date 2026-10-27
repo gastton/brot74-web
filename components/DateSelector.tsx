@@ -55,7 +55,7 @@ function InfoRow({ icon, label, value, last }: InfoRowProps) {
     >
       <span className="flex-none flex">{icon}</span>
       <div className="flex-1 min-w-0">
-        <div className="brot-mlabel whitespace-nowrap" style={{ fontWeight: 600 }}>
+        <div className="brot-mlabel brot-mlabel-amber whitespace-nowrap" style={{ fontWeight: 500, fontSize: "11px" }}>
           {label}
         </div>
         <div className="text-[16px] text-navy mt-0 leading-[1.25] whitespace-nowrap">
@@ -82,7 +82,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
         const day = date.getDate();
         const isOpen = slot.id !== null;
         // Fechas de delivery: "Horario/Zona de delivery" y camión; retiro (y las viejas "both") como siempre.
-        const labels = deliveryModeLabels(slot.deliveryMode);
+        const labels = slot.deliveryMode === "delivery" ? { time: "Horario de entrega", place: "Zona de entrega" } : deliveryModeLabels(slot.deliveryMode);
         const isDelivery = slot.deliveryMode === "delivery";
 
         const cutoffLabel = formatCutoff(slot);
