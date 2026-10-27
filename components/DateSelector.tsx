@@ -81,8 +81,8 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
         const month = date.toLocaleDateString("es-AR", { month: "long" }).toUpperCase();
         const day = date.getDate();
         const isOpen = slot.id !== null;
-        // Fechas de delivery: "Horario/Zona de delivery" y camión; retiro (y las viejas "both") como siempre.
-        const labels = slot.deliveryMode === "delivery" ? { time: "Horario de entrega", place: "Zona de entrega" } : deliveryModeLabels(slot.deliveryMode);
+        // Fechas de delivery: "Horario/Zona de entrega" y camión; retiro (y las viejas "both") como siempre.
+        const labels = deliveryModeLabels(slot.deliveryMode);
         const isDelivery = slot.deliveryMode === "delivery";
 
         const cutoffLabel = formatCutoff(slot);

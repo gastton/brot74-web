@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     const isDelivery = slot.deliveryMode === "delivery";
     const address = isDelivery && typeof customerAddress === "string" ? customerAddress.trim() : "";
     if (isDelivery && !address) {
-      return NextResponse.json({ error: "La dirección es requerida para delivery" }, { status: 400 });
+      return NextResponse.json({ error: "La dirección de entrega es requerida" }, { status: 400 });
     }
 
     const now = new Date();
