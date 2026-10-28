@@ -84,24 +84,6 @@ export default function ProductCard({
         ) : (
           <div className="absolute inset-0 bg-[#ddd6c8]" />
         )}
-        {/* v54: rótulo decorativo — avisa que la card abre el detalle (el toque lo toma la card) */}
-        {!isDisabled && (
-          <span
-            className="absolute left-1/2 bottom-0 -translate-x-1/2 whitespace-nowrap pointer-events-none"
-            style={{
-              background: "#F4EEE2",
-              color: "#0E233C",
-              fontSize: "12px",
-              fontWeight: 600,
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              padding: "2px 8px 1px",
-              lineHeight: 1.2,
-            }}
-          >
-            Ver más
-          </span>
-        )}
       </div>
 
       {/* Texto */}
@@ -148,8 +130,9 @@ export default function ProductCard({
            tacho que saca el pan y vuelve a "Agregar". El wrapper frena el click para
            que la acción de cantidad no abra el modal (toda la card es tocable). */}
         {!isDisabled && (
-          quantity > 0 ? (
-            <div className="mt-[10px] inline-block" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-[14px] mt-[10px]">
+          {quantity > 0 ? (
+            <div className="inline-block" onClick={(e) => e.stopPropagation()}>
               <QtyCapsule
                 value={quantity}
                 onMinus={onQuickRemove}
@@ -167,7 +150,7 @@ export default function ProductCard({
               aria-disabled={limitReached}
               disabled={limitReached}
               onClick={(e) => { e.stopPropagation(); if (!limitReached) onQuickAdd(); }}
-              className="brot-ghost brot-ghost--sm mt-[10px]"
+              className="brot-ghost brot-ghost--sm"
             >
               <span className="md:hidden">Agregar</span>
               <span className="hidden md:inline">Sumar</span>
@@ -175,7 +158,11 @@ export default function ProductCard({
                 <path d="M5 12h14M12 5v14"/>
               </svg>
             </button>
-          )
+          )}
+          <button type="button" className="brot-vml md:hidden" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+            Ver más
+          </button>
+          </div>
         )}
         {!isDisabled && maxReached && !stockReached && (
           <div className="text-[13px] text-stone mt-1">Máximo {MAX_PER_PRODUCT} por pan</div>

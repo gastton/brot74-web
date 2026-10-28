@@ -1,11 +1,11 @@
-// Íconos de línea ámbar, sin círculo (v46): Retiro / Lugar / Pedidos hasta.
+// Íconos de línea navy con detalle ámbar, sin círculo (v65): Retiro / Lugar / Pedidos hasta.
 // TruckIcon: zona de las fechas de delivery (en vez del pin del lugar de retiro).
 const common = {
   width: 22,
   height: 22,
   viewBox: "0 0 24 24",
   fill: "none",
-  stroke: "#C8851A",
+  stroke: "#0E233C",
   strokeWidth: 1.6,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,

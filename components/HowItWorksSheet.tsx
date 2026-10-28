@@ -15,7 +15,7 @@ import SheetShell, { useSheetClose } from "./SheetShell";
 const STEPS = [
   { n: "1", t: "Elegí tu BROT", d: "Elegís la fecha y armás tu pedido online, según lo que haya disponible para esa tanda." },
   { n: "2", t: "Pagá por transferencia", d: "Confirmás con una transferencia. Sin filas, sin efectivo, a tu ritmo." },
-  { n: "3", t: "Retirá en tu horario", d: "Pasás a buscarlo en el lugar y la franja horaria de la fecha. Horneamos por tandas, no hay local abierto." },
+  { n: "3", t: "Retiralo o recibilo", d: "Según la fecha, pasás a buscarlo o te lo llevamos, en la franja horaria indicada. Horneamos por tandas, no hay local abierto." },
 ];
 
 interface HowItWorksSheetProps {
