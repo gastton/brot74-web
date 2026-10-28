@@ -637,3 +637,4 @@ textarea.brot-input {
     align-self: start;
   }
 }
+.brot-vml { min-height: 44px; padding: 0; border: none; background: transparent; font-family: inherit; font-size: 14px; font-weight: 500; color: #0E233C; text-decoration: underline; text-decoration-color: #C8851A; text-underline-offset: 5px; text-decoration-thickness: 1.5px; cursor: pointer; white-space: nowrap; }
