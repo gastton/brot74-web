@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Hanken_Grotesk, Jost } from "next/font/google";
+import SiteAnalytics from "@/components/SiteAnalytics";
 import "./globals.css";
 
 const hanken = Hanken_Grotesk({
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${hanken.variable} ${jost.variable}`}>
       <body className="min-h-screen bg-cream antialiased">
         {children}
+        <SiteAnalytics />
       </body>
     </html>
   );
