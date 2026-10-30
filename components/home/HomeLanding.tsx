@@ -259,7 +259,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
         </div>
       </section>
 
-      {/* Footer (v60): crema, sello navy. v62: "Mientras horneamos" (playlist) e íconos */}
+      {/* Footer (v60): crema, sello navy. v62: playlist e íconos. v67: compacto, bandera de Mendiolaza y "Música" */}
       <footer className="ft" id="contacto">
         <div className="wrap">
           <div className="ft-top">
@@ -271,9 +271,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
               <div>
                 <dt>Dónde</dt>
                 <dd className="ico">
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                  </svg>
+                  <Image className="flag" src="/assets/bandera-mendiolaza.png" alt="Bandera de Mendiolaza" width={256} height={195} />
                   <span>Mendiolaza · Córdoba</span>
                 </dd>
               </div>
@@ -291,7 +289,7 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
                 </dd>
               </div>
               <div>
-                <dt>Mientras horneamos</dt>
+                <dt>Música</dt>
                 <dd>
                   <a href={SPOTIFY_URL} target="_blank" rel="noopener noreferrer" className="ico">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true">
