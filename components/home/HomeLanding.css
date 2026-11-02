@@ -154,10 +154,17 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 .brot-landing .ft-info dt{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--stone);margin-bottom:8px}
 .brot-landing .ft-info dd{margin:0;font-size:17px}
 /* v62 · íconos del footer; el subrayado del link queda solo bajo el texto */
-.brot-landing .ft-info .ico{display:inline-flex;align-items:center;gap:8px}.brot-landing .ft-info .ico svg{width:18px;height:18px;flex:none}.brot-landing footer.ft .ft-info a.ico{border-bottom:none;padding-bottom:0}.brot-landing footer.ft .ft-info a.ico span{border-bottom:1px solid currentColor;padding-bottom:2px}
+.brot-landing .ft-info .ico{display:inline-flex;align-items:center;gap:8px}.brot-landing .ft-info .ico svg{width:18px;height:18px;flex:none}.brot-landing .ft-info .ico img.flag{width:auto;height:16px;flex:none;box-shadow:0 0 0 1px var(--hair);border-radius:1px}.brot-landing footer.ft .ft-info a.ico{border-bottom:none;padding-bottom:0}.brot-landing footer.ft .ft-info a.ico span{border-bottom:1px solid currentColor;padding-bottom:2px}
 .brot-landing footer.ft .f-legal{border-top:1px solid var(--hair);color:var(--stone)}
 @media (max-width:860px){.brot-landing .ft-top{grid-template-columns:minmax(0,1fr);gap:40px}.brot-landing .ft-info{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:24px;border-top:1px solid var(--hair)}.brot-landing footer.ft .f-legal{margin-top:40px}}
 
+/* v67 · footer compacto: logo 64px + frase a la izquierda, 3 datos apilados a la derecha */
+.brot-landing footer.ft{padding:clamp(40px,5vw,64px) 0 28px}.brot-landing footer.ft .f-legal{margin-top:28px;padding-top:18px}
+.brot-landing .ft-top{grid-template-columns:minmax(0,1fr) auto;gap:28px 48px;align-items:center}
+.brot-landing .ft-brand{display:flex;align-items:center;gap:20px}.brot-landing .ft-brand img{width:64px;margin:0}.brot-landing .ft-brand p{font-size:clamp(22px,2vw,28px);max-width:none}
+.brot-landing .ft-info{grid-template-columns:auto auto;align-items:center;padding:0 0 0 32px;border-top:none;border-left:1px solid var(--hair);gap:14px 24px}.brot-landing .ft-info>div{display:contents}.brot-landing .ft-info dt{margin:0;white-space:nowrap;line-height:1}.brot-landing .ft-info dd{line-height:1.2}.brot-landing footer.ft .ft-info a.ico span{padding-bottom:1px}.brot-landing .ft-top{gap:28px 32px}@media (min-width:761px){.brot-landing .ft-brand p{white-space:nowrap}}
+@media (max-width:760px){.brot-landing .ft-top{grid-template-columns:minmax(0,1fr)}.brot-landing .ft-info{padding:22px 0 0;border-left:none;border-top:1px solid var(--hair)}}.brot-landing .ft-info dd span,.brot-landing footer.ft .f-legal span{white-space:nowrap}
+@media (max-width:600px){.brot-landing .ft-info{grid-template-columns:auto minmax(0,1fr)}}
 /* v61 · foto de masa madre */
 .brot-landing .mm{grid-column:7 / span 5;margin:clamp(40px,5vw,72px) 0 0}
 .brot-landing .mm .media{aspect-ratio:941/1342}
