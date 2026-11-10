@@ -59,6 +59,7 @@ afterEach(async () => {
     prisma.product.deleteMany(),
     prisma.deliverySlot.deleteMany(),
     prisma.waitlistEntry.deleteMany(),
+    prisma.featureFlag.deleteMany(),
   ]);
 });
 
