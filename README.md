@@ -63,7 +63,6 @@ El build de producción corre `prisma migrate deploy` (ver [Scripts](#scripts)),
 | `ADMIN_PASSWORD` | Contraseña del panel `/admin` |
 | `JWT_SECRET` | Secreto para firmar la cookie de sesión del admin |
 | `BLOB_READ_WRITE_TOKEN` | Token de Vercel Blob para subir imágenes de producto |
-| `WHATSAPP_PHONE` / `WHATSAPP_APIKEY` | Envío de mensajes de WhatsApp (waitlist) |
 | `NEXT_PUBLIC_ALIAS` / `NEXT_PUBLIC_CVU` / `NEXT_PUBLIC_CUIT` / `NEXT_PUBLIC_TITULAR` | Datos de la cuenta bancaria mostrados en el checkout por transferencia |
 | `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp mostrado en el sitio |
 | `NEXT_PUBLIC_BASE_URL` | URL base del sitio |

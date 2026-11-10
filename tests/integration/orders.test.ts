@@ -1,13 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-vi.mock("@/lib/whatsapp", () => ({
-  sendWhatsAppNotification: vi.fn(),
-  buildOrderMessage: vi.fn(() => "mock message"),
-}));
-
 import { POST } from "@/app/api/orders/route";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { prisma } from "@/lib/db";
 import { createProduct, createDeliverySlot, createProductStock, getStock } from "../helpers/factories";
 
@@ -52,10 +46,6 @@ async function placeSingleOrder({
 }
 
 describe("POST /api/orders", () => {
-  beforeEach(() => {
-    vi.mocked(sendWhatsAppNotification).mockReset();
-  });
-
   it("crea el pedido y descuenta el stock", async () => {
     const product = await createProduct({ price: 1500 });
     const slot = await createDeliverySlot();
@@ -213,12 +203,16 @@ describe("POST /api/orders", () => {
     expect(json.total).toBe(9000);
   });
 
-  it("crea el pedido igual si falla la notificación de WhatsApp", async () => {
-    vi.mocked(sendWhatsAppNotification).mockRejectedValueOnce(new Error("network down"));
+  it("crea el pedido sin llamar a ningún servicio externo (BRT-258: sin aviso por CallMeBot)", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    try {
+      const { res } = await placeSingleOrder();
 
-    const { res } = await placeSingleOrder();
-
-    expect(res.status).toBe(200);
+      expect(res.status).toBe(200);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 
   it("devuelve 400 con quantity negativa, cero, o no entera (BRT-108)", async () => {
@@ -364,7 +358,7 @@ describe("POST /api/orders", () => {
       }
     }
 
-    it("responde 429 con Retry-After al pasar de 10 pedidos por hora, sin crear el pedido ni avisar por WhatsApp", async () => {
+    it("responde 429 con Retry-After al pasar de 10 pedidos por hora, sin crear el pedido", async () => {
       const product = await createProduct();
       const slot = await createDeliverySlot();
       await createProductStock(product.id, slot.id, { totalStock: 100 });
@@ -377,7 +371,6 @@ describe("POST /api/orders", () => {
       expect(res.status).toBe(429);
       expect(Number(res.headers.get("Retry-After"))).toBeGreaterThan(0);
       expect(await prisma.order.count()).toBe(0);
-      expect(sendWhatsAppNotification).not.toHaveBeenCalled();
     });
 
     it("otra IP no se ve afectada por el límite de la primera", async () => {

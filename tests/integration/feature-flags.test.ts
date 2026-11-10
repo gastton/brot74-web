@@ -1,10 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
-
-vi.mock("@/lib/whatsapp", () => ({
-  sendWhatsAppNotification: vi.fn(),
-  buildOrderMessage: vi.fn(() => "mock message"),
-}));
 
 import { GET as adminGET, PATCH } from "@/app/api/admin/feature-flags/route";
 import { GET as publicGET } from "@/app/api/feature-flags/route";
