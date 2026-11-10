@@ -83,6 +83,15 @@ model Order {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  // BRT-250 (épica BRT-248): cómo se paga el pedido. "alias" = transferencia
+  // con confirmación manual (el flujo de siempre, y el valor de todos los
+  // pedidos viejos); "mp" = Mercado Pago, confirmado por webhook.
+  paymentMethod    String    @default("alias") // "alias" | "mp"
+  mpPreferenceId   String?   // link de pago (preferencia de Checkout Pro)
+  mpPaymentId      String?   @unique // pago aprobado; único para no confirmar dos veces
+  paidAt           DateTime?
+  paymentExpiresAt DateTime? // vence el link de MP; pasado esto, se cancela y vuelve el stock
+
   deliverySlot DeliverySlot @relation(fields: [deliverySlotId], references: [id])
   items        OrderItem[]
 }
