@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ShoppingBag, Package, Calendar, TrendingUp, ChevronDown } from "lucide-react";
 import { isPickupPast } from "@/lib/deliverySlots";
 import { deliveryModeLabels } from "@/lib/deliveryMode";
+import { getFeatureFlags } from "@/lib/featureFlags";
+import FeatureFlagsCard from "@/components/admin/FeatureFlagsCard";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +19,7 @@ export default async function AdminDashboard() {
     stocks: { include: { product: { select: { name: true } } } },
   };
 
-  const [totalOrders, pendingOrders, paidOrders, recentAndFutureSlots, olderSlots] = await Promise.all([
+  const [totalOrders, pendingOrders, paidOrders, recentAndFutureSlots, olderSlots, featureFlags] = await Promise.all([
     prisma.order.count(),
     prisma.order.count({ where: { status: "pending" } }),
     prisma.order.count({ where: { status: "paid" } }),
@@ -32,6 +34,7 @@ export default async function AdminDashboard() {
       take: 10,
       include: slotInclude,
     }),
+    getFeatureFlags(),
   ]);
 
   const noCutoff = (s: { date: Date }) => ({ date: s.date, orderCutoff: null });
@@ -55,6 +58,8 @@ export default async function AdminDashboard() {
         <StatCard icon={<TrendingUp className="w-5 h-5" />} label="Pagados" value={paidOrders} color="text-green-600" />
         <StatCard icon={<Package className="w-5 h-5" />} label="Pendientes" value={pendingOrders} color="text-amber" />
       </div>
+
+      <FeatureFlagsCard initial={featureFlags} />
 
       {/* Upcoming slots */}
       <div>
