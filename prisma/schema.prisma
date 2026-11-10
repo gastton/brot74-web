@@ -126,3 +126,12 @@ model WaitlistEntry {
 
   @@index([createdAt])
 }
+
+// BRT-268: interruptores de funcionalidades que se prenden/apagan desde el
+// admin sin redeploy. Sin fila = apagado (no hace falta seed). Las claves
+// válidas viven en lib/featureFlags.ts.
+model FeatureFlag {
+  key       String   @id
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
