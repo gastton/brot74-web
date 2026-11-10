@@ -62,6 +62,17 @@ describe("feature flags (BRT-268)", () => {
     expect(await prisma.featureFlag.count()).toBe(0);
   });
 
+  it("rechaza un body que no es JSON o no es un objeto", async () => {
+    const headers = await adminCookieHeader();
+    const rawPatch = (body: string) =>
+      PATCH(new NextRequest("http://localhost/api/admin/feature-flags", { method: "PATCH", body, headers }));
+
+    expect((await rawPatch("{no es json")).status).toBe(400);
+    expect((await rawPatch("null")).status).toBe(400);
+    expect((await rawPatch("[]")).status).toBe(400);
+    expect(await prisma.featureFlag.count()).toBe(0);
+  });
+
   it("con mpCheckout apagado, el pedido por transferencia al alias se crea igual que antes", async () => {
     const product = await createProduct({ price: 1500 });
     const slot = await createDeliverySlot();

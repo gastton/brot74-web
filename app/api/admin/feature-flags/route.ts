@@ -14,7 +14,11 @@ export async function PATCH(req: NextRequest) {
   const session = await requireAdmin(req);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const { key, enabled } = await req.json();
+  const body: unknown = await req.json().catch(() => null);
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return NextResponse.json({ error: "Body inválido" }, { status: 400 });
+  }
+  const { key, enabled } = body as Record<string, unknown>;
 
   if (!isFeatureFlagKey(key)) {
     return NextResponse.json({ error: "Flag desconocido" }, { status: 400 });
