@@ -87,7 +87,9 @@ model Order {
   // con confirmación manual (el flujo de siempre, y el valor de todos los
   // pedidos viejos); "mp" = Mercado Pago, confirmado por webhook.
   paymentMethod    String    @default("alias") // "alias" | "mp"
-  mpPreferenceId   String?   // link de pago (preferencia de Checkout Pro)
+  mpPreferenceId   String?   // sin uso: se planeó para la API de Preferences; BRT-251 usa Orders (mpOrderId)
+  mpOrderId        String?   @unique // BRT-251: orden de Checkout Pro (API de Orders) con el link de pago
+  publicToken      String?   @unique // BRT-251: secreto que recibe solo quien creó el pedido; habilita el pago con MP y la consulta de estado
   mpPaymentId      String?   @unique // pago aprobado; único para no confirmar dos veces
   paidAt           DateTime?
   paymentExpiresAt DateTime? // vence el link de MP; pasado esto, se cancela y vuelve el stock

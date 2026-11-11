@@ -36,3 +36,110 @@ export function mpAccessToken(): string {
 export function mpWebhookSecret(): string {
   return requiredEnv("MP_WEBHOOK_SECRET");
 }
+
+// ── BRT-251: orden de Checkout Pro (link de pago) ─────────────────────────
+
+/**
+ * Tipos de medio de pago que se excluyen: queda solo el dinero en cuenta de
+ * MP (que no se puede excluir). Sin tarjetas por los contracargos y sin
+ * efectivo (Pago Fácil/Rapipago). Son los tipos activos en Argentina según
+ * GET /v1/payment_methods.
+ */
+export const MP_NOT_ALLOWED_PAYMENT_TYPES = ["credit_card", "debit_card", "prepaid_card", "ticket"] as const;
+
+/** Cuánto dura el link de pago. Pasado esto, BRT-256 cancela el pedido y libera el stock. */
+export const MP_PAYMENT_TTL_MINUTES = 30;
+
+export class MercadoPagoError extends Error {
+  constructor(public status: number, public body: string) {
+    super(`Mercado Pago respondió ${status}`);
+  }
+}
+
+export interface CheckoutOrderInput {
+  orderId: number;
+  /** Mismo valor en reintentos: MP devuelve la misma orden en vez de crear otra. */
+  idempotencyKey: string;
+  total: number;
+  items: { title: string; quantity: number; unitPrice: number }[];
+  /** URL a la que vuelve el cliente desde MP (aprobado, pendiente o rechazado). */
+  returnUrl: string;
+}
+
+export interface CheckoutOrder {
+  id: string;
+  checkoutUrl: string;
+}
+
+/** Pesos enteros → string con dos decimales, el formato de montos de la API de Orders. */
+function mpAmount(pesos: number): string {
+  return pesos.toFixed(2);
+}
+
+async function mpFetch(path: string, init: RequestInit = {}): Promise<unknown> {
+  const res = await fetch(`${MP_API_URL}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${mpAccessToken()}`,
+      "Content-Type": "application/json",
+      ...init.headers,
+    },
+    cache: "no-store",
+  });
+  const text = await res.text();
+  if (!res.ok) throw new MercadoPagoError(res.status, text);
+  return JSON.parse(text);
+}
+
+function toCheckoutOrder(data: unknown): CheckoutOrder {
+  const { id, checkout_url } = (data ?? {}) as { id?: unknown; checkout_url?: unknown };
+  if (typeof id !== "string" || typeof checkout_url !== "string") {
+    throw new MercadoPagoError(200, "Respuesta sin id o checkout_url");
+  }
+  return { id, checkoutUrl: checkout_url };
+}
+
+/**
+ * Crea la orden de Checkout Pro (API de Orders) para un pedido. Solo dinero
+ * en cuenta, con external_reference = ID del pedido y vencimiento de
+ * MP_PAYMENT_TTL_MINUTES. El aviso de pago llega al webhook configurado en el
+ * panel de la aplicación (la API de Orders no lleva notification_url).
+ */
+export async function createCheckoutOrder(input: CheckoutOrderInput): Promise<CheckoutOrder> {
+  // MP exige que total_amount sea la suma de los ítems. Los precios del
+  // pedido ya vienen con descuento aplicado, pero si por algo no cierra se
+  // manda una sola línea con el total en vez de un monto distinto.
+  const itemsSum = input.items.reduce((n, i) => n + i.unitPrice * i.quantity, 0);
+  const items =
+    itemsSum === input.total
+      ? input.items
+      : [{ title: `BROT 74 · Pedido #${input.orderId}`, quantity: 1, unitPrice: input.total }];
+
+  const data = await mpFetch("/v1/orders", {
+    method: "POST",
+    headers: { "X-Idempotency-Key": input.idempotencyKey },
+    body: JSON.stringify({
+      type: "online",
+      processing_mode: "manual",
+      external_reference: String(input.orderId),
+      total_amount: mpAmount(input.total),
+      expiration_time: `PT${MP_PAYMENT_TTL_MINUTES}M`,
+      items: items.map((i) => ({ title: i.title, quantity: i.quantity, unit_price: mpAmount(i.unitPrice) })),
+      config: {
+        online: {
+          success_url: input.returnUrl,
+          pending_url: input.returnUrl,
+          failure_url: input.returnUrl,
+          auto_return: "approved",
+        },
+        payment_method: { not_allowed_types: MP_NOT_ALLOWED_PAYMENT_TYPES },
+      },
+    }),
+  });
+  return toCheckoutOrder(data);
+}
+
+/** Orden ya creada (para volver a dar el mismo link si el cliente reintenta). */
+export async function getCheckoutOrder(mpOrderId: string): Promise<CheckoutOrder> {
+  return toCheckoutOrder(await mpFetch(`/v1/orders/${encodeURIComponent(mpOrderId)}`));
+}

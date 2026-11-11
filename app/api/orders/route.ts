@@ -4,6 +4,7 @@ import { effectivePrice } from "@/lib/pricing";
 import { normalizeCartItems, MAX_PER_PRODUCT } from "@/lib/cartItems";
 import { isOrderingClosed } from "@/lib/deliverySlots";
 import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
+import { generateOrderToken } from "@/lib/orderToken";
 
 class InsufficientStockError extends Error {
   constructor(public productId: number, public productName: string) {
@@ -129,6 +130,8 @@ export async function POST(req: NextRequest) {
             total,
             notes: notes ?? "",
             status: "pending",
+            // BRT-251: solo este cliente lo recibe (ver lib/orderToken.ts).
+            publicToken: generateOrderToken(),
             items: {
               create: enrichedItems.map((i) => ({
                 productId: i.productId,
@@ -174,7 +177,7 @@ export async function POST(req: NextRequest) {
       throw e;
     }
 
-    return NextResponse.json({ orderId: order.id, total });
+    return NextResponse.json({ orderId: order.id, total, token: order.publicToken });
   } catch (e) {
     console.error("Order creation error:", e);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
