@@ -20,6 +20,7 @@ interface Order {
   notes: string;
   paymentMethod: string;
   paidAt: string | null;
+  deliveredAt: string | null;
   slotLabel: string;
   slotDate: string;
   createdAt: string;
@@ -169,6 +170,10 @@ function PedidosContent() {
                         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pay.color}`}>{pay.label}</span>
                         {order.paidAt && (
                           <span className="text-[11px] text-muted">Pagado {formatPaidAt(order.paidAt)}</span>
+                        )}
+                        {/* BRT-266: la guarda el servidor al pasar a Entregado desde el desplegable. */}
+                        {order.deliveredAt && (
+                          <span className="text-[11px] text-muted">Entregado {formatPaidAt(order.deliveredAt)}</span>
                         )}
                         {notifyLink && (
                           <a

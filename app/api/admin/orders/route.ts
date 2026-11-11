@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
       // Los IDs internos de MP (preferencia/pago) no se exponen.
       paymentMethod: o.paymentMethod,
       paidAt: o.paidAt,
+      deliveredAt: o.deliveredAt,
       slotLabel: o.deliverySlot.dayLabel,
       slotDate: o.deliverySlot.date,
       createdAt: o.createdAt,
