@@ -63,11 +63,13 @@ El build de producción corre `prisma migrate deploy` (ver [Scripts](#scripts)),
 | `ADMIN_PASSWORD` | Contraseña del panel `/admin` |
 | `JWT_SECRET` | Secreto para firmar la cookie de sesión del admin |
 | `BLOB_READ_WRITE_TOKEN` | Token de Vercel Blob para subir imágenes de producto |
+| `MP_ACCESS_TOKEN` | Access Token de Mercado Pago (Checkout Pro, API de Orders). Solo servidor. En dev, el de la cuenta vendedora de prueba (`APP_USR-…`) |
+| `MP_WEBHOOK_SECRET` | "Firma secreta" de Webhooks de la aplicación de MP, para validar el `x-signature` de los avisos |
 | `NEXT_PUBLIC_ALIAS` / `NEXT_PUBLIC_CVU` / `NEXT_PUBLIC_CUIT` / `NEXT_PUBLIC_TITULAR` | Datos de la cuenta bancaria mostrados en el checkout por transferencia |
 | `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp mostrado en el sitio |
 | `NEXT_PUBLIC_BASE_URL` | URL base del sitio |
 
-Ninguna de estas variables tiene un valor por defecto en el código: si falta alguna, la app falla explícitamente en vez de usar un fallback inseguro.
+Ninguna de estas variables tiene un valor por defecto en el código: si falta alguna, la app falla explícitamente en vez de usar un fallback inseguro. Las de Mercado Pago se leen recién al usar MP, así que con el toggle `mpCheckout` apagado la app funciona sin ellas.
 
 ### Tests
 
