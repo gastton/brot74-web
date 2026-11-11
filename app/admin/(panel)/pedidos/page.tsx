@@ -16,6 +16,8 @@ interface Order {
   status: string;
   total: number;
   notes: string;
+  paymentMethod: string;
+  paidAt: string | null;
   slotLabel: string;
   slotDate: string;
   createdAt: string;
@@ -33,6 +35,17 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   delivered: { label: "Entregado",  color: "bg-gray-100 text-gray-700" },
   cancelled: { label: "Cancelado",  color: "bg-red-100 text-red-700" },
 };
+
+// BRT-264: cómo pagó el cliente. "mp" se confirma solo (webhook de Mercado
+// Pago); "alias" es la transferencia de siempre, que se confirma a mano.
+const PAYMENT_LABELS: Record<string, { label: string; color: string }> = {
+  alias: { label: "Transferencia · manual",    color: "bg-cream text-muted border border-border" },
+  mp:    { label: "Mercado Pago · automático", color: "bg-sky-100 text-sky-800" },
+};
+
+function formatPaidAt(iso: string) {
+  return new Date(iso).toLocaleString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
 
 function PedidosContent() {
   const searchParams = useSearchParams();
@@ -134,6 +147,7 @@ function PedidosContent() {
         <div className="space-y-3">
           {slotOrders.map((order) => {
             const st = STATUS_LABELS[order.status] ?? { label: order.status, color: "bg-gray-100 text-gray-700" };
+            const pay = PAYMENT_LABELS[order.paymentMethod] ?? PAYMENT_LABELS.alias;
             return (
               <div key={order.id} className="bg-white rounded-2xl border-2 border-border p-5">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -145,6 +159,12 @@ function PedidosContent() {
                     <div className="flex items-center gap-1.5 mt-1 text-sm text-muted">
                       <Phone className="w-3.5 h-3.5" />
                       <a href={`tel:${order.customerPhone}`} className="hover:text-brown">{order.customerPhone}</a>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pay.color}`}>{pay.label}</span>
+                      {order.paidAt && (
+                        <span className="text-[11px] text-muted">Pagado {formatPaidAt(order.paidAt)}</span>
+                      )}
                     </div>
                     {order.customerAddress && (
                       <div className="flex items-center gap-1.5 mt-0.5 text-sm text-muted">

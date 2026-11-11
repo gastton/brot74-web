@@ -61,6 +61,29 @@ describe("GET /api/admin/orders", () => {
     expect(json[0].items[0]).toMatchObject({ name: "Campo", quantity: 2, unitPrice: 1000 });
   });
 
+  it("devuelve el método de pago de cada pedido (BRT-264)", async () => {
+    const slot = await createDeliverySlot();
+    const paidAt = new Date("2026-11-10T15:00:00Z");
+    const alias = await createOrder(slot.id);
+    const mp = await createOrder(slot.id, [], { paymentMethod: "mp", status: "paid", paidAt, mpPaymentId: "pago-1" });
+
+    const json = await (await GET(await authedGetRequest())).json();
+    const byId = new Map(json.map((o: { id: number }) => [o.id, o]));
+
+    expect(byId.get(alias.id)).toMatchObject({ paymentMethod: "alias", paidAt: null });
+    expect(byId.get(mp.id)).toMatchObject({ paymentMethod: "mp", paidAt: paidAt.toISOString() });
+  });
+
+  it("no expone los IDs internos de Mercado Pago (BRT-264)", async () => {
+    const slot = await createDeliverySlot();
+    await createOrder(slot.id, [], { paymentMethod: "mp", mpPaymentId: "pago-1", mpPreferenceId: "pref-1" });
+
+    const [order] = await (await GET(await authedGetRequest())).json();
+
+    expect(order).not.toHaveProperty("mpPaymentId");
+    expect(order).not.toHaveProperty("mpPreferenceId");
+  });
+
   it("filtra por slotId", async () => {
     const product = await createProduct();
     const slotA = await createDeliverySlot();

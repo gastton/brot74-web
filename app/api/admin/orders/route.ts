@@ -28,6 +28,10 @@ export async function GET(req: NextRequest) {
       status: o.status,
       total: o.total,
       notes: o.notes,
+      // BRT-264: "alias" (confirmación manual) | "mp" (confirmado por webhook).
+      // Los IDs internos de MP (preferencia/pago) no se exponen.
+      paymentMethod: o.paymentMethod,
+      paidAt: o.paidAt,
       slotLabel: o.deliverySlot.dayLabel,
       slotDate: o.deliverySlot.date,
       createdAt: o.createdAt,
