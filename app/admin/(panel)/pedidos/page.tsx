@@ -7,6 +7,7 @@ import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2 }
 import { formatCurrency } from "@/lib/utils";
 import { toastError } from "@/lib/toast";
 import { isPickupPast } from "@/lib/deliverySlots";
+import { PAID_STATUSES, canTransition } from "@/lib/orderStatus";
 
 interface Order {
   id: number;
@@ -23,9 +24,6 @@ interface Order {
   createdAt: string;
   items: { name: string; quantity: number; unitPrice: number }[];
 }
-
-// Estados con el pago ya confirmado (para el resumen de panes por fecha).
-const PAID_STATUSES = ["paid", "preparing", "ready", "delivered"];
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending:   { label: "Pendiente",  color: "bg-yellow-100 text-yellow-800" },
@@ -160,8 +158,8 @@ function PedidosContent() {
                       <Phone className="w-3.5 h-3.5" />
                       <a href={`tel:${order.customerPhone}`} className="hover:text-brown">{order.customerPhone}</a>
                     </div>
-                    {/* Solo con el pedido en "Pagado": antes no hay pago que mostrar. */}
-                    {order.status === "paid" && (
+                    {/* Solo con el pago confirmado (Pagado en adelante): antes no hay pago que mostrar. */}
+                    {PAID_STATUSES.includes(order.status) && (
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pay.color}`}>{pay.label}</span>
                         {order.paidAt && (
@@ -187,7 +185,8 @@ function PedidosContent() {
                         className="appearance-none bg-cream border-2 border-border rounded-lg pl-3 pr-7 py-1.5 text-sm font-medium text-charcoal focus:outline-none focus:border-amber cursor-pointer"
                       >
                         {Object.entries(STATUS_LABELS).map(([val, { label }]) => (
-                          <option key={val} value={val}>{label}</option>
+                          // Los estados anteriores quedan deshabilitados: el pedido solo avanza.
+                          <option key={val} value={val} disabled={!canTransition(order.status, val)}>{label}</option>
                         ))}
                       </select>
                       {updating === order.id ? (

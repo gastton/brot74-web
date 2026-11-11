@@ -123,6 +123,48 @@ describe("PATCH /api/admin/orders/[id]", () => {
     expect(updated?.status).toBe("paid");
   });
 
+  it("avanza el pedido por el camino normal, salteando pasos si hace falta", async () => {
+    const slot = await createDeliverySlot();
+    const order = await createOrder(slot.id, [], { status: "paid" });
+    const headers = await adminCookieHeader();
+    const params = { params: Promise.resolve({ id: String(order.id) }) };
+
+    expect((await PATCH(patchRequest({ status: "preparing" }, headers), params)).status).toBe(200);
+    expect((await PATCH(patchRequest({ status: "delivered" }, headers), params)).status).toBe(200);
+    expect((await prisma.order.findUnique({ where: { id: order.id } }))?.status).toBe("delivered");
+  });
+
+  it("devuelve 409 y no cambia nada si se intenta volver a un estado anterior", async () => {
+    const slot = await createDeliverySlot();
+    const order = await createOrder(slot.id, [], { status: "preparing" });
+    const headers = await adminCookieHeader();
+    const params = { params: Promise.resolve({ id: String(order.id) }) };
+
+    for (const status of ["pending", "paid"]) {
+      expect((await PATCH(patchRequest({ status }, headers), params)).status).toBe(409);
+    }
+    expect((await prisma.order.findUnique({ where: { id: order.id } }))?.status).toBe("preparing");
+  });
+
+  it("devuelve 409 al cancelar un pedido entregado o reactivar un cancelado a un estado que no sea Pendiente", async () => {
+    const slot = await createDeliverySlot();
+    const delivered = await createOrder(slot.id, [], { status: "delivered" });
+    const cancelled = await createOrder(slot.id, [], { status: "cancelled" });
+    const headers = await adminCookieHeader();
+
+    const cancelDelivered = await PATCH(patchRequest({ status: "cancelled" }, headers), {
+      params: Promise.resolve({ id: String(delivered.id) }),
+    });
+    const reactivateAsPaid = await PATCH(patchRequest({ status: "paid" }, headers), {
+      params: Promise.resolve({ id: String(cancelled.id) }),
+    });
+
+    expect(cancelDelivered.status).toBe(409);
+    expect(reactivateAsPaid.status).toBe(409);
+    expect((await prisma.order.findUnique({ where: { id: delivered.id } }))?.status).toBe("delivered");
+    expect((await prisma.order.findUnique({ where: { id: cancelled.id } }))?.status).toBe("cancelled");
+  });
+
   it("libera el stock reservado al cancelar el pedido", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot();
