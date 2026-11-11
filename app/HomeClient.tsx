@@ -92,7 +92,7 @@ function buildFlowUrl(params: { step?: "slots"; slot?: number | null; product?: 
   return qs ? `/?${qs}` : "/";
 }
 
-function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
+function HomeContent({ landingStatus, mpCheckout }: { landingStatus: LandingStatus; mpCheckout: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -362,6 +362,7 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
               slots={slots}
               selectedId={selectedSlotId}
               onChange={(id) => selectSlot(id)}
+              mpCheckout={mpCheckout}
             />
           )}
         </main>
@@ -479,15 +480,15 @@ function HomeContent({ landingStatus }: { landingStatus: LandingStatus }) {
   // fijo dispara la misma navegación de siempre (mismo buildFlowUrl de
   // BRT-95), sin cambios de comportamiento del flujo de pedido.
   const goToSlots = () => router.push(buildFlowUrl({ step: "slots" }));
-  return <HomeLanding onReservar={goToSlots} status={landingStatus} />;
+  return <HomeLanding onReservar={goToSlots} status={landingStatus} mpCheckout={mpCheckout} />;
 }
 
 // useSearchParams() exige un límite Suspense (BRT-95) — mismo patrón que ya
 // usa app/confirmacion/page.tsx.
-export default function Home({ landingStatus }: { landingStatus: LandingStatus }) {
+export default function Home({ landingStatus, mpCheckout }: { landingStatus: LandingStatus; mpCheckout: boolean }) {
   return (
     <Suspense>
-      <HomeContent landingStatus={landingStatus} />
+      <HomeContent landingStatus={landingStatus} mpCheckout={mpCheckout} />
     </Suspense>
   );
 }

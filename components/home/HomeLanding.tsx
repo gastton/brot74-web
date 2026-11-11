@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import "./HomeLanding.css";
+import { howItWorksSteps } from "@/lib/howItWorks";
 
 // v59: estado de pedidos, calculado en el servidor (app/page.tsx) con la misma
 // fuente que el flujo de pedidos. open = hay una fecha para pedir.
@@ -11,6 +12,7 @@ export type LandingStatus = { open: boolean };
 interface HomeLandingProps {
   onReservar: () => void;
   status: LandingStatus;
+  mpCheckout: boolean;
 }
 
 const INSTAGRAM_URL = "https://www.instagram.com/brot.74";
@@ -62,13 +64,7 @@ function Media({ src, alt, sizes, priority }: MediaProps) {
   );
 }
 
-const STEPS = [
-  { n: "01", t: "Elegí tu BROT", d: "Elegís la fecha y armás tu pedido online, según lo que haya disponible para esa tanda." },
-  { n: "02", t: "Pagá por transferencia", d: "Confirmás con una transferencia. Sin filas, sin efectivo, a tu ritmo." },
-  { n: "03", t: "Retiralo o recibilo", d: "Según la fecha, pasás a buscarlo o te lo llevamos, en la franja horaria indicada. Horneamos por tandas, no hay local abierto." },
-];
-
-export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
+export default function HomeLanding({ onReservar, status, mpCheckout }: HomeLandingProps) {
   const barRef = useRef<HTMLElement>(null);
   const mbarRef = useRef<HTMLDivElement>(null);
   const heroBtnRef = useRef<HTMLButtonElement>(null);
@@ -237,9 +233,9 @@ export default function HomeLanding({ onReservar, status }: HomeLandingProps) {
                 con pedidos anticipados. Así tu BROT lo retirás recién hecho.
               </p>
               <ol className="steps">
-                {STEPS.map((s) => (
+                {howItWorksSteps(mpCheckout).map((s) => (
                   <li key={s.n} className="step">
-                    <span className="step-n">{s.n}</span>
+                    <span className="step-n">0{s.n}</span>
                     <div>
                       <h3>{s.t}</h3>
                       <p>{s.d}</p>

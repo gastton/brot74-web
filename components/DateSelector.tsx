@@ -26,6 +26,7 @@ interface DateSelectorProps {
   slots: Slot[];
   selectedId: number | null;
   onChange: (id: number) => void;
+  mpCheckout: boolean;
 }
 
 const FALLBACK_IMAGE = "/products/fecha-default-basket.jpeg";
@@ -66,7 +67,7 @@ function InfoRow({ icon, label, value, last }: InfoRowProps) {
   );
 }
 
-export default function DateSelector({ slots, onChange }: DateSelectorProps) {
+export default function DateSelector({ slots, onChange, mpCheckout }: DateSelectorProps) {
   const [showHow, setShowHow] = useState(false);
   const visibleSlots = slots.filter((s) => !s.disabled);
 
@@ -170,7 +171,7 @@ export default function DateSelector({ slots, onChange }: DateSelectorProps) {
           </article>
         );
       })}
-      {showHow && <HowItWorksSheet onClose={() => setShowHow(false)} />}
+      {showHow && <HowItWorksSheet onClose={() => setShowHow(false)} mpCheckout={mpCheckout} />}
     </div>
   );
 }
