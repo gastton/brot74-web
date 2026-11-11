@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toastError } from "@/lib/toast";
 import { isPickupPast } from "@/lib/deliverySlots";
 import { PAID_STATUSES, canTransition } from "@/lib/orderStatus";
+import { whatsAppLink, paymentReceivedMessage } from "@/lib/whatsappLink";
 
 interface Order {
   id: number;
@@ -146,6 +147,10 @@ function PedidosContent() {
           {slotOrders.map((order) => {
             const st = STATUS_LABELS[order.status] ?? { label: order.status, color: "bg-gray-100 text-gray-700" };
             const pay = PAYMENT_LABELS[order.paymentMethod] ?? PAYMENT_LABELS.alias;
+            // BRT-265: aviso manual de "recibimos tu pago" (wa.me con el texto ya escrito).
+            const notifyLink = PAID_STATUSES.includes(order.status)
+              ? whatsAppLink(order.customerPhone, paymentReceivedMessage(order))
+              : null;
             return (
               <div key={order.id} className="bg-white rounded-2xl border-2 border-border p-5">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -164,6 +169,18 @@ function PedidosContent() {
                         <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pay.color}`}>{pay.label}</span>
                         {order.paidAt && (
                           <span className="text-[11px] text-muted">Pagado {formatPaidAt(order.paidAt)}</span>
+                        )}
+                        {notifyLink && (
+                          <a
+                            href={notifyLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Abrir WhatsApp con el aviso de pago recibido"
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-green-200 text-green-600 hover:bg-green-50 transition-colors"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            Avisar por WhatsApp
+                          </a>
                         )}
                       </div>
                     )}
