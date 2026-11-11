@@ -55,7 +55,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
       const wasCancelled = row.status === "cancelled";
 
-      await tx.order.update({ where: { id: orderId }, data: { status } });
+      // BRT-266: la fecha de entrega la pone el servidor la primera vez que
+      // el pedido pasa a Entregado (evidencia ante un reclamo en MP). Como un
+      // pedido entregado no se cancela ni retrocede, no se vuelve a pisar.
+      const deliveredNow = status === "delivered" && row.status !== "delivered";
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status, ...(deliveredNow && { deliveredAt: new Date() }) },
+      });
 
       if (willBeCancelled && !wasCancelled) {
         // Cancelando por primera vez: liberar el stock reservado.

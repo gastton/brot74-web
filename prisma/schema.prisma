@@ -91,6 +91,7 @@ model Order {
   mpPaymentId      String?   @unique // pago aprobado; único para no confirmar dos veces
   paidAt           DateTime?
   paymentExpiresAt DateTime? // vence el link de MP; pasado esto, se cancela y vuelve el stock
+  deliveredAt      DateTime? // BRT-266: cuándo se marcó Entregado (evidencia ante un reclamo en MP)
 
   deliverySlot DeliverySlot @relation(fields: [deliverySlotId], references: [id])
   items        OrderItem[]

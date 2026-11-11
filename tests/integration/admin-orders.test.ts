@@ -165,6 +165,49 @@ describe("PATCH /api/admin/orders/[id]", () => {
     expect((await prisma.order.findUnique({ where: { id: cancelled.id } }))?.status).toBe("cancelled");
   });
 
+  it("guarda la fecha de entrega al marcar el pedido como Entregado y la devuelve en el listado (BRT-266)", async () => {
+    const slot = await createDeliverySlot();
+    const order = await createOrder(slot.id, [], { status: "ready" });
+    const headers = await adminCookieHeader();
+    const params = { params: Promise.resolve({ id: String(order.id) }) };
+
+    const before = Date.now();
+    expect((await PATCH(patchRequest({ status: "delivered" }, headers), params)).status).toBe(200);
+    const after = Date.now();
+
+    const saved = await prisma.order.findUnique({ where: { id: order.id } });
+    expect(saved?.deliveredAt).not.toBeNull();
+    expect(saved!.deliveredAt!.getTime()).toBeGreaterThanOrEqual(before);
+    expect(saved!.deliveredAt!.getTime()).toBeLessThanOrEqual(after);
+
+    const json = await (await GET(await authedGetRequest())).json();
+    expect(json[0].deliveredAt).toBe(saved!.deliveredAt!.toISOString());
+  });
+
+  it("no pone fecha de entrega en otros estados, ni la acepta desde el body (BRT-266)", async () => {
+    const slot = await createDeliverySlot();
+    const order = await createOrder(slot.id, [], { status: "paid" });
+    const headers = await adminCookieHeader();
+    const params = { params: Promise.resolve({ id: String(order.id) }) };
+
+    const res = await PATCH(patchRequest({ status: "ready", deliveredAt: "2020-01-01T00:00:00Z" }, headers), params);
+
+    expect(res.status).toBe(200);
+    expect((await prisma.order.findUnique({ where: { id: order.id } }))?.deliveredAt).toBeNull();
+  });
+
+  it("no pisa la fecha de entrega si el pedido ya estaba entregado ni al intentar cancelarlo (BRT-266)", async () => {
+    const slot = await createDeliverySlot();
+    const deliveredAt = new Date("2026-11-10T18:00:00Z");
+    const order = await createOrder(slot.id, [], { status: "delivered", deliveredAt });
+    const headers = await adminCookieHeader();
+    const params = { params: Promise.resolve({ id: String(order.id) }) };
+
+    expect((await PATCH(patchRequest({ status: "delivered" }, headers), params)).status).toBe(200);
+    expect((await PATCH(patchRequest({ status: "cancelled" }, headers), params)).status).toBe(409);
+    expect((await prisma.order.findUnique({ where: { id: order.id } }))?.deliveredAt).toEqual(deliveredAt);
+  });
+
   it("libera el stock reservado al cancelar el pedido", async () => {
     const product = await createProduct();
     const slot = await createDeliverySlot();
