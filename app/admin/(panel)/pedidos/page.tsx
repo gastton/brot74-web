@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2, MessageCircle, PackageCheck } from "lucide-react";
+import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2, MessageCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { toastError } from "@/lib/toast";
 import { isPickupPast } from "@/lib/deliverySlots";
@@ -42,9 +42,6 @@ const PAYMENT_LABELS: Record<string, { label: string; color: string }> = {
   alias: { label: "Transferencia · manual",    color: "bg-cream text-muted border border-border" },
   mp:    { label: "Mercado Pago · automático", color: "bg-sky-100 text-sky-800" },
 };
-
-// BRT-266: el botón "Entregado" aparece con el pago confirmado y antes de entregar.
-const DELIVERABLE_STATUSES: readonly string[] = ["paid", "preparing", "ready"];
 
 function formatPaidAt(iso: string) {
   return new Date(iso).toLocaleString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -113,13 +110,6 @@ function PedidosContent() {
     setUpdating(null);
   }
 
-  // BRT-266: atajo para pasar a Entregado. La fecha la guarda el servidor; se
-  // confirma antes porque un pedido entregado ya no vuelve atrás.
-  async function markDelivered(orderId: number) {
-    if (!confirm("¿Marcar este pedido como entregado? Se guarda la fecha de hoy y no se puede volver atrás.")) return;
-    await updateStatus(orderId, "delivered");
-  }
-
   // Solo pedidos cancelados (el servidor rechaza el resto con 409).
   async function deleteOrder(orderId: number) {
     if (!confirm("¿Borrar este pedido cancelado? No se puede deshacer.")) return;
@@ -181,6 +171,7 @@ function PedidosContent() {
                         {order.paidAt && (
                           <span className="text-[11px] text-muted">Pagado {formatPaidAt(order.paidAt)}</span>
                         )}
+                        {/* BRT-266: la guarda el servidor al pasar a Entregado desde el desplegable. */}
                         {order.deliveredAt && (
                           <span className="text-[11px] text-muted">Entregado {formatPaidAt(order.deliveredAt)}</span>
                         )}
@@ -226,17 +217,6 @@ function PedidosContent() {
                         <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                       )}
                     </div>
-                    {DELIVERABLE_STATUSES.includes(order.status) && (
-                      <button
-                        onClick={() => markDelivered(order.id)}
-                        disabled={updating === order.id}
-                        title="Marcar como entregado y guardar la fecha"
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-sm font-semibold border-2 border-border text-charcoal hover:border-amber hover:text-brown transition-colors disabled:opacity-50"
-                      >
-                        <PackageCheck className="w-4 h-4" />
-                        Entregado
-                      </button>
-                    )}
                     {order.status === "cancelled" && (
                       <button
                         onClick={() => deleteOrder(order.id)}
