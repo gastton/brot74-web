@@ -160,12 +160,15 @@ function PedidosContent() {
                       <Phone className="w-3.5 h-3.5" />
                       <a href={`tel:${order.customerPhone}`} className="hover:text-brown">{order.customerPhone}</a>
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pay.color}`}>{pay.label}</span>
-                      {order.paidAt && (
-                        <span className="text-[11px] text-muted">Pagado {formatPaidAt(order.paidAt)}</span>
-                      )}
-                    </div>
+                    {/* Solo con el pedido en "Pagado": antes no hay pago que mostrar. */}
+                    {order.status === "paid" && (
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pay.color}`}>{pay.label}</span>
+                        {order.paidAt && (
+                          <span className="text-[11px] text-muted">Pagado {formatPaidAt(order.paidAt)}</span>
+                        )}
+                      </div>
+                    )}
                     {order.customerAddress && (
                       <div className="flex items-center gap-1.5 mt-0.5 text-sm text-muted">
                         <MapPin className="w-3.5 h-3.5" />
