@@ -26,7 +26,7 @@ export default function AdminNav() {
     <header className="bg-charcoal text-cream shadow-md">
       <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link href="/admin" className="font-serif text-xl font-bold">
-          BROT.74 <span className="text-amber text-sm font-normal">admin</span>
+          BROT 74 <span className="text-amber text-sm font-normal">admin</span>
         </Link>
 
         <nav className="flex items-center gap-1">
