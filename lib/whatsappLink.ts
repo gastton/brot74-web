@@ -43,6 +43,6 @@ export function paymentReceivedMessage(order: {
     "",
     `Nos vemos el ${order.slotLabel}.`,
     "¡Muchas gracias! 🍞",
-    "BROT.74",
+    "BROT 74",
   ].join("\n");
 }
