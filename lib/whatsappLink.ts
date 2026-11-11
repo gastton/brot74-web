@@ -1,3 +1,5 @@
+import { formatCurrency } from "@/lib/utils";
+
 // BRT-265: links wa.me para avisarle al cliente a mano (sin servicio pago
 // de mensajes). El admin toca el botón, se abre WhatsApp con el texto ya
 // escrito y lo envía él.
@@ -21,7 +23,26 @@ export function whatsAppLink(phone: string, text: string): string | null {
   return number ? `https://wa.me/${number}?text=${encodeURIComponent(text)}` : null;
 }
 
-export function paymentReceivedMessage(order: { id: number; customerName: string; slotLabel: string }): string {
+/**
+ * Aviso de pago recibido con el detalle del pedido. "Nos vemos el…" (y no
+ * "Te esperamos") porque sirve tanto para retiro como para entrega. Viñetas
+ * con "•": en WhatsApp el "*" marca negrita.
+ */
+export function paymentReceivedMessage(order: {
+  id: number;
+  customerName: string;
+  total: number;
+  slotLabel: string;
+  items: { name: string; quantity: number }[];
+}): string {
   const firstName = order.customerName.trim().split(/\s+/)[0] ?? "";
-  return `¡Hola ${firstName}! Recibimos tu pago del pedido #${order.id} de BROT.74 para el ${order.slotLabel}. ¡Gracias!`;
+  return [
+    `¡Hola ${firstName}! Recibimos tu pago de ${formatCurrency(order.total)} correspondiente al pedido #${order.id}:`,
+    "",
+    ...order.items.map((i) => `• ${i.quantity} × ${i.name}`),
+    "",
+    `Nos vemos el ${order.slotLabel}.`,
+    "¡Muchas gracias! 🍞",
+    "BROT.74",
+  ].join("\n");
 }
