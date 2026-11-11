@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import SheetShell, { useSheetClose } from "./SheetShell";
+import { howItWorksSteps, type HowItWorksStep } from "@/lib/howItWorks";
 
 // v46 · 1b "¿Cómo funciona?": panel desde abajo sobre la pantalla de fecha.
 // Los 3 pasos son los mismos que antes estaban en la landing ("Pedís hoy,
@@ -11,18 +12,15 @@ import SheetShell, { useSheetClose } from "./SheetShell";
 // v48: abre subiendo (320 ms, ease-out) con fade del scrim; cierra bajando
 // (200 ms, ease-in) y se desmonta recién al terminar la salida. Con "reducir
 // movimiento" no hay transición. v55: esa mecánica pasó a SheetShell, que
-// comparte con el aviso al salir del pedido.
-const STEPS = [
-  { n: "1", t: "Elegí tu BROT", d: "Elegís la fecha y armás tu pedido online, según lo que haya disponible para esa tanda." },
-  { n: "2", t: "Pagá por transferencia", d: "Confirmás con una transferencia. Sin filas, sin efectivo, a tu ritmo." },
-  { n: "3", t: "Retiralo o recibilo", d: "Según la fecha, pasás a buscarlo o te lo llevamos, en la franja horaria indicada. Horneamos por tandas, no hay local abierto." },
-];
+// comparte con el aviso al salir del pedido. BRT-267: los pasos salen de
+// lib/howItWorks.ts (compartidos con la landing).
 
 interface HowItWorksSheetProps {
   onClose: () => void;
+  mpCheckout: boolean;
 }
 
-function HowItWorksContent({ closeRef }: { closeRef: React.RefObject<HTMLButtonElement | null> }) {
+function HowItWorksContent({ closeRef, steps }: { closeRef: React.RefObject<HTMLButtonElement | null>; steps: HowItWorksStep[] }) {
   const requestClose = useSheetClose();
   return (
     <>
@@ -45,7 +43,7 @@ function HowItWorksContent({ closeRef }: { closeRef: React.RefObject<HTMLButtonE
       </div>
 
       <ol className="list-none m-0 p-0" style={{ marginTop: "18px" }}>
-        {STEPS.map((s) => (
+        {steps.map((s) => (
           <li key={s.n} className="grid items-start gap-3" style={{ gridTemplateColumns: "44px minmax(0,1fr)", padding: "14px 0", borderTop: "1px solid rgba(14,35,60,.16)" }}>
             <span style={{ fontSize: "28px", lineHeight: 1, fontWeight: 300, letterSpacing: "-.02em", color: "#6E6A60" }}>
               0<b style={{ fontWeight: "inherit", color: "#C8851A" }}>{s.n}</b>
@@ -65,12 +63,12 @@ function HowItWorksContent({ closeRef }: { closeRef: React.RefObject<HTMLButtonE
   );
 }
 
-export default function HowItWorksSheet({ onClose }: HowItWorksSheetProps) {
+export default function HowItWorksSheet({ onClose, mpCheckout }: HowItWorksSheetProps) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   return (
     <SheetShell onClose={onClose} labelledBy="how-title" initialFocusRef={closeRef}>
-      <HowItWorksContent closeRef={closeRef} />
+      <HowItWorksContent closeRef={closeRef} steps={howItWorksSteps(mpCheckout)} />
     </SheetShell>
   );
 }
