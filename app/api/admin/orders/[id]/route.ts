@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { canTransition, isOrderStatus } from "@/lib/orderStatus";
 
 class InsufficientStockError extends Error {
   constructor(public productId: number) {
@@ -10,6 +11,8 @@ class InsufficientStockError extends Error {
 
 class OrderNotFoundError extends Error {}
 
+class InvalidTransitionError extends Error {}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await requireAdmin(req);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -17,8 +20,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const { id } = await params;
   const { status } = await req.json();
 
-  const validStatuses = ["pending", "paid", "preparing", "ready", "delivered", "cancelled"];
-  if (!validStatuses.includes(status)) {
+  if (!isOrderStatus(status)) {
     return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
   }
 
@@ -47,6 +49,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         SELECT status FROM "Order" WHERE id = ${orderId} FOR UPDATE
       `;
       if (!row) throw new OrderNotFoundError();
+      // Con el estado ya bloqueado: un pedido no vuelve a un paso anterior
+      // (ver lib/orderStatus.ts).
+      if (!canTransition(row.status, status)) throw new InvalidTransitionError();
 
       const wasCancelled = row.status === "cancelled";
 
@@ -88,6 +93,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   } catch (e) {
     if (e instanceof OrderNotFoundError) {
       return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    }
+    if (e instanceof InvalidTransitionError) {
+      return NextResponse.json(
+        { error: "No se puede pasar el pedido a ese estado (no se vuelve a un paso anterior)" },
+        { status: 409 }
+      );
     }
     if (e instanceof InsufficientStockError) {
       return NextResponse.json(

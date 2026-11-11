@@ -7,6 +7,7 @@ import { Loader2, Phone, MapPin, Package, Home, ChevronDown, ChevronUp, Trash2 }
 import { formatCurrency } from "@/lib/utils";
 import { toastError } from "@/lib/toast";
 import { isPickupPast } from "@/lib/deliverySlots";
+import { PAID_STATUSES, canTransition } from "@/lib/orderStatus";
 
 interface Order {
   id: number;
@@ -16,14 +17,13 @@ interface Order {
   status: string;
   total: number;
   notes: string;
+  paymentMethod: string;
+  paidAt: string | null;
   slotLabel: string;
   slotDate: string;
   createdAt: string;
   items: { name: string; quantity: number; unitPrice: number }[];
 }
-
-// Estados con el pago ya confirmado (para el resumen de panes por fecha).
-const PAID_STATUSES = ["paid", "preparing", "ready", "delivered"];
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending:   { label: "Pendiente",  color: "bg-yellow-100 text-yellow-800" },
@@ -33,6 +33,17 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   delivered: { label: "Entregado",  color: "bg-gray-100 text-gray-700" },
   cancelled: { label: "Cancelado",  color: "bg-red-100 text-red-700" },
 };
+
+// BRT-264: cómo pagó el cliente. "mp" se confirma solo (webhook de Mercado
+// Pago); "alias" es la transferencia de siempre, que se confirma a mano.
+const PAYMENT_LABELS: Record<string, { label: string; color: string }> = {
+  alias: { label: "Transferencia · manual",    color: "bg-cream text-muted border border-border" },
+  mp:    { label: "Mercado Pago · automático", color: "bg-sky-100 text-sky-800" },
+};
+
+function formatPaidAt(iso: string) {
+  return new Date(iso).toLocaleString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
 
 function PedidosContent() {
   const searchParams = useSearchParams();
@@ -134,6 +145,7 @@ function PedidosContent() {
         <div className="space-y-3">
           {slotOrders.map((order) => {
             const st = STATUS_LABELS[order.status] ?? { label: order.status, color: "bg-gray-100 text-gray-700" };
+            const pay = PAYMENT_LABELS[order.paymentMethod] ?? PAYMENT_LABELS.alias;
             return (
               <div key={order.id} className="bg-white rounded-2xl border-2 border-border p-5">
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -146,6 +158,15 @@ function PedidosContent() {
                       <Phone className="w-3.5 h-3.5" />
                       <a href={`tel:${order.customerPhone}`} className="hover:text-brown">{order.customerPhone}</a>
                     </div>
+                    {/* Solo con el pago confirmado (Pagado en adelante): antes no hay pago que mostrar. */}
+                    {PAID_STATUSES.includes(order.status) && (
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${pay.color}`}>{pay.label}</span>
+                        {order.paidAt && (
+                          <span className="text-[11px] text-muted">Pagado {formatPaidAt(order.paidAt)}</span>
+                        )}
+                      </div>
+                    )}
                     {order.customerAddress && (
                       <div className="flex items-center gap-1.5 mt-0.5 text-sm text-muted">
                         <MapPin className="w-3.5 h-3.5" />
@@ -164,7 +185,8 @@ function PedidosContent() {
                         className="appearance-none bg-cream border-2 border-border rounded-lg pl-3 pr-7 py-1.5 text-sm font-medium text-charcoal focus:outline-none focus:border-amber cursor-pointer"
                       >
                         {Object.entries(STATUS_LABELS).map(([val, { label }]) => (
-                          <option key={val} value={val}>{label}</option>
+                          // Los estados anteriores quedan deshabilitados: el pedido solo avanza.
+                          <option key={val} value={val} disabled={!canTransition(order.status, val)}>{label}</option>
                         ))}
                       </select>
                       {updating === order.id ? (

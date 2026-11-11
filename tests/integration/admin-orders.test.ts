@@ -61,6 +61,29 @@ describe("GET /api/admin/orders", () => {
     expect(json[0].items[0]).toMatchObject({ name: "Campo", quantity: 2, unitPrice: 1000 });
   });
 
+  it("devuelve el método de pago de cada pedido (BRT-264)", async () => {
+    const slot = await createDeliverySlot();
+    const paidAt = new Date("2026-11-10T15:00:00Z");
+    const alias = await createOrder(slot.id);
+    const mp = await createOrder(slot.id, [], { paymentMethod: "mp", status: "paid", paidAt, mpPaymentId: "pago-1" });
+
+    const json = await (await GET(await authedGetRequest())).json();
+    const byId = new Map(json.map((o: { id: number }) => [o.id, o]));
+
+    expect(byId.get(alias.id)).toMatchObject({ paymentMethod: "alias", paidAt: null });
+    expect(byId.get(mp.id)).toMatchObject({ paymentMethod: "mp", paidAt: paidAt.toISOString() });
+  });
+
+  it("no expone los IDs internos de Mercado Pago (BRT-264)", async () => {
+    const slot = await createDeliverySlot();
+    await createOrder(slot.id, [], { paymentMethod: "mp", mpPaymentId: "pago-1", mpPreferenceId: "pref-1" });
+
+    const [order] = await (await GET(await authedGetRequest())).json();
+
+    expect(order).not.toHaveProperty("mpPaymentId");
+    expect(order).not.toHaveProperty("mpPreferenceId");
+  });
+
   it("filtra por slotId", async () => {
     const product = await createProduct();
     const slotA = await createDeliverySlot();
@@ -98,6 +121,48 @@ describe("PATCH /api/admin/orders/[id]", () => {
     expect(res.status).toBe(200);
     const updated = await prisma.order.findUnique({ where: { id: order.id } });
     expect(updated?.status).toBe("paid");
+  });
+
+  it("avanza el pedido por el camino normal, salteando pasos si hace falta", async () => {
+    const slot = await createDeliverySlot();
+    const order = await createOrder(slot.id, [], { status: "paid" });
+    const headers = await adminCookieHeader();
+    const params = { params: Promise.resolve({ id: String(order.id) }) };
+
+    expect((await PATCH(patchRequest({ status: "preparing" }, headers), params)).status).toBe(200);
+    expect((await PATCH(patchRequest({ status: "delivered" }, headers), params)).status).toBe(200);
+    expect((await prisma.order.findUnique({ where: { id: order.id } }))?.status).toBe("delivered");
+  });
+
+  it("devuelve 409 y no cambia nada si se intenta volver a un estado anterior", async () => {
+    const slot = await createDeliverySlot();
+    const order = await createOrder(slot.id, [], { status: "preparing" });
+    const headers = await adminCookieHeader();
+    const params = { params: Promise.resolve({ id: String(order.id) }) };
+
+    for (const status of ["pending", "paid"]) {
+      expect((await PATCH(patchRequest({ status }, headers), params)).status).toBe(409);
+    }
+    expect((await prisma.order.findUnique({ where: { id: order.id } }))?.status).toBe("preparing");
+  });
+
+  it("devuelve 409 al cancelar un pedido entregado o reactivar un cancelado a un estado que no sea Pendiente", async () => {
+    const slot = await createDeliverySlot();
+    const delivered = await createOrder(slot.id, [], { status: "delivered" });
+    const cancelled = await createOrder(slot.id, [], { status: "cancelled" });
+    const headers = await adminCookieHeader();
+
+    const cancelDelivered = await PATCH(patchRequest({ status: "cancelled" }, headers), {
+      params: Promise.resolve({ id: String(delivered.id) }),
+    });
+    const reactivateAsPaid = await PATCH(patchRequest({ status: "paid" }, headers), {
+      params: Promise.resolve({ id: String(cancelled.id) }),
+    });
+
+    expect(cancelDelivered.status).toBe(409);
+    expect(reactivateAsPaid.status).toBe(409);
+    expect((await prisma.order.findUnique({ where: { id: delivered.id } }))?.status).toBe("delivered");
+    expect((await prisma.order.findUnique({ where: { id: cancelled.id } }))?.status).toBe("cancelled");
   });
 
   it("libera el stock reservado al cancelar el pedido", async () => {
