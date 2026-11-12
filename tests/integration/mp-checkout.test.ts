@@ -21,11 +21,12 @@ function mpResponse(body: unknown, status = 201) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
 
-function checkoutRequest(orderId: number | string, body: unknown) {
+function checkoutRequest(orderId: number | string, body: unknown, headers: Record<string, string> = {}) {
   return [
     new NextRequest(`http://localhost/api/orders/${orderId}/mercadopago`, {
       method: "POST",
       body: JSON.stringify(body),
+      headers,
     }),
     { params: Promise.resolve({ id: String(orderId) }) },
   ] as const;
@@ -116,6 +117,31 @@ describe("POST /api/orders/[id]/mercadopago (BRT-251)", () => {
     const expiresInMin = (saved!.paymentExpiresAt!.getTime() - before) / 60_000;
     expect(expiresInMin).toBeGreaterThan(29);
     expect(expiresInMin).toBeLessThanOrEqual(30.1);
+  });
+
+  it("la vuelta desde MP usa el dominio por el que entró el cliente (proxy como ngrok o Vercel)", async () => {
+    const order = await pendingOrder();
+
+    await createMpCheckout(
+      ...checkoutRequest(order.id, { token: TOKEN }, {
+        "x-forwarded-host": "algo-123.ngrok-free.dev",
+        "x-forwarded-proto": "https",
+      })
+    );
+
+    const sent = JSON.parse((fetchSpy.mock.calls[0] as [string, RequestInit])[1].body as string);
+    expect(sent.config.online.success_url).toBe(`https://algo-123.ngrok-free.dev/confirmacion?order=${order.id}&pago=mp`);
+  });
+
+  it("ignora un host que no es nuestro y vuelve al origen del servidor", async () => {
+    const order = await pendingOrder();
+
+    await createMpCheckout(
+      ...checkoutRequest(order.id, { token: TOKEN }, { "x-forwarded-host": "sitio-malicioso.com", "x-forwarded-proto": "https" })
+    );
+
+    const sent = JSON.parse((fetchSpy.mock.calls[0] as [string, RequestInit])[1].body as string);
+    expect(sent.config.online.success_url).toBe(`http://localhost/confirmacion?order=${order.id}&pago=mp`);
   });
 
   it("si el pedido ya tiene un link vigente devuelve el mismo, sin crear otra orden", async () => {
