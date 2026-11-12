@@ -150,7 +150,7 @@ function ConfirmacionContent() {
 
   const { state: mpState, checkAgain } = useMpPaymentState(orderId, isMp, saved?.token ?? null);
   const showDetails =
-    !isMp || mpState === "approved" || mpState === "pending" || mpState === "unpaid" || mpState === "error" || mpState === "unknown";
+    !isMp || mpState === "approved" || mpState === "pending" || mpState === "error" || mpState === "unknown";
 
   let heading: React.ReactNode = <>Ya pediste<br />tu <span style={{ color: "#C8851A" }}>BROT</span></>;
   let message = "Cuando se acredite la transferencia, te confirmamos por WhatsApp.";
@@ -166,7 +166,7 @@ function ConfirmacionContent() {
       message = "Si ya pagaste, en unos minutos se acredita y te confirmamos por WhatsApp. Si no llegaste a pagar, podés hacerlo ahora; el pedido se cancela solo si no se paga a tiempo.";
     } else if (mpState === "unpaid") {
       heading = <>Todavía no<br /><span style={{ color: "#C8851A" }}>pagaste</span></>;
-      message = "El pago en Mercado Pago no se completó. Tu pedido está reservado: podés pagarlo ahora. Si no se paga a tiempo, se cancela solo.";
+      message = "Tu pedido está reservado, pero el pago en Mercado Pago no se completó.";
     } else if (mpState === "error") {
       heading = <>No pudimos ver<br />tu <span style={{ color: "#C8851A" }}>pago</span></>;
       message = "Parece que hay un problema de conexión. Si pagaste, no te preocupes: te confirmamos por WhatsApp cuando se acredite.";
@@ -194,6 +194,23 @@ function ConfirmacionContent() {
             style={{ width: "96px", height: "auto", display: "block" }}
           />
 
+          {/* "Pago confirmado" lleva un sello verde para que no se confunda con "Todavía no pagaste". */}
+          {isMp && mpState === "approved" && (
+            <div
+              className="inline-flex items-center gap-2 self-start mt-[22px]"
+              style={{ background: "#E6F2EA", color: "#1F6B3A", borderRadius: "999px", padding: "6px 14px 6px 8px", fontSize: "14px", fontWeight: 600 }}
+            >
+              <span
+                className="flex items-center justify-center"
+                style={{ width: "22px", height: "22px", borderRadius: "999px", background: "#1F6B3A" }}
+                aria-hidden="true"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+              </span>
+              Pago acreditado
+            </div>
+          )}
+
           {orderId && (
             <div className="brot-mlabel brot-mlabel-amber mt-[22px]" style={{ fontWeight: 500 }}>
               Pedido #{orderId}
@@ -208,6 +225,23 @@ function ConfirmacionContent() {
             {message}
           </p>
 
+          {/* "Todavía no pagaste": aviso destacado y el botón para pagar ahí mismo, sin los datos de retiro. */}
+          {isMp && mpState === "unpaid" && (
+            <div className="mt-[20px]">
+              <div
+                style={{ background: "#FBF1DF", borderLeft: "3px solid #C8851A", padding: "14px 16px", color: "#5C3D08", fontSize: "15px", lineHeight: 1.45 }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: "2px" }}>Falta el pago</div>
+                Pagalo ahora con Mercado Pago. Si no se paga a tiempo, el pedido se cancela solo.
+              </div>
+              {orderId && saved && (
+                <div className="mt-[16px]">
+                  <RetryMpButton orderId={orderId} token={saved.token} primary />
+                </div>
+              )}
+            </div>
+          )}
+
           {isMp && mpState === "checking" && (
             <Loader2 className="w-6 h-6 animate-spin mt-[18px]" style={{ color: "#C8851A" }} aria-label="Consultando el pago" />
           )}
@@ -220,8 +254,8 @@ function ConfirmacionContent() {
           )}
         </div>
 
-        {isMp && (mpState === "pending" || mpState === "unpaid") && orderId && saved && (
-          <RetryMpButton orderId={orderId} token={saved.token} primary={mpState === "unpaid"} />
+        {isMp && mpState === "pending" && orderId && saved && (
+          <RetryMpButton orderId={orderId} token={saved.token} primary={false} />
         )}
 
         {isMp && mpState === "error" && (
