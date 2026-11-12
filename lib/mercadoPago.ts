@@ -77,15 +77,23 @@ function mpAmount(pesos: number): string {
 }
 
 async function mpFetch(path: string, init: RequestInit = {}): Promise<unknown> {
-  const res = await fetch(`${MP_API_URL}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${mpAccessToken()}`,
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
-    cache: "no-store",
-  });
+  const token = mpAccessToken();
+  let res: Response;
+  try {
+    res = await fetch(`${MP_API_URL}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...init.headers,
+      },
+      cache: "no-store",
+    });
+  } catch (err) {
+    // Sin respuesta (red, DNS, timeout): mismo error que una respuesta fallida,
+    // así cada ruta lo trata como "MP no respondió" (502, reintento o estado guardado).
+    throw new MercadoPagoError(0, err instanceof Error ? err.message : String(err));
+  }
   const text = await res.text();
   if (!res.ok) throw new MercadoPagoError(res.status, text);
   return JSON.parse(text);
