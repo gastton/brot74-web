@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Loader2, ShoppingCart } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import QtyCapsule from "./QtyCapsule";
@@ -111,6 +111,19 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
   const [toastText, setToastText] = useState("Alias copiado");
 
   const successScheduledRef = useRef(false);
+  // Pedido del link de MP en curso: si el cliente vuelve atrás o cierra el
+  // checkout antes de la respuesta, se descarta (no se lo manda a pagar).
+  const mpRequestRef = useRef(0);
+  useEffect(() => {
+    const invalidate = () => {
+      mpRequestRef.current += 1;
+      setMpLoading(false);
+    };
+    if (step !== "payment") invalidate();
+    return () => {
+      mpRequestRef.current += 1;
+    };
+  }, [step]);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const CVU     = process.env.NEXT_PUBLIC_CVU     ?? "";
@@ -238,13 +251,16 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
     }
     setError("");
     setMpLoading(true);
+    const requestId = ++mpRequestRef.current;
     try {
       const res = await fetch(`/api/orders/${orderId}/mercadopago`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: orderToken }),
+        signal: AbortSignal.timeout(15_000),
       });
       const data = await res.json().catch(() => ({}));
+      if (requestId !== mpRequestRef.current) return; // el cliente ya salió de esta pantalla
       if (!res.ok || typeof data.checkoutUrl !== "string") {
         setError(data.error ?? "No pudimos generar el link de pago. Probá de nuevo o pagá por transferencia.");
         setMpLoading(false);
@@ -255,6 +271,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
       // Navegación dura a MP: el modal queda montado (con el spinner) hasta que la página se reemplaza.
       window.location.href = data.checkoutUrl;
     } catch {
+      if (requestId !== mpRequestRef.current) return;
       setError("Error de conexión. Intentá de nuevo.");
       setMpLoading(false);
     }

@@ -11,9 +11,12 @@ import { parseOrderReturn, readOrderReturnRaw } from "@/lib/orderReturn";
 // BRT-262/263: a la vuelta de Mercado Pago (?pago=mp) se consulta el estado
 // del pago (BRT-257). El cliente suele volver antes que el aviso de MP, así
 // que mientras siga pendiente se reintenta unas veces antes de mostrar "procesando".
-type MpState = "checking" | "approved" | "pending" | "rejected" | "unknown";
+// error = no se pudo consultar (sin conexión); unknown = no hay token en este navegador.
+type MpState = "checking" | "approved" | "pending" | "rejected" | "error" | "unknown";
 const POLL_INTERVAL_MS = 2500;
 const POLL_ATTEMPTS = 6;
+/** Una consulta colgada no deja la pantalla trabada: se corta y cuenta como fallida. */
+const REQUEST_TIMEOUT_MS = 10_000;
 
 const noopSubscribe = () => () => {};
 
@@ -22,9 +25,15 @@ function useHydrated(): boolean {
   return useSyncExternalStore(noopSubscribe, () => true, () => false);
 }
 
-function useMpPaymentState(orderId: string | null, enabled: boolean, token: string | null): MpState {
+function useMpPaymentState(
+  orderId: string | null,
+  enabled: boolean,
+  token: string | null
+): { state: MpState; checkAgain: () => void } {
   const hydrated = useHydrated();
-  const [result, setResult] = useState<{ token: string; state: MpState } | null>(null);
+  // round: cada "Consultar de nuevo" vuelve a arrancar las consultas.
+  const [round, setRound] = useState(0);
+  const [result, setResult] = useState<{ token: string; round: number; state: MpState } | null>(null);
 
   useEffect(() => {
     if (!enabled || !orderId || !token) return;
@@ -38,31 +47,34 @@ function useMpPaymentState(orderId: string | null, enabled: boolean, token: stri
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
         if (res.ok) status = (await res.json()).status ?? null;
       } catch {
-        /* sin conexión: se reintenta */
+        /* sin conexión o timeout: se reintenta */
       }
       if (cancelled) return;
-      if (status === "approved" || status === "rejected") return setResult({ token: token!, state: status });
+      if (status === "approved" || status === "rejected") return setResult({ token: token!, round, state: status });
       if (attempt + 1 >= POLL_ATTEMPTS) {
-        return setResult({ token: token!, state: status === "pending" ? "pending" : "unknown" });
+        return setResult({ token: token!, round, state: status === "pending" ? "pending" : "error" });
       }
-      timer = setTimeout(() => check(attempt + 1), POLL_INTERVAL_MS);
+      timer = setTimeout(() => void check(attempt + 1), POLL_INTERVAL_MS);
     }
 
-    check(0);
+    void check(0);
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [enabled, orderId, token]);
+  }, [enabled, orderId, token, round]);
 
-  if (!enabled) return "unknown";
+  const checkAgain = () => setRound((r) => r + 1);
+  if (!enabled) return { state: "unknown", checkAgain };
   // Hasta leer el navegador no se sabe si hay token: se muestra "confirmando" (igual en servidor y cliente).
-  if (!hydrated) return "checking";
-  if (!token) return "unknown";
-  return result?.token === token ? result.state : "checking";
+  if (!hydrated) return { state: "checking", checkAgain };
+  if (!token) return { state: "unknown", checkAgain };
+  const current = result?.token === token && result.round === round ? result.state : "checking";
+  return { state: current, checkAgain };
 }
 
 function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; label: string; value: string; last?: boolean }) {
@@ -90,6 +102,7 @@ function RetryMpButton({ orderId, token }: { orderId: string; token: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && typeof data.checkoutUrl === "string") {
@@ -132,8 +145,8 @@ function ConfirmacionContent() {
   const place   = params.get("place") ?? savedParams.get("place");
   const isDelivery = (params.get("mode") ?? savedParams.get("mode")) === "delivery";
 
-  const mpState = useMpPaymentState(orderId, isMp, saved?.token ?? null);
-  const showDetails = !isMp || mpState === "approved" || mpState === "pending" || mpState === "unknown";
+  const { state: mpState, checkAgain } = useMpPaymentState(orderId, isMp, saved?.token ?? null);
+  const showDetails = !isMp || mpState === "approved" || mpState === "pending" || mpState === "error" || mpState === "unknown";
 
   let heading: React.ReactNode = <>Ya pediste<br />tu <span style={{ color: "#C8851A" }}>BROT</span></>;
   let message = "Cuando se acredite la transferencia, te confirmamos por WhatsApp.";
@@ -147,6 +160,9 @@ function ConfirmacionContent() {
     } else if (mpState === "pending") {
       heading = <>Tu pago se está<br /><span style={{ color: "#C8851A" }}>procesando</span></>;
       message = "Si ya pagaste, en unos minutos se acredita y te confirmamos por WhatsApp. Si no llegaste a pagar, podés hacerlo ahora; el pedido se cancela solo si no se paga a tiempo.";
+    } else if (mpState === "error") {
+      heading = <>No pudimos ver<br />tu <span style={{ color: "#C8851A" }}>pago</span></>;
+      message = "Parece que hay un problema de conexión. Si pagaste, no te preocupes: te confirmamos por WhatsApp cuando se acredite.";
     } else if (mpState === "rejected") {
       heading = <>El pago no<br />se <span style={{ color: "#C8851A" }}>completó</span></>;
       message = "Pasó el tiempo para pagar y el pedido se canceló. Podés hacer un pedido nuevo cuando quieras.";
@@ -199,6 +215,12 @@ function ConfirmacionContent() {
 
         {isMp && mpState === "pending" && orderId && saved && (
           <RetryMpButton orderId={orderId} token={saved.token} />
+        )}
+
+        {isMp && mpState === "error" && (
+          <button type="button" onClick={checkAgain} className="brot-pill brot-pill--ghost mb-3">
+            Consultar de nuevo
+          </button>
         )}
 
         <Link href="/" className="brot-pill no-underline">

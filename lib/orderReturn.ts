@@ -16,11 +16,13 @@ export interface OrderReturnInfo {
 
 const key = (orderId: number | string) => `brot74-order-${orderId}`;
 
-export function saveOrderReturn(orderId: number, info: OrderReturnInfo) {
+/** true si quedó guardado. */
+export function saveOrderReturn(orderId: number, info: OrderReturnInfo): boolean {
   try {
     localStorage.setItem(key(orderId), JSON.stringify(info));
+    return true;
   } catch {
-    /* localStorage no disponible */
+    return false;
   }
 }
 

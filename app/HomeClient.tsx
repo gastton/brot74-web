@@ -337,9 +337,13 @@ function HomeContent({ landingStatus, mpCheckout }: { landingStatus: LandingStat
   // BRT-260: justo antes de salir a Mercado Pago. MP vuelve a /confirmacion
   // solo con el número de pedido: el token y los datos de retiro quedan en el
   // navegador para esa pantalla (lib/orderReturn.ts).
+  //
+  // Si el navegador no deja guardar (incógnito estricto), igual se sale a
+  // pagar: el webhook confirma el pago y la vuelta muestra el mensaje genérico.
+  // Frenar el pago por eso sería peor.
   function handleLeaveForMp(orderId: number, token: string, address?: string) {
-    clearSavedCart();
     saveOrderReturn(orderId, { token, confirmationQuery: confirmationQuery(address) });
+    clearSavedCart();
   }
 
   /* ─── SLOTS VIEW ────────────────────────────────────────── */
