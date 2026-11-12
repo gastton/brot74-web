@@ -265,8 +265,12 @@ describe("POST /api/orders", () => {
       ),
     ]);
 
+    // El perdedor se rechaza con 409 (update atómico) o, si llega a ver la
+    // reserva del otro en el chequeo previo, con 400: depende del orden en que
+    // corren. Lo que importa es que no se vende de más.
     const statuses = [resA.status, resB.status].sort();
-    expect(statuses).toEqual([200, 409]);
+    expect(statuses[0]).toBe(200);
+    expect([400, 409]).toContain(statuses[1]);
 
     const stock = await getStock(product.id, slot.id);
     expect(stock?.reservedStock).toBe(1);

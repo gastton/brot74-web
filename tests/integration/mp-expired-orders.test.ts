@@ -61,13 +61,14 @@ describe("Pedidos de MP vencidos sin pago (BRT-256)", () => {
           customerName: "Ana",
           customerPhone: "1122334455",
           deliverySlotId: slot.id,
-          items: [{ productId: product.id, quantity: 5 }],
+          items: [{ productId: product.id, quantity: 3 }],
         }),
       })
     );
 
+    // Sin la limpieza solo quedarían 2 (5 − 3 retenidos) y el pedido de 3 se rechazaría.
     expect(res.status).toBe(200);
-    expect((await getStock(product.id, slot.id))?.reservedStock).toBe(5);
+    expect((await getStock(product.id, slot.id))?.reservedStock).toBe(3);
   });
 
   it("el admin ve el pedido vencido como cancelado", async () => {
