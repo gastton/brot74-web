@@ -213,11 +213,14 @@ describe("POST /api/payments/webhook: avisos que no confirman", () => {
     expect(await orderRow(order.id)).toMatchObject({ status: "cancelled", mpPaymentId: null });
   });
 
-  it("devuelve 500 para que MP reintente si no puede consultar la orden, y 200 si la orden no existe", async () => {
+  it("devuelve 500 para que MP reintente si no puede consultar la orden o viene sin estado, y 200 si la orden no existe", async () => {
     const order = await mpPendingOrder();
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     fetchSpy.mockResolvedValueOnce(mpResponse({ message: "internal_error" }, 500));
+    expect((await webhook(notification(MP_ORDER_ID))).status).toBe(500);
+
+    fetchSpy.mockResolvedValueOnce(mpResponse({ id: MP_ORDER_ID, external_reference: String(order.id) }));
     expect((await webhook(notification(MP_ORDER_ID))).status).toBe(500);
 
     fetchSpy.mockResolvedValueOnce(mpResponse({ message: "order not found" }, 404));
