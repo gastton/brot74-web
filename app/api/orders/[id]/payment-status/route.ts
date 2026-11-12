@@ -23,8 +23,20 @@ const PAYMENT_STATUS_RATE_LIMIT = { max: 120, windowMs: 60 * 60 * 1000 };
 
 const NOT_FOUND = { error: "Pedido no encontrado" };
 
-/** approved = pago confirmado; pending = todavía no; rejected = el pedido se canceló (venció o lo canceló el admin). */
-type PaymentStatus = "approved" | "pending" | "rejected";
+/**
+ * approved = pago confirmado; pending = todavía no confirmado (puede estar
+ * acreditándose, o es un pedido por alias); unpaid = MP dice que no hubo pago
+ * (volvió de MP sin pagar, o el pago fue rechazado); rejected = el pedido se
+ * canceló (venció o lo canceló el admin).
+ */
+type PaymentStatus = "approved" | "pending" | "unpaid" | "rejected";
+
+/**
+ * Estados de la orden de MP sin un pago en curso: creada sin intentos, pago
+ * rechazado, o cancelada/vencida. "processing" y "action_required" siguen
+ * como pending porque el pago puede acreditarse.
+ */
+const MP_UNPAID_STATUSES = new Set(["created", "failed", "canceled", "expired"]);
 
 function paymentStatus(orderStatus: string): PaymentStatus {
   if (PAID_STATUSES.includes(orderStatus)) return "approved";
@@ -49,8 +61,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (order.status === "pending" && order.paymentMethod === "mp" && order.mpOrderId) {
     // Primero confirmar (un pago de último momento le gana a la cancelación por vencido)...
+    let mpUnpaid = false;
     try {
-      await confirmMpOrder(order.mpOrderId);
+      const result = await confirmMpOrder(order.mpOrderId);
+      mpUnpaid = result.outcome === "not_paid" && MP_UNPAID_STATUSES.has(result.status.split("/")[0]);
     } catch (e) {
       // MP no respondió: se informa lo que hay en la base; el webhook confirma después.
       if (!(e instanceof MercadoPagoError)) throw e;
@@ -61,6 +75,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
     // ...y después cancelar si venció sin pagarse (BRT-256).
     await sweepExpiredMpOrders();
+
+    const afterCheck = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } });
+    if (afterCheck.status === "pending" && mpUnpaid) return NextResponse.json({ status: "unpaid" });
+    return NextResponse.json({ status: paymentStatus(afterCheck.status) });
   }
 
   const current = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } });

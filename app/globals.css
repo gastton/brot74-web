@@ -635,6 +635,21 @@ textarea.brot-input {
   .brot-cf-cta {
     grid-area: cta;
     align-self: start;
+  }  /* BRT-260: con Mercado Pago, MP a la izquierda (total + botón) y la
+     transferencia al alias a la derecha (separador, datos, "Ya transferí"). */
+  .brot-cf-body--mp {
+    grid-template-areas: "tot alt" "mp data" "mp cta";
+  }
+  .brot-cf-body--mp .brot-cf-mp {
+    grid-area: mp;
+    padding-top: 0 !important;
+  }
+  .brot-cf-body--mp .brot-cf-alt {
+    grid-area: alt;
+    align-self: end;
+  }
+  .brot-cf-body--mp .brot-cf-cta {
+    padding-top: 0 !important;
   }
 }
 .brot-vml { min-height: 44px; padding: 0; border: none; background: transparent; font-family: inherit; font-size: 14px; font-weight: 500; color: #0E233C; text-decoration: underline; text-decoration-color: #C8851A; text-underline-offset: 5px; text-decoration-thickness: 1.5px; cursor: pointer; white-space: nowrap; }

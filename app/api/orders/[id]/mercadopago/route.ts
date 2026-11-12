@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { FEATURE_FLAGS, isFeatureEnabled } from "@/lib/featureFlags";
 import { orderTokenMatches, readOrderIdAndToken } from "@/lib/orderToken";
+import { publicOrigin } from "@/lib/publicOrigin";
 import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
 import {
   MP_PAYMENT_TTL_MINUTES,
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       idempotencyKey: `brot74-order-${order.id}-${order.publicToken!.slice(0, 16)}`,
       total: order.total,
       items: order.items.map((i) => ({ title: i.product.name, quantity: i.quantity, unitPrice: i.unitPrice })),
-      returnUrl: `${req.nextUrl.origin}/confirmacion?order=${order.id}&pago=mp`,
+      returnUrl: `${publicOrigin(req)}/confirmacion?order=${order.id}&pago=mp`,
     });
 
     // Condicionado a que siga pendiente y sin link: si otra llamada ganó la

@@ -11,6 +11,7 @@ import HomeLanding, { type LandingStatus } from "@/components/home/HomeLanding";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 import PickupDateRow from "@/components/PickupDateRow";
 import NoSlotsScreen from "@/components/NoSlotsScreen";
+import { saveOrderReturn } from "@/lib/orderReturn";
 
 interface Slot {
   id: number | null;
@@ -320,12 +321,29 @@ function HomeContent({ landingStatus, mpCheckout }: { landingStatus: LandingStat
     // productos de atrás. Dejamos el modal montado hasta que la página
     // completa se reemplace sola.
     clearSavedCart();
+    window.location.href = `/confirmacion?order=${orderId}&status=pending${confirmationQuery(address)}`;
+  }
+
+  // Retiro, lugar y modo para la pantalla de confirmación.
+  function confirmationQuery(address?: string) {
     const retiro = [selectedSlot?.dayLabel, selectedSlot?.pickupTime].filter(Boolean).join(" · ");
-    const extra =
+    return (
       (retiro ? `&pickup=${encodeURIComponent(retiro)}` : "") +
       (address ? `&place=${encodeURIComponent(address)}` : selectedSlot?.location ? `&place=${encodeURIComponent(selectedSlot.location)}` : "") +
-      (selectedSlot?.deliveryMode === "delivery" ? "&mode=delivery" : "");
-    window.location.href = `/confirmacion?order=${orderId}&status=pending${extra}`;
+      (selectedSlot?.deliveryMode === "delivery" ? "&mode=delivery" : "")
+    );
+  }
+
+  // BRT-260: justo antes de salir a Mercado Pago. MP vuelve a /confirmacion
+  // solo con el número de pedido: el token y los datos de retiro quedan en el
+  // navegador para esa pantalla (lib/orderReturn.ts).
+  //
+  // Si el navegador no deja guardar (incógnito estricto), igual se sale a
+  // pagar: el webhook confirma el pago y la vuelta muestra el mensaje genérico.
+  // Frenar el pago por eso sería peor.
+  function handleLeaveForMp(orderId: number, token: string, address?: string) {
+    saveOrderReturn(orderId, { token, confirmationQuery: confirmationQuery(address) });
+    clearSavedCart();
   }
 
   /* ─── SLOTS VIEW ────────────────────────────────────────── */
@@ -466,6 +484,8 @@ function HomeContent({ landingStatus, mpCheckout }: { landingStatus: LandingStat
             onAdvanceToPayment={advanceToPaymentStep}
             onClose={closeCheckout}
             onSuccess={handleOrderSuccess}
+            mpCheckout={mpCheckout}
+            onLeaveForMp={handleLeaveForMp}
           />
         )}
 
