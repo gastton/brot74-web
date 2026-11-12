@@ -89,7 +89,7 @@ describe("POST /api/orders/[id]/payment-status (BRT-257)", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("responde pending mientras MP no acredita, y también si MP no responde", async () => {
+  it("responde pending mientras MP no acredita, si MP falla o si no se puede llegar a MP", async () => {
     const { order } = await mpOrderRow();
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
@@ -97,6 +97,9 @@ describe("POST /api/orders/[id]/payment-status (BRT-257)", () => {
     expect(await (await paymentStatus(...statusRequest(order.id, { token: TOKEN }))).json()).toEqual({ status: "pending" });
 
     fetchSpy.mockResolvedValueOnce(mpResponse({ message: "internal_error" }, 500));
+    expect(await (await paymentStatus(...statusRequest(order.id, { token: TOKEN }))).json()).toEqual({ status: "pending" });
+
+    fetchSpy.mockRejectedValueOnce(new TypeError("fetch failed"));
     expect(await (await paymentStatus(...statusRequest(order.id, { token: TOKEN }))).json()).toEqual({ status: "pending" });
 
     expect((await prisma.order.findUnique({ where: { id: order.id } }))?.status).toBe("pending");
