@@ -11,8 +11,9 @@ import { parseOrderReturn, readOrderReturnRaw } from "@/lib/orderReturn";
 // BRT-262/263: a la vuelta de Mercado Pago (?pago=mp) se consulta el estado
 // del pago (BRT-257). El cliente suele volver antes que el aviso de MP, así
 // que mientras siga pendiente se reintenta unas veces antes de mostrar "procesando".
+// unpaid = MP dice que no hubo pago (volvió sin pagar o se lo rechazaron);
 // error = no se pudo consultar (sin conexión); unknown = no hay token en este navegador.
-type MpState = "checking" | "approved" | "pending" | "rejected" | "error" | "unknown";
+type MpState = "checking" | "approved" | "pending" | "unpaid" | "rejected" | "error" | "unknown";
 const POLL_INTERVAL_MS = 2500;
 const POLL_ATTEMPTS = 6;
 /** Una consulta colgada no deja la pantalla trabada: se corta y cuenta como fallida. */
@@ -55,6 +56,8 @@ function useMpPaymentState(
       }
       if (cancelled) return;
       if (status === "approved" || status === "rejected") return setResult({ token: token!, round, state: status });
+      // Sin pago en MP: se confirma con una segunda consulta (por si el pago recién se acredita) y se muestra.
+      if (status === "unpaid" && attempt >= 1) return setResult({ token: token!, round, state: "unpaid" });
       if (attempt + 1 >= POLL_ATTEMPTS) {
         return setResult({ token: token!, round, state: status === "pending" ? "pending" : "error" });
       }
@@ -90,7 +93,7 @@ function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; label: s
 }
 
 /** Vuelve a pedir el link de pago (el mismo mientras no venza) y sale a MP. */
-function RetryMpButton({ orderId, token }: { orderId: string; token: string }) {
+function RetryMpButton({ orderId, token, primary }: { orderId: string; token: string; primary: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -118,7 +121,7 @@ function RetryMpButton({ orderId, token }: { orderId: string; token: string }) {
 
   return (
     <div className="mb-3">
-      <button type="button" onClick={retry} disabled={loading} className="brot-pill brot-pill--ghost">
+      <button type="button" onClick={retry} disabled={loading} className={primary ? "brot-pill" : "brot-pill brot-pill--ghost"}>
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ir a pagar con Mercado Pago"}
       </button>
       {error && <div className="text-center text-[13px] mt-[10px]" style={{ color: "#C0392B" }}>{error}</div>}
@@ -146,7 +149,8 @@ function ConfirmacionContent() {
   const isDelivery = (params.get("mode") ?? savedParams.get("mode")) === "delivery";
 
   const { state: mpState, checkAgain } = useMpPaymentState(orderId, isMp, saved?.token ?? null);
-  const showDetails = !isMp || mpState === "approved" || mpState === "pending" || mpState === "error" || mpState === "unknown";
+  const showDetails =
+    !isMp || mpState === "approved" || mpState === "pending" || mpState === "unpaid" || mpState === "error" || mpState === "unknown";
 
   let heading: React.ReactNode = <>Ya pediste<br />tu <span style={{ color: "#C8851A" }}>BROT</span></>;
   let message = "Cuando se acredite la transferencia, te confirmamos por WhatsApp.";
@@ -160,6 +164,9 @@ function ConfirmacionContent() {
     } else if (mpState === "pending") {
       heading = <>Tu pago se está<br /><span style={{ color: "#C8851A" }}>procesando</span></>;
       message = "Si ya pagaste, en unos minutos se acredita y te confirmamos por WhatsApp. Si no llegaste a pagar, podés hacerlo ahora; el pedido se cancela solo si no se paga a tiempo.";
+    } else if (mpState === "unpaid") {
+      heading = <>Todavía no<br /><span style={{ color: "#C8851A" }}>pagaste</span></>;
+      message = "El pago en Mercado Pago no se completó. Tu pedido está reservado: podés pagarlo ahora. Si no se paga a tiempo, se cancela solo.";
     } else if (mpState === "error") {
       heading = <>No pudimos ver<br />tu <span style={{ color: "#C8851A" }}>pago</span></>;
       message = "Parece que hay un problema de conexión. Si pagaste, no te preocupes: te confirmamos por WhatsApp cuando se acredite.";
@@ -213,8 +220,8 @@ function ConfirmacionContent() {
           )}
         </div>
 
-        {isMp && mpState === "pending" && orderId && saved && (
-          <RetryMpButton orderId={orderId} token={saved.token} />
+        {isMp && (mpState === "pending" || mpState === "unpaid") && orderId && saved && (
+          <RetryMpButton orderId={orderId} token={saved.token} primary={mpState === "unpaid"} />
         )}
 
         {isMp && mpState === "error" && (
@@ -223,7 +230,7 @@ function ConfirmacionContent() {
           </button>
         )}
 
-        <Link href="/" className="brot-pill no-underline">
+        <Link href="/" className={mpState === "unpaid" && isMp ? "brot-pill brot-pill--ghost no-underline" : "brot-pill no-underline"}>
           {isMp && mpState === "rejected" ? "Hacer un pedido nuevo" : "Volver al inicio"}
         </Link>
       </div>

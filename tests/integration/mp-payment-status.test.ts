@@ -89,11 +89,27 @@ describe("POST /api/orders/[id]/payment-status (BRT-257)", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("responde pending mientras MP no acredita, si MP falla o si no se puede llegar a MP", async () => {
+  it("responde unpaid si se volvió de MP sin pagar o con el pago rechazado, sin tocar el pedido", async () => {
+    const { order } = await mpOrderRow();
+
+    // Como responde MP de verdad: una orden sin pagar llega con status "created" y sin status_detail.
+    for (const overrides of [
+      { status: "created", status_detail: undefined, transactions: undefined, total_paid_amount: undefined },
+      { status: "failed", status_detail: "rejected" },
+    ]) {
+      fetchSpy.mockResolvedValueOnce(mpResponse(mpOrder(order.id, overrides)));
+      const res = await paymentStatus(...statusRequest(order.id, { token: TOKEN }));
+      expect(await res.json()).toEqual({ status: "unpaid" });
+    }
+
+    expect(await prisma.order.findUnique({ where: { id: order.id } })).toMatchObject({ status: "pending", mpPaymentId: null });
+  });
+
+  it("responde pending mientras MP procesa el pago, si MP falla o si no se puede llegar a MP", async () => {
     const { order } = await mpOrderRow();
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    fetchSpy.mockResolvedValueOnce(mpResponse(mpOrder(order.id, { status: "created", status_detail: "created" })));
+    fetchSpy.mockResolvedValueOnce(mpResponse(mpOrder(order.id, { status: "processing", status_detail: "in_process" })));
     expect(await (await paymentStatus(...statusRequest(order.id, { token: TOKEN }))).json()).toEqual({ status: "pending" });
 
     fetchSpy.mockResolvedValueOnce(mpResponse({ message: "internal_error" }, 500));

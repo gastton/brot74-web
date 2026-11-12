@@ -180,10 +180,12 @@ export async function getOrderPayment(mpOrderId: string): Promise<MpOrderPayment
   const data = ((await mpFetch(orderPath(mpOrderId))) ?? {}) as Record<string, unknown>;
   const id = str(data.id);
   const status = str(data.status);
-  const statusDetail = str(data.status_detail);
   // Sin estado no se puede decidir: error (el webhook responde 500 y MP
   // reintenta) en vez de tomarlo como "no pagado" y perder el aviso.
-  if (!id || !status || !statusDetail) throw new MercadoPagoError(200, "Respuesta sin id o estado");
+  // status_detail puede faltar: una orden recién creada y sin pagar llega solo
+  // con status "created".
+  if (!id || !status) throw new MercadoPagoError(200, "Respuesta sin id o estado");
+  const statusDetail = str(data.status_detail) ?? "";
   const transactions = (data.transactions ?? {}) as { payments?: unknown };
   const payments = Array.isArray(transactions.payments) ? transactions.payments : [];
   return {

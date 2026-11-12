@@ -167,6 +167,19 @@ describe("POST /api/payments/webhook: avisos que no confirman", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it("responde 200 sin confirmar el aviso de una orden creada y sin pagar (sin status_detail)", async () => {
+    const order = await mpPendingOrder();
+    fetchSpy.mockResolvedValue(
+      mpResponse({ id: MP_ORDER_ID, type: "online", status: "created", external_reference: String(order.id), total_amount: "2000.00" })
+    );
+
+    const res = await webhook(notification(MP_ORDER_ID));
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ outcome: "not_paid" });
+    expect((await orderRow(order.id))?.status).toBe("pending");
+  });
+
   it("no confirma si MP dice que la orden no está acreditada", async () => {
     const order = await mpPendingOrder();
     fetchSpy.mockResolvedValue(mpResponse(mpOrder({ status: "canceled", status_detail: "expired" }, String(order.id))));
