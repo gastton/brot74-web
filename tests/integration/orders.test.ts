@@ -74,6 +74,23 @@ describe("POST /api/orders", () => {
     return { res, product, slot, order };
   }
 
+  it("acepta el teléfono con código de área en sus formas habituales (0, 15, +54 9)", async () => {
+    for (const customerPhone of ["351 123 4567", "0351 15 123-4567", "+54 9 351 123 4567", "11 1234 5678"]) {
+      const { res } = await placeSingleOrder({ extra: { customerPhone } });
+      expect(res.status).toBe(200);
+    }
+  });
+
+  it("devuelve 400 sin crear el pedido ni tocar el stock si el teléfono no tiene código de área", async () => {
+    for (const customerPhone of ["4231234", "15 4231234", "15 4231 1234", "12345678", "351 123", "123456789012345"]) {
+      const { res, product, slot } = await placeSingleOrder({ extra: { customerPhone } });
+      expect(res.status).toBe(400);
+      expect((await res.json()).error).toMatch(/código de área/);
+      expect((await getStock(product.id, slot.id))?.reservedStock).toBe(0);
+    }
+    expect(await prisma.order.count()).toBe(0);
+  });
+
   it("en una fecha de delivery guarda la dirección del cliente", async () => {
     const { res, order } = await orderWithAddress("delivery", "  Av. Siempreviva 742, El Talar  ");
 

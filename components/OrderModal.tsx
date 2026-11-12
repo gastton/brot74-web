@@ -7,6 +7,7 @@ import QtyCapsule from "./QtyCapsule";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 import PickupDateRow from "./PickupDateRow";
 import ExitDialog from "./ExitDialog";
+import { INVALID_PHONE_MESSAGE, PHONE_EXAMPLE, isValidCustomerPhone } from "@/lib/whatsappLink";
 
 interface CartItem {
   id: number;
@@ -189,8 +190,8 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
     if (loading) return;
     setError("");
     if (!name.trim() || !phone.trim()) { setError("Nombre y teléfono son requeridos"); return; }
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 8 || digits.length > 15) { setError("El teléfono debe tener entre 8 y 15 dígitos"); return; }
+    // Con código de área: si no, no se le puede avisar por WhatsApp (mismo criterio que el servidor).
+    if (!isValidCustomerPhone(phone)) { setError(INVALID_PHONE_MESSAGE); return; }
     if (isDelivery && !address.trim()) { setError("La dirección de entrega es requerida"); return; }
     const id = await createOrder();
     if (id != null) onAdvanceToPayment();
@@ -549,7 +550,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
               <div className="flex flex-col gap-[6px]" style={{ marginTop: "10px" }}>
                 {[
                   { label: "Nombre y apellido", id: "name", type: "text", value: name, onChange: (v: string) => setName(v.replace(/[0-9]/g, "")), placeholder: "Juan Pérez", required: true },
-                  { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: "11 1234-5678", required: true },
+                  { label: "Teléfono (WhatsApp)", id: "phone", type: "tel", value: phone, onChange: (v: string) => setPhone(v), placeholder: `Ej: ${PHONE_EXAMPLE}`, required: true },
                   ...(isDelivery
                     ? [{ label: "Dirección de entrega", id: "address", type: "text", value: address, onChange: (v: string) => setAddress(v), placeholder: "Calle 1234, piso/depto, localidad", required: true }]
                     : []),
