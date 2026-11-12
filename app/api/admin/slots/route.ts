@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { sweepExpiredMpOrders } from "@/lib/expiredMpOrders";
 import { NEW_SLOT_STOCK } from "@/lib/productStock";
 import { isDeliveryMode } from "@/lib/deliveryMode";
 import { parseOrderCutoff } from "@/lib/deliverySlots";
@@ -8,6 +9,9 @@ import { parseOrderCutoff } from "@/lib/deliverySlots";
 export async function GET(req: NextRequest) {
   const session = await requireAdmin(req);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  // BRT-256: liberar el stock de pedidos de MP vencidos antes de leerlo.
+  await sweepExpiredMpOrders();
 
   const slots = await prisma.deliverySlot.findMany({
     orderBy: { date: "asc" },

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { isCutoffPassed } from "@/lib/deliverySlots";
+import { sweepExpiredMpOrders } from "@/lib/expiredMpOrders";
 
 /**
  * Fechas abiertas para pedir: activas, futuras, con el cierre sin vencer y con
@@ -7,6 +8,9 @@ import { isCutoffPassed } from "@/lib/deliverySlots";
  * y la landing (estado "Pedidos abiertos / cerrados", v59), así ambos coinciden.
  */
 export async function getOpenSlots(now: Date, limit = 2) {
+  // BRT-256: que un pedido de MP vencido no deje una fecha como "sin stock".
+  await sweepExpiredMpOrders();
+
   const slots = await prisma.deliverySlot.findMany({
     where: { active: true, date: { gte: now } },
     orderBy: { date: "asc" },
