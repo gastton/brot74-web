@@ -21,7 +21,9 @@ export function toWhatsAppNumber(phone: string): string | null {
   if (digits.length === 11 && digits.startsWith("9")) digits = digits.slice(1); // 9 de celular
   if (digits.startsWith("0")) digits = digits.slice(1); // 0 de larga distancia
   if (digits.length === 12) digits = stripLocal15(digits);
-  return digits.length === 10 ? `549${digits}` : null;
+  // Los códigos de área argentinos empiezan con 11, 2 o 3: un número que empieza
+  // con otro 1 (por ejemplo "15 4231 1234", celular local sin código) no sirve.
+  return /^(11|[23])\d+$/.test(digits) && digits.length === 10 ? `549${digits}` : null;
 }
 
 /**
@@ -37,6 +39,18 @@ function stripLocal15(digits: string): string {
   }
   return digits;
 }
+
+/**
+ * Teléfono del checkout: tiene que servir para WhatsApp (código de área +
+ * número; acepta 0, 15, +54 y 9). Lo validan el formulario y POST /api/orders,
+ * así el botón "Avisar por WhatsApp" del admin siempre tiene un número.
+ */
+export function isValidCustomerPhone(phone: unknown): boolean {
+  return typeof phone === "string" && toWhatsAppNumber(phone) !== null;
+}
+
+export const PHONE_EXAMPLE = "351 123 4567";
+export const INVALID_PHONE_MESSAGE = `Ingresá tu WhatsApp con código de área, por ejemplo ${PHONE_EXAMPLE}`;
 
 /** Link wa.me con el texto ya escrito, o null si el teléfono no sirve. */
 export function whatsAppLink(phone: string, text: string): string | null {
