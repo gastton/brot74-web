@@ -5,6 +5,7 @@ import { normalizeCartItems, MAX_PER_PRODUCT } from "@/lib/cartItems";
 import { isOrderingClosed } from "@/lib/deliverySlots";
 import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
 import { generateOrderToken } from "@/lib/orderToken";
+import { sweepExpiredMpOrders } from "@/lib/expiredMpOrders";
 
 class InsufficientStockError extends Error {
   constructor(public productId: number, public productName: string) {
@@ -22,6 +23,9 @@ export async function POST(req: NextRequest) {
   if (!allowed) {
     return tooManyRequestsResponse(resetAt, "Demasiados pedidos desde tu conexión. Probá de nuevo en un rato.");
   }
+
+  // BRT-256: liberar el stock de pedidos de MP vencidos antes de leerlo.
+  await sweepExpiredMpOrders();
 
   try {
     const body = await req.json();

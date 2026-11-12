@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import { sweepExpiredMpOrders } from "@/lib/expiredMpOrders";
 
 export async function GET(req: NextRequest) {
   const session = await requireAdmin(req);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  // BRT-256: liberar el stock de pedidos de MP vencidos antes de leerlo.
+  await sweepExpiredMpOrders();
 
   const slotId = req.nextUrl.searchParams.get("slotId");
 

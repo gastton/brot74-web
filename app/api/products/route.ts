@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hasDiscount } from "@/lib/pricing";
+import { sweepExpiredMpOrders } from "@/lib/expiredMpOrders";
 
 export async function GET(req: NextRequest) {
   const slotId = req.nextUrl.searchParams.get("slotId");
 
   if (slotId) {
+    // BRT-256: liberar el stock de pedidos de MP vencidos antes de leerlo.
+    await sweepExpiredMpOrders();
+
     const slotIdInt = parseInt(slotId);
 
     const products = await prisma.product.findMany({
