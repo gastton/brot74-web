@@ -55,7 +55,9 @@ export async function confirmMpOrder(mpOrderId: string): Promise<MpConfirmationR
   if (!Number.isInteger(orderId) || orderId <= 0) return reject("referencia inválida", log);
 
   const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order || order.paymentMethod !== "mp" || order.mpOrderId !== mpOrder.id) {
+  // Por mpOrderId (único) y no por paymentMethod: un pedido que se pasó a
+  // transferencia conserva su orden de MP, y si igual se pagó por MP se confirma.
+  if (!order || order.mpOrderId !== mpOrder.id) {
     return reject("la referencia no corresponde a un pedido con esta orden de MP", log);
   }
 
@@ -82,7 +84,7 @@ export async function confirmMpOrder(mpOrderId: string): Promise<MpConfirmationR
   try {
     const { count } = await prisma.order.updateMany({
       where: { id: order.id, status: "pending", mpOrderId: mpOrder.id },
-      data: { status: "paid", paidAt: new Date(), mpPaymentId: payment.id },
+      data: { status: "paid", paidAt: new Date(), mpPaymentId: payment.id, paymentMethod: "mp" },
     });
     if (count === 0) {
       // Otro aviso de la misma orden lo confirmó entre la lectura y el update.

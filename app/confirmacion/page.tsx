@@ -7,13 +7,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { CalendarIcon, PinIcon, TruckIcon } from "@/components/FlowIcons";
 import { parseOrderReturn, readOrderReturnRaw } from "@/lib/orderReturn";
+import { formatCurrency } from "@/lib/utils";
+import BankDetails from "@/components/BankDetails";
 
 // BRT-262/263: a la vuelta de Mercado Pago (?pago=mp) se consulta el estado
 // del pago (BRT-257). El cliente suele volver antes que el aviso de MP, así
 // que mientras siga pendiente se reintenta unas veces antes de mostrar "procesando".
 // unpaid = MP dice que no hubo pago (volvió sin pagar o se lo rechazaron);
 // error = no se pudo consultar (sin conexión); unknown = no hay token en este navegador.
-type MpState = "checking" | "approved" | "pending" | "unpaid" | "rejected" | "error" | "unknown";
+// transfer = el cliente eligió pagar por transferencia al alias (se confirma a mano).
+type MpState = "checking" | "approved" | "pending" | "unpaid" | "transfer" | "rejected" | "error" | "unknown";
 const POLL_INTERVAL_MS = 2500;
 const POLL_ATTEMPTS = 6;
 /** Una consulta colgada no deja la pantalla trabada: se corta y cuenta como fallida. */
@@ -30,11 +33,11 @@ function useMpPaymentState(
   orderId: string | null,
   enabled: boolean,
   token: string | null
-): { state: MpState; checkAgain: () => void } {
+): { state: MpState; total: number | null; checkAgain: () => void; markTransfer: (total: number) => void } {
   const hydrated = useHydrated();
   // round: cada "Consultar de nuevo" vuelve a arrancar las consultas.
   const [round, setRound] = useState(0);
-  const [result, setResult] = useState<{ token: string; round: number; state: MpState } | null>(null);
+  const [result, setResult] = useState<{ token: string; round: number; state: MpState; total?: number } | null>(null);
 
   useEffect(() => {
     if (!enabled || !orderId || !token) return;
@@ -43,6 +46,7 @@ function useMpPaymentState(
 
     async function check(attempt: number) {
       let status: string | null = null;
+      let total: number | undefined;
       try {
         const res = await fetch(`/api/orders/${encodeURIComponent(orderId!)}/payment-status`, {
           method: "POST",
@@ -50,12 +54,17 @@ function useMpPaymentState(
           body: JSON.stringify({ token }),
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
-        if (res.ok) status = (await res.json()).status ?? null;
+        if (res.ok) {
+          const data = await res.json();
+          status = data.status ?? null;
+          if (typeof data.total === "number") total = data.total;
+        }
       } catch {
         /* sin conexión o timeout: se reintenta */
       }
       if (cancelled) return;
       if (status === "approved" || status === "rejected") return setResult({ token: token!, round, state: status });
+      if (status === "transfer") return setResult({ token: token!, round, state: "transfer", total });
       // Sin pago en MP: se confirma con una segunda consulta (por si el pago recién se acredita) y se muestra.
       if (status === "unpaid" && attempt >= 1) return setResult({ token: token!, round, state: "unpaid" });
       if (attempt + 1 >= POLL_ATTEMPTS) {
@@ -72,12 +81,14 @@ function useMpPaymentState(
   }, [enabled, orderId, token, round]);
 
   const checkAgain = () => setRound((r) => r + 1);
-  if (!enabled) return { state: "unknown", checkAgain };
+  const markTransfer = (total: number) => token && setResult({ token, round, state: "transfer", total });
+  const base = { total: null, checkAgain, markTransfer };
+  if (!enabled) return { ...base, state: "unknown" };
   // Hasta leer el navegador no se sabe si hay token: se muestra "confirmando" (igual en servidor y cliente).
-  if (!hydrated) return { state: "checking", checkAgain };
-  if (!token) return { state: "unknown", checkAgain };
-  const current = result?.token === token && result.round === round ? result.state : "checking";
-  return { state: current, checkAgain };
+  if (!hydrated) return { ...base, state: "checking" };
+  if (!token) return { ...base, state: "unknown" };
+  const current = result?.token === token && result.round === round ? result : null;
+  return { ...base, state: current?.state ?? "checking", total: current?.total ?? null };
 }
 
 function InfoRow({ icon, label, value, last }: { icon: React.ReactNode; label: string; value: string; last?: boolean }) {
@@ -129,6 +140,43 @@ function RetryMpButton({ orderId, token, primary }: { orderId: string; token: st
   );
 }
 
+/** "¿No te alcanzó el saldo?": pasa el pedido a transferencia al alias (sin vencimiento). */
+function SwitchToTransferButton({ orderId, token, onDone }: { orderId: string; token: string; onDone: (total: number) => void }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function switchToTransfer() {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/transfer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && typeof data.total === "number") {
+        onDone(data.total);
+        return;
+      }
+      setError(data.error ?? "No pudimos cambiar el pago. Probá de nuevo.");
+    } catch {
+      setError("Error de conexión. Probá de nuevo.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="mt-[10px]">
+      <button type="button" onClick={switchToTransfer} disabled={loading} className="brot-pill brot-pill--ghost">
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "¿No te alcanzó el saldo? Pagá por transferencia"}
+      </button>
+      {error && <div className="text-center text-[13px] mt-[10px]" style={{ color: "#C0392B" }}>{error}</div>}
+    </div>
+  );
+}
+
 function ConfirmacionContent() {
   const params  = useSearchParams();
   const orderId = params.get("order");
@@ -148,9 +196,9 @@ function ConfirmacionContent() {
   const place   = params.get("place") ?? savedParams.get("place");
   const isDelivery = (params.get("mode") ?? savedParams.get("mode")) === "delivery";
 
-  const { state: mpState, checkAgain } = useMpPaymentState(orderId, isMp, saved?.token ?? null);
+  const { state: mpState, total, checkAgain, markTransfer } = useMpPaymentState(orderId, isMp, saved?.token ?? null);
   const showDetails =
-    !isMp || mpState === "approved" || mpState === "pending" || mpState === "error" || mpState === "unknown";
+    !isMp || mpState === "approved" || mpState === "pending" || mpState === "transfer" || mpState === "error" || mpState === "unknown";
 
   let heading: React.ReactNode = <>Ya pediste<br />tu <span style={{ color: "#C8851A" }}>BROT</span></>;
   let message = "Cuando se acredite la transferencia, te confirmamos por WhatsApp.";
@@ -167,6 +215,9 @@ function ConfirmacionContent() {
     } else if (mpState === "unpaid") {
       heading = <>Todavía no<br /><span style={{ color: "#C8851A" }}>pagaste</span></>;
       message = "Tu pedido está reservado, pero el pago en Mercado Pago no se completó.";
+    } else if (mpState === "transfer") {
+      heading = <>Pagá por<br /><span style={{ color: "#C8851A" }}>transferencia</span></>;
+      message = "Tu pedido está reservado. Transferí el total al alias y, cuando llegue, te confirmamos por WhatsApp.";
     } else if (mpState === "error") {
       heading = <>No pudimos ver<br />tu <span style={{ color: "#C8851A" }}>pago</span></>;
       message = "Parece que hay un problema de conexión. Si pagaste, no te preocupes: te confirmamos por WhatsApp cuando se acredite.";
@@ -237,8 +288,26 @@ function ConfirmacionContent() {
               {orderId && saved && (
                 <div className="mt-[16px]">
                   <RetryMpButton orderId={orderId} token={saved.token} primary />
+                  <SwitchToTransferButton orderId={orderId} token={saved.token} onDone={markTransfer} />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Pagar por transferencia: total y datos del alias, como en el checkout. */}
+          {isMp && mpState === "transfer" && (
+            <div className="mt-[20px]">
+              {total != null && (
+                <div style={{ padding: "4px 0 16px", borderBottom: "1px solid #0E233C" }}>
+                  <div className="brot-mlabel" style={{ fontWeight: 500 }}>Total a transferir</div>
+                  <div className="leading-none mt-[8px]" style={{ fontSize: "44px", fontWeight: 500, letterSpacing: "-.03em", color: "#C8851A", fontVariantNumeric: "tabular-nums" }}>
+                    {formatCurrency(total)}
+                  </div>
+                </div>
+              )}
+              <div className="mt-[6px]">
+                <BankDetails />
+              </div>
             </div>
           )}
 

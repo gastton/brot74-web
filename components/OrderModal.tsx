@@ -7,6 +7,7 @@ import QtyCapsule from "./QtyCapsule";
 import { MAX_PER_PRODUCT } from "@/lib/cartItems";
 import PickupDateRow from "./PickupDateRow";
 import ExitDialog from "./ExitDialog";
+import BankDetails from "./BankDetails";
 
 interface CartItem {
   id: number;
@@ -105,8 +106,6 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
   // se armaba el carrito).
   const [orderTotal, setOrderTotal] = useState<number | null>(null);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-  const [aliasCopied, setAliasCopied] = useState(false); // feedback transitorio del botón (1.4s)
-  const [cvuCopied, setCvuCopied] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastText, setToastText] = useState("Alias copiado");
 
@@ -126,10 +125,6 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
   }, [step]);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const CVU     = process.env.NEXT_PUBLIC_CVU     ?? "";
-  const ALIAS   = process.env.NEXT_PUBLIC_ALIAS   ?? "";
-  const TITULAR = process.env.NEXT_PUBLIC_TITULAR ?? "";
-  const CUIT    = process.env.NEXT_PUBLIC_CUIT    ?? "";
 
   // v49: la fecha de retiro se muestra solo en "Tu pedido" con productos.
   const showDateRow = step === "form" && items.length > 0;
@@ -212,20 +207,6 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
     toastTimeoutRef.current = setTimeout(() => setToastVisible(false), 1600);
   }
 
-  function handleCopyAlias() {
-    navigator.clipboard?.writeText(ALIAS).catch(() => {});
-    setAliasCopied(true);
-    setTimeout(() => setAliasCopied(false), 1400);
-    showToast("Alias copiado");
-  }
-
-  function handleCopyCvu() {
-    navigator.clipboard?.writeText(CVU).catch(() => {});
-    setCvuCopied(true);
-    setTimeout(() => setCvuCopied(false), 1400);
-    showToast("CVU copiado");
-  }
-
   // "¡Listo!": el pedido ya existe (se creó con "Pagar"), acá solo se
   // pasa a la confirmación.
   function handleYaPague() {
@@ -277,49 +258,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
     }
   }
 
-  // Datos bancarios — orden: Titular, CUIT/CUIL, Alias, CVU. Copiar solo en Alias y CVU.
-  const bankData = (
-    <>
-    {TITULAR && (
-      <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
-        <div className="flex-1 min-w-0">
-          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Titular</div>
-          <div className="text-[16px] text-navy mt-[2px] break-words">{TITULAR}</div>
-        </div>
-      </div>
-    )}
-    {CUIT && (
-      <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
-        <div className="flex-1 min-w-0">
-          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CUIT / CUIL</div>
-          <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums" }}>{CUIT}</div>
-        </div>
-      </div>
-    )}
-    {ALIAS && (
-      <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: CVU ? "1px solid rgba(14,35,60,.10)" : "none" }}>
-        <div className="flex-1 min-w-0">
-          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Alias</div>
-          <div className="text-[18px] text-navy mt-[2px] break-all">{ALIAS}</div>
-        </div>
-        <button type="button" onClick={handleCopyAlias} className="brot-ghost brot-ghost--xs">
-          {aliasCopied ? "Copiado" : "Copiar"}
-        </button>
-      </div>
-    )}
-    {CVU && (
-      <div className="flex items-center gap-2" style={{ padding: "10px 0" }}>
-        <div className="flex-1 min-w-0">
-          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CVU</div>
-          <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".03em" }}>{CVU}</div>
-        </div>
-        <button type="button" onClick={handleCopyCvu} className="brot-ghost brot-ghost--xs">
-          {cvuCopied ? "Copiado" : "Copiar"}
-        </button>
-      </div>
-    )}
-    </>
-  );
+  const bankData = <BankDetails onCopied={showToast} />;
 
   return (
     <div className="brot-co-backdrop fixed inset-0 z-50 flex justify-center">
