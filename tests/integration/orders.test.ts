@@ -82,7 +82,7 @@ describe("POST /api/orders", () => {
   });
 
   it("devuelve 400 sin crear el pedido ni tocar el stock si el teléfono no tiene código de área", async () => {
-    for (const customerPhone of ["4231234", "15 4231234", "12345678", "351 123", "123456789012345"]) {
+    for (const customerPhone of ["4231234", "15 4231234", "15 4231 1234", "12345678", "351 123", "123456789012345"]) {
       const { res, product, slot } = await placeSingleOrder({ extra: { customerPhone } });
       expect(res.status).toBe(400);
       expect((await res.json()).error).toMatch(/código de área/);
