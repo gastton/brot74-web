@@ -34,6 +34,10 @@ interface OrderModalProps {
   onAdvanceToPayment: () => void;
   onClose: (clearCart?: boolean) => void;
   onSuccess: (orderId: number, address?: string) => void;
+  // BRT-260: con el toggle mpCheckout prendido, la pantalla de pago ofrece
+  // Mercado Pago como opción principal y la transferencia al alias abajo.
+  mpCheckout: boolean;
+  onLeaveForMp: (orderId: number, token: string, address?: string) => void;
 }
 
 const MODAL_STYLE = {
@@ -85,7 +89,7 @@ function saveContact(name: string, phone: string) {
   }
 }
 
-export default function OrderModal({ items, slotId, slotDate, pickupTime, isDelivery, step, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess }: OrderModalProps) {
+export default function OrderModal({ items, slotId, slotDate, pickupTime, isDelivery, step, onRemoveItem, onChangeQuantity, canAddMore, onAdvanceToPayment, onClose, onSuccess, mpCheckout, onLeaveForMp }: OrderModalProps) {
   const [name, setName]       = useState(() => loadSavedContact().name);
   const [phone, setPhone]     = useState(() => loadSavedContact().phone);
   const [address, setAddress] = useState("");
@@ -93,6 +97,9 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
   const [error, setError]     = useState("");
   const [orderId, setOrderId] = useState<number | null>(null);
   const [orderSignature, setOrderSignature] = useState("");
+  // Token del pedido (BRT-251): lo pide el link de pago de MP y, a la vuelta, el estado del pago.
+  const [orderToken, setOrderToken] = useState<string | null>(null);
+  const [mpLoading, setMpLoading] = useState(false);
   // Total que calculó el servidor al crear el pedido: es el que hay que
   // transferir (puede diferir del calculado acá si un precio cambió mientras
   // se armaba el carrito).
@@ -150,6 +157,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
         return null;
       }
       setOrderId(data.orderId);
+      setOrderToken(typeof data.token === "string" ? data.token : null);
       setOrderTotal(typeof data.total === "number" ? data.total : null);
       setOrderSignature(signature);
       saveContact(name.trim(), phone.trim());
@@ -220,6 +228,82 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
     onSuccess(orderId, isDelivery ? address.trim() : undefined);
   }
 
+  // BRT-260: "Pagar con Mercado Pago". Pide el link de pago del pedido ya
+  // creado y sale a MP; a la vuelta, /confirmacion muestra el estado del pago.
+  async function handlePayMp() {
+    if (orderId == null || orderToken == null || mpLoading || successScheduledRef.current) return;
+    if (orderSignature !== currentSignature()) {
+      setError("Tu pedido cambió. Volvé atrás y tocá Pagar de nuevo.");
+      return;
+    }
+    setError("");
+    setMpLoading(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/mercadopago`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: orderToken }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || typeof data.checkoutUrl !== "string") {
+        setError(data.error ?? "No pudimos generar el link de pago. Probá de nuevo o pagá por transferencia.");
+        setMpLoading(false);
+        return;
+      }
+      successScheduledRef.current = true;
+      onLeaveForMp(orderId, orderToken, isDelivery ? address.trim() : undefined);
+      // Navegación dura a MP: el modal queda montado (con el spinner) hasta que la página se reemplaza.
+      window.location.href = data.checkoutUrl;
+    } catch {
+      setError("Error de conexión. Intentá de nuevo.");
+      setMpLoading(false);
+    }
+  }
+
+  // Datos bancarios — orden: Titular, CUIT/CUIL, Alias, CVU. Copiar solo en Alias y CVU.
+  const bankData = (
+    <>
+    {TITULAR && (
+      <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
+        <div className="flex-1 min-w-0">
+          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Titular</div>
+          <div className="text-[16px] text-navy mt-[2px] break-words">{TITULAR}</div>
+        </div>
+      </div>
+    )}
+    {CUIT && (
+      <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
+        <div className="flex-1 min-w-0">
+          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CUIT / CUIL</div>
+          <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums" }}>{CUIT}</div>
+        </div>
+      </div>
+    )}
+    {ALIAS && (
+      <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: CVU ? "1px solid rgba(14,35,60,.10)" : "none" }}>
+        <div className="flex-1 min-w-0">
+          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Alias</div>
+          <div className="text-[18px] text-navy mt-[2px] break-all">{ALIAS}</div>
+        </div>
+        <button type="button" onClick={handleCopyAlias} className="brot-ghost brot-ghost--xs">
+          {aliasCopied ? "Copiado" : "Copiar"}
+        </button>
+      </div>
+    )}
+    {CVU && (
+      <div className="flex items-center gap-2" style={{ padding: "10px 0" }}>
+        <div className="flex-1 min-w-0">
+          <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CVU</div>
+          <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".03em" }}>{CVU}</div>
+        </div>
+        <button type="button" onClick={handleCopyCvu} className="brot-ghost brot-ghost--xs">
+          {cvuCopied ? "Copiado" : "Copiar"}
+        </button>
+      </div>
+    )}
+    </>
+  );
+
   return (
     <div className="brot-co-backdrop fixed inset-0 z-50 flex justify-center">
       {/* Backdrop */}
@@ -243,7 +327,11 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
           <div className="flex items-start justify-between gap-[14px]" style={{ marginTop: showDateRow ? "16px" : 0 }}>
             <h3 className="brot-h brot-h--modal">
               {step === "payment" ? (
-                <>Pagá por<br /><span style={{ color: "#C8851A" }}>transferencia</span></>
+                mpCheckout ? (
+                  <>Pagá tu<br /><span style={{ color: "#C8851A" }}>pedido</span></>
+                ) : (
+                  <>Pagá por<br /><span style={{ color: "#C8851A" }}>transferencia</span></>
+                )
               ) : (
                 <span className="whitespace-nowrap">Tu <span style={{ color: "#C8851A" }}>pedido</span></span>
               )}
@@ -261,7 +349,63 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
         </div>
 
         {/* ── Pantalla de pago (step = payment) ── */}
-        {step === "payment" ? (
+        {step === "payment" && mpCheckout ? (
+          /* BRT-260/261: Mercado Pago como opción principal; la transferencia al alias, abajo
+             (en 900px+, MP a la izquierda y el alias a la derecha: ver globals.css). */
+          <div className="brot-cf-body brot-cf-body--mp flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[6px] pb-6">
+            <div className="brot-cf-tot text-center" style={{ padding: "22px 0 20px", borderBottom: "1px solid #0E233C" }}>
+              <div className="brot-mlabel" style={{ fontWeight: 500 }}>
+                {orderId != null ? `Pedido #${orderId} · total` : "Total"}
+              </div>
+              <div className="brot-cf-tot-amount leading-none mt-[10px]" style={{ fontSize: "56px", fontWeight: 500, letterSpacing: "-.03em", color: "#C8851A", fontVariantNumeric: "tabular-nums" }}>
+                {formatCurrency(orderTotal ?? total)}
+              </div>
+            </div>
+
+            <div className="brot-cf-mp" style={{ paddingTop: "22px" }}>
+              <button
+                type="button"
+                onClick={handlePayMp}
+                disabled={mpLoading || loading || orderToken == null}
+                className="brot-pill"
+              >
+                {mpLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Pagar con Mercado Pago"}
+              </button>
+              <p className="text-[14px] text-stone m-0 text-center" style={{ marginTop: "10px" }}>
+                Con el dinero de tu cuenta de Mercado Pago. Se confirma al instante.
+              </p>
+              {error && (
+                <div className="text-center text-[13px]" style={{ color: "#C0392B", marginTop: "10px" }}>
+                  {error}
+                </div>
+              )}
+            </div>
+
+            <div className="brot-cf-alt flex items-center gap-3" style={{ marginTop: "26px" }}>
+              <div className="flex-1" style={{ borderTop: "1px solid rgba(14,35,60,.16)" }} />
+              <span className="brot-mlabel" style={{ fontWeight: 500 }}>o transferí al alias</span>
+              <div className="flex-1" style={{ borderTop: "1px solid rgba(14,35,60,.16)" }} />
+            </div>
+
+            <div className="brot-cf-data" style={{ marginTop: "6px" }}>
+              {bankData}
+              <p className="text-[15px] text-stone m-0 italic" style={{ marginTop: "14px" }}>
+                Transferí desde tu banco o billetera y, cuando termines, tocá el botón de abajo. Lo confirmamos nosotros.
+              </p>
+            </div>
+
+            <div className="brot-cf-cta" style={{ marginTop: "auto", paddingTop: "22px" }}>
+              <button
+                type="button"
+                onClick={handleYaPague}
+                disabled={loading || mpLoading}
+                className="brot-pill brot-pill--ghost"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Ya transferí"}
+              </button>
+            </div>
+          </div>
+        ) : step === "payment" ? (
           <div className="brot-cf-body flex flex-col flex-1 px-5 min-[900px]:px-[30px] pt-[6px] pb-6">
             {/* Total a transferir — ámbar, 56px/500, filete navy abajo */}
             <div className="brot-cf-tot text-center" style={{ marginTop: "auto", padding: "22px 0 20px", borderBottom: "1px solid #0E233C" }}>
@@ -275,44 +419,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
 
             {/* Datos bancarios — orden: Titular, CUIT/CUIL, Alias, CVU. Copiar solo en Alias y CVU. */}
             <div className="brot-cf-data" style={{ marginTop: "6px" }}>
-              {TITULAR && (
-                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Titular</div>
-                    <div className="text-[16px] text-navy mt-[2px] break-words">{TITULAR}</div>
-                  </div>
-                </div>
-              )}
-              {CUIT && (
-                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: "1px solid rgba(14,35,60,.10)" }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CUIT / CUIL</div>
-                    <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums" }}>{CUIT}</div>
-                  </div>
-                </div>
-              )}
-              {ALIAS && (
-                <div className="flex items-center gap-2" style={{ padding: "10px 0", borderBottom: CVU ? "1px solid rgba(14,35,60,.10)" : "none" }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>Alias</div>
-                    <div className="text-[18px] text-navy mt-[2px] break-all">{ALIAS}</div>
-                  </div>
-                  <button type="button" onClick={handleCopyAlias} className="brot-ghost brot-ghost--xs">
-                    {aliasCopied ? "Copiado" : "Copiar"}
-                  </button>
-                </div>
-              )}
-              {CVU && (
-                <div className="flex items-center gap-2" style={{ padding: "10px 0" }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="brot-mlabel brot-mlabel-amber" style={{ fontWeight: 500 }}>CVU</div>
-                    <div className="text-[16px] text-navy mt-[2px] break-all" style={{ fontVariantNumeric: "tabular-nums", letterSpacing: ".03em" }}>{CVU}</div>
-                  </div>
-                  <button type="button" onClick={handleCopyCvu} className="brot-ghost brot-ghost--xs">
-                    {cvuCopied ? "Copiado" : "Copiar"}
-                  </button>
-                </div>
-              )}
+              {bankData}
               <p className="text-[15px] text-stone m-0 italic" style={{ marginTop: "14px" }}>
                 Transferí desde tu banco o billetera y, cuando termines, tocá el botón de abajo.
               </p>
@@ -502,7 +609,7 @@ export default function OrderModal({ items, slotId, slotDate, pickupTime, isDeli
           // nada elegido, pero no se prepara hasta que llegue la transferencia.
           <ExitDialog
             title="¿Salir sin terminar?"
-            body={`Tu pedido #${orderId} ya quedó registrado, pero no lo preparamos hasta que llegue la transferencia.`}
+            body={`Tu pedido #${orderId} ya quedó registrado, pero no lo preparamos hasta que ${mpCheckout ? "se acredite el pago" : "llegue la transferencia"}.`}
             stayLabel="Volver al pago"
             leaveLabel="Salir"
             onStay={() => setShowCloseConfirm(false)}
