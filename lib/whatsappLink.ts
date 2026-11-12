@@ -38,6 +38,18 @@ function stripLocal15(digits: string): string {
   return digits;
 }
 
+/**
+ * Teléfono del checkout: tiene que servir para WhatsApp (código de área +
+ * número; acepta 0, 15, +54 y 9). Lo validan el formulario y POST /api/orders,
+ * así el botón "Avisar por WhatsApp" del admin siempre tiene un número.
+ */
+export function isValidCustomerPhone(phone: unknown): boolean {
+  return typeof phone === "string" && toWhatsAppNumber(phone) !== null;
+}
+
+export const PHONE_EXAMPLE = "351 123 4567";
+export const INVALID_PHONE_MESSAGE = `Ingresá tu WhatsApp con código de área, por ejemplo ${PHONE_EXAMPLE}`;
+
 /** Link wa.me con el texto ya escrito, o null si el teléfono no sirve. */
 export function whatsAppLink(phone: string, text: string): string | null {
   const number = toWhatsAppNumber(phone);

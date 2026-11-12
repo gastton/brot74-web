@@ -5,6 +5,7 @@ import { normalizeCartItems, MAX_PER_PRODUCT } from "@/lib/cartItems";
 import { isOrderingClosed } from "@/lib/deliverySlots";
 import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
 import { generateOrderToken } from "@/lib/orderToken";
+import { INVALID_PHONE_MESSAGE, isValidCustomerPhone } from "@/lib/whatsappLink";
 import { sweepExpiredMpOrders } from "@/lib/expiredMpOrders";
 
 class InsufficientStockError extends Error {
@@ -33,6 +34,10 @@ export async function POST(req: NextRequest) {
 
     if (!customerName || !customerPhone || !deliverySlotId) {
       return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
+
+    if (!isValidCustomerPhone(customerPhone)) {
+      return NextResponse.json({ error: INVALID_PHONE_MESSAGE }, { status: 400 });
     }
 
     const items = normalizeCartItems(rawItems);
