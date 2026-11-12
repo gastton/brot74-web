@@ -333,7 +333,20 @@ function ConfirmacionContent() {
           </button>
         )}
 
-        <Link href="/" className={mpState === "unpaid" && isMp ? "brot-pill brot-pill--ghost no-underline" : "brot-pill no-underline"}>
+        {/* Transferencia: "Ya transferí" cierra como en el checkout (confirmación de siempre, sin ?pago=mp). */}
+        {isMp && mpState === "transfer" && orderId && (
+          <Link
+            href={`/confirmacion?order=${encodeURIComponent(orderId)}&status=pending${saved?.confirmationQuery ?? ""}`}
+            className="brot-pill no-underline mb-3"
+          >
+            Ya transferí
+          </Link>
+        )}
+
+        <Link
+          href="/"
+          className={isMp && (mpState === "unpaid" || mpState === "transfer") ? "brot-pill brot-pill--ghost no-underline" : "brot-pill no-underline"}
+        >
           {isMp && mpState === "rejected" ? "Hacer un pedido nuevo" : "Volver al inicio"}
         </Link>
       </div>
