@@ -24,12 +24,12 @@ const PAYMENT_STATUS_RATE_LIMIT = { max: 120, windowMs: 60 * 60 * 1000 };
 const NOT_FOUND = { error: "Pedido no encontrado" };
 
 /**
- * approved = pago confirmado; pending = todavía no confirmado (puede estar
- * acreditándose, o es un pedido por alias); unpaid = MP dice que no hubo pago
- * (volvió de MP sin pagar, o el pago fue rechazado); rejected = el pedido se
- * canceló (venció o lo canceló el admin).
+ * approved = pago confirmado; pending = MP todavía lo está procesando;
+ * unpaid = MP dice que no hubo pago (volvió sin pagar, o se lo rechazaron);
+ * transfer = pendiente, se paga por transferencia al alias (se confirma a
+ * mano); rejected = el pedido se canceló (venció o lo canceló el admin).
  */
-type PaymentStatus = "approved" | "pending" | "unpaid" | "rejected";
+type PaymentStatus = "approved" | "pending" | "unpaid" | "transfer" | "rejected";
 
 /**
  * Estados de la orden de MP sin un pago en curso: creada sin intentos, pago
@@ -38,10 +38,16 @@ type PaymentStatus = "approved" | "pending" | "unpaid" | "rejected";
  */
 const MP_UNPAID_STATUSES = new Set(["created", "failed", "canceled", "expired"]);
 
-function paymentStatus(orderStatus: string): PaymentStatus {
-  if (PAID_STATUSES.includes(orderStatus)) return "approved";
-  if (orderStatus === "cancelled") return "rejected";
-  return "pending";
+function paymentStatus(order: { status: string; paymentMethod: string }): PaymentStatus {
+  if (PAID_STATUSES.includes(order.status)) return "approved";
+  if (order.status === "cancelled") return "rejected";
+  return order.paymentMethod === "alias" ? "transfer" : "pending";
+}
+
+/** El total va solo para "transfer": es lo que hay que transferir. */
+function statusResponse(order: { status: string; paymentMethod: string; total: number }) {
+  const status = paymentStatus(order);
+  return NextResponse.json(status === "transfer" ? { status, total: order.total } : { status });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -59,7 +65,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(NOT_FOUND, { status: 404 });
   }
 
-  if (order.status === "pending" && order.paymentMethod === "mp" && order.mpOrderId) {
+  // También para un pedido que se pasó a transferencia: si igual se pagó por MP, se confirma acá.
+  if (order.status === "pending" && order.mpOrderId) {
     // Primero confirmar (un pago de último momento le gana a la cancelación por vencido)...
     let mpUnpaid = false;
     try {
@@ -76,11 +83,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // ...y después cancelar si venció sin pagarse (BRT-256).
     await sweepExpiredMpOrders();
 
-    const afterCheck = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } });
-    if (afterCheck.status === "pending" && mpUnpaid) return NextResponse.json({ status: "unpaid" });
-    return NextResponse.json({ status: paymentStatus(afterCheck.status) });
+    const afterCheck = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+    if (afterCheck.status === "pending" && afterCheck.paymentMethod === "mp" && mpUnpaid) {
+      return NextResponse.json({ status: "unpaid" });
+    }
+    return statusResponse(afterCheck);
   }
 
-  const current = await prisma.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } });
-  return NextResponse.json({ status: paymentStatus(current.status) });
+  return statusResponse(order);
 }

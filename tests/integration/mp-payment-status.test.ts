@@ -153,12 +153,12 @@ describe("POST /api/orders/[id]/payment-status (BRT-257)", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("un pedido por alias responde pending sin consultar a MP", async () => {
+  it("un pedido por alias responde transfer con el total, sin consultar a MP", async () => {
     const { order } = await mpOrderRow({ paymentMethod: "alias", mpOrderId: null });
 
     const res = await paymentStatus(...statusRequest(order.id, { token: TOKEN }));
 
-    expect(await res.json()).toEqual({ status: "pending" });
+    expect(await res.json()).toEqual({ status: "transfer", total: 2000 });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
