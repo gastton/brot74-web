@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { FEATURE_FLAGS, isFeatureEnabled } from "@/lib/featureFlags";
-import { orderTokenMatches } from "@/lib/orderToken";
+import { orderTokenMatches, readOrderIdAndToken } from "@/lib/orderToken";
 import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
 import {
   MP_PAYMENT_TTL_MINUTES,
@@ -30,14 +30,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return tooManyRequestsResponse(resetAt, "Demasiados intentos de pago desde tu conexión. Probá de nuevo en un rato.");
   }
 
-  const { id } = await params;
-  const orderId = Number(id);
-  if (!Number.isInteger(orderId) || orderId <= 0) {
-    return NextResponse.json(NOT_FOUND, { status: 404 });
-  }
-
-  const body = await req.json().catch(() => null);
-  const token = body && typeof body === "object" ? (body as { token?: unknown }).token : undefined;
+  const request = await readOrderIdAndToken(req, params);
+  if (!request) return NextResponse.json(NOT_FOUND, { status: 404 });
+  const { orderId, token } = request;
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },

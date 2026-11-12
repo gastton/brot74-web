@@ -4,7 +4,7 @@ import { sweepExpiredMpOrders } from "@/lib/expiredMpOrders";
 import { MercadoPagoError } from "@/lib/mercadoPago";
 import { confirmMpOrder } from "@/lib/mpPaymentConfirmation";
 import { PAID_STATUSES } from "@/lib/orderStatus";
-import { orderTokenMatches } from "@/lib/orderToken";
+import { orderTokenMatches, readOrderIdAndToken } from "@/lib/orderToken";
 import { checkRateLimit, getClientIp, tooManyRequestsResponse } from "@/lib/rateLimit";
 
 // BRT-257: estado de pago de un pedido, para la pantalla de vuelta desde MP.
@@ -38,14 +38,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return tooManyRequestsResponse(resetAt, "Demasiadas consultas desde tu conexión. Probá de nuevo en un rato.");
   }
 
-  const { id } = await params;
-  const orderId = Number(id);
-  if (!Number.isInteger(orderId) || orderId <= 0) {
-    return NextResponse.json(NOT_FOUND, { status: 404 });
-  }
-
-  const body = await req.json().catch(() => null);
-  const token = body && typeof body === "object" ? (body as { token?: unknown }).token : undefined;
+  const request = await readOrderIdAndToken(req, params);
+  if (!request) return NextResponse.json(NOT_FOUND, { status: 404 });
+  const { orderId, token } = request;
 
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order || !orderTokenMatches(order.publicToken, token)) {

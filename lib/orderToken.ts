@@ -15,3 +15,19 @@ export function orderTokenMatches(stored: string | null, given: unknown): boolea
   const b = Buffer.from(given);
   return a.length === b.length && timingSafeEqual(a, b);
 }
+
+/**
+ * ID del pedido (de la URL) y token (del body) de las rutas públicas de un
+ * pedido: link de pago (BRT-251) y estado de pago (BRT-257). null si el ID no
+ * es válido; el token puede venir vacío y se rechaza con orderTokenMatches.
+ */
+export async function readOrderIdAndToken(
+  req: Request,
+  params: Promise<{ id: string }>
+): Promise<{ orderId: number; token: unknown } | null> {
+  const orderId = Number((await params).id);
+  if (!Number.isInteger(orderId) || orderId <= 0) return null;
+  const body = await req.json().catch(() => null);
+  const token = body && typeof body === "object" ? (body as { token?: unknown }).token : undefined;
+  return { orderId, token };
+}
