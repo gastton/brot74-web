@@ -40,12 +40,24 @@ export function mpWebhookSecret(): string {
 // ── BRT-251: orden de Checkout Pro (link de pago) ─────────────────────────
 
 /**
- * Tipos de medio de pago que se excluyen: queda solo el dinero en cuenta de
- * MP (que no se puede excluir). Sin tarjetas por los contracargos y sin
- * efectivo (Pago Fácil/Rapipago). Son los tipos activos en Argentina según
- * GET /v1/payment_methods.
+ * Tipos de medio de pago que se excluyen: queda solo el dinero en cuenta
+ * (account_money). Sin tarjetas por los contracargos, sin efectivo (Pago
+ * Fácil/Rapipago) y sin Mercado Crédito (cuotas sin tarjeta, digital_currency).
+ *
+ * Es la lista completa de tipos que acepta la API de Orders menos
+ * account_money (la devuelve MP en el error de un tipo inválido). GET
+ * /v1/payment_methods no lista digital_currency, así que no alcanza como
+ * fuente: en producción aparecía Mercado Crédito.
  */
-export const MP_NOT_ALLOWED_PAYMENT_TYPES = ["credit_card", "debit_card", "prepaid_card", "ticket"] as const;
+export const MP_NOT_ALLOWED_PAYMENT_TYPES = [
+  "credit_card",
+  "debit_card",
+  "prepaid_card",
+  "ticket",
+  "atm",
+  "bank_transfer",
+  "digital_currency",
+] as const;
 
 /** Cuánto dura el link de pago. Pasado esto, BRT-256 cancela el pedido y libera el stock. */
 export const MP_PAYMENT_TTL_MINUTES = 30;

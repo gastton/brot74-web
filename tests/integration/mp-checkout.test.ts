@@ -108,9 +108,15 @@ describe("POST /api/orders/[id]/mercadopago (BRT-251)", () => {
       items: [{ title: "Campo", quantity: 2, unit_price: "1000.00" }],
       config: {
         online: { success_url: `http://localhost/confirmacion?order=${order.id}&pago=mp`, auto_return: "approved" },
-        payment_method: { not_allowed_types: ["credit_card", "debit_card", "prepaid_card", "ticket"] },
+        // Todo menos account_money: sin tarjetas, efectivo ni Mercado Crédito (digital_currency).
+        payment_method: {
+          not_allowed_types: ["credit_card", "debit_card", "prepaid_card", "ticket", "atm", "bank_transfer", "digital_currency"],
+        },
       },
     });
+
+    // El dinero en cuenta es lo único que queda habilitado.
+    expect(sent.config.payment_method.not_allowed_types).not.toContain("account_money");
 
     const saved = await prisma.order.findUnique({ where: { id: order.id } });
     expect(saved).toMatchObject({ paymentMethod: "mp", mpOrderId: MP_ORDER.id, status: "pending" });
