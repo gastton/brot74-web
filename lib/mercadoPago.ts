@@ -62,6 +62,9 @@ export const MP_NOT_ALLOWED_PAYMENT_TYPES = [
 /** Cuánto dura el link de pago. Pasado esto, BRT-256 cancela el pedido y libera el stock. */
 export const MP_PAYMENT_TTL_MINUTES = 30;
 
+/** Lo que ve el cliente como detalle de la compra en la pantalla de MP. */
+export const MP_ITEM_TITLE = "BROT 74 - Panadería";
+
 export class MercadoPagoError extends Error {
   constructor(public status: number, public body: string) {
     super(`Mercado Pago respondió ${status}`);
@@ -73,7 +76,6 @@ export interface CheckoutOrderInput {
   /** Mismo valor en reintentos: MP devuelve la misma orden en vez de crear otra. */
   idempotencyKey: string;
   total: number;
-  items: { title: string; quantity: number; unitPrice: number }[];
   /** URL a la que vuelve el cliente desde MP (aprobado, pendiente o rechazado). */
   returnUrl: string;
 }
@@ -126,14 +128,10 @@ function toCheckoutOrder(data: unknown): CheckoutOrder {
  * panel de la aplicación (la API de Orders no lleva notification_url).
  */
 export async function createCheckoutOrder(input: CheckoutOrderInput): Promise<CheckoutOrder> {
-  // MP exige que total_amount sea la suma de los ítems. Los precios del
-  // pedido ya vienen con descuento aplicado, pero si por algo no cierra se
-  // manda una sola línea con el total en vez de un monto distinto.
-  const itemsSum = input.items.reduce((n, i) => n + i.unitPrice * i.quantity, 0);
-  const items =
-    itemsSum === input.total
-      ? input.items
-      : [{ title: `BROT 74 · Pedido #${input.orderId}`, quantity: 1, unitPrice: input.total }];
+  // Una sola línea con el total: en la pantalla de MP el detalle dice siempre
+  // "BROT 74 - Panadería" (con varios ítems MP mostraba "Productos"). Además
+  // total_amount coincide siempre con la suma de los ítems, como exige MP.
+  const items = [{ title: MP_ITEM_TITLE, quantity: 1, unitPrice: input.total }];
 
   const data = await mpFetch("/v1/orders", {
     method: "POST",
