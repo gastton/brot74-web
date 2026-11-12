@@ -139,7 +139,56 @@ export async function createCheckoutOrder(input: CheckoutOrderInput): Promise<Ch
   return toCheckoutOrder(data);
 }
 
+function orderPath(mpOrderId: string): string {
+  return `/v1/orders/${encodeURIComponent(mpOrderId)}`;
+}
+
 /** Orden ya creada (para volver a dar el mismo link si el cliente reintenta). */
 export async function getCheckoutOrder(mpOrderId: string): Promise<CheckoutOrder> {
-  return toCheckoutOrder(await mpFetch(`/v1/orders/${encodeURIComponent(mpOrderId)}`));
+  return toCheckoutOrder(await mpFetch(orderPath(mpOrderId)));
+}
+
+// ── BRT-253: estado de pago de la orden ───────────────────────────────────
+
+/** Lo que importa de la orden para confirmar un pedido. Los montos de MP son strings ("800.00"). */
+export interface MpOrderPayment {
+  id: string;
+  status: string;
+  statusDetail: string;
+  externalReference: string | null;
+  totalPaidAmount: string | null;
+  payments: { id: string; status: string; paymentType: string | null }[];
+}
+
+function str(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+/**
+ * Estado de una orden consultado directo a MP. El webhook no le cree al aviso:
+ * con el ID que llega, se pregunta acá si la orden está pagada y por cuánto.
+ */
+export async function getOrderPayment(mpOrderId: string): Promise<MpOrderPayment> {
+  const data = ((await mpFetch(orderPath(mpOrderId))) ?? {}) as Record<string, unknown>;
+  const id = str(data.id);
+  const status = str(data.status);
+  const statusDetail = str(data.status_detail);
+  // Sin estado no se puede decidir: error (el webhook responde 500 y MP
+  // reintenta) en vez de tomarlo como "no pagado" y perder el aviso.
+  if (!id || !status || !statusDetail) throw new MercadoPagoError(200, "Respuesta sin id o estado");
+  const transactions = (data.transactions ?? {}) as { payments?: unknown };
+  const payments = Array.isArray(transactions.payments) ? transactions.payments : [];
+  return {
+    id,
+    status,
+    statusDetail,
+    externalReference: str(data.external_reference),
+    totalPaidAmount: str(data.total_paid_amount),
+    payments: payments.flatMap((p) => {
+      const { id: paymentId, status, payment_method } = (p ?? {}) as Record<string, unknown>;
+      if (typeof paymentId !== "string") return [];
+      const method = (payment_method ?? {}) as { type?: unknown };
+      return [{ id: paymentId, status: str(status) ?? "", paymentType: str(method.type) }];
+    }),
+  };
 }
