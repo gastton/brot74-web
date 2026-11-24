@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 
 /**
- * Generador de tarjetas de pan para WhatsApp/Instagram (1080×1350).
+ * Generador de tarjetas de pan para WhatsApp/Instagram (1080×1920).
  *
  * Port 1:1 de la referencia on-brand del Design System
  * ("BROT 74/brot-card-app.jsx" + "brot-card-canvas.js" + su CSS acompañante
@@ -25,8 +25,9 @@ import { formatCurrency } from "@/lib/utils";
  */
 
 const CANVAS_W = 1080;
-const CANVAS_H = 1350;
-const PHOTO_H = 810; // 60% de 1350 — ratio 4:3 sobre el ancho completo
+const CANVAS_H = 1920; // 9:16
+const PHOTO_H = 1340; // el resto (580px) es el bloque de texto; una foto 9:16 llena el ancho sin barras
+const NOTE_H = 52; // alto que suma la nota chica al bloque de texto
 const MARGIN = 60; // M — margen izquierdo/derecho del contenido
 const LABEL_X = 84; // TX — x donde arranca cada bullet (después del punto)
 const MAX_TITLE_WIDTH = CANVAS_W - 2 * MARGIN; // 960
@@ -171,6 +172,11 @@ function fitTitle(ctx: CanvasRenderingContext2D, name: string): { size: number; 
   };
 }
 
+/** La foto cede el alto que ocupan la 2.ª línea del título y la nota, para que entren todos los datos. */
+function photoHeight(title: { lh: number; lines: string[] }, hasNote: boolean): number {
+  return PHOTO_H - (title.lines.length - 1) * (title.lh + 4) - (hasNote ? NOTE_H : 0);
+}
+
 function measureTitle(name: string): { size: number; lh: number; lines: string[] } {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) return { size: 52, lh: 56, lines: [name] };
@@ -246,6 +252,9 @@ async function renderCard(o: RenderOptions): Promise<HTMLCanvasElement> {
   ctx.fillStyle = CREAM;
   ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
 
+  const tf = fitTitle(ctx, o.name);
+  const photoH = photoHeight(tf, Boolean(o.footnote));
+
   let photo: HTMLImageElement | null = null;
   try {
     photo = await loadImage(o.image);
@@ -255,26 +264,25 @@ async function renderCard(o: RenderOptions): Promise<HTMLCanvasElement> {
   if (photo) {
     ctx.save();
     ctx.beginPath();
-    ctx.rect(0, 0, CANVAS_W, PHOTO_H);
+    ctx.rect(0, 0, CANVAS_W, photoH);
     ctx.clip();
     if (o.fit === "cover") {
-      const scale = Math.max(CANVAS_W / photo.width, PHOTO_H / photo.height);
+      const scale = Math.max(CANVAS_W / photo.width, photoH / photo.height);
       const w = photo.width * scale,
         h = photo.height * scale;
-      ctx.drawImage(photo, (CANVAS_W - w) / 2, (PHOTO_H - h) * (o.posY / 100), w, h);
+      ctx.drawImage(photo, (CANVAS_W - w) / 2, (photoH - h) * (o.posY / 100), w, h);
     } else {
-      const scale = Math.min(CANVAS_W / photo.width, PHOTO_H / photo.height);
+      const scale = Math.min(CANVAS_W / photo.width, photoH / photo.height);
       const w = photo.width * scale,
         h = photo.height * scale;
-      ctx.drawImage(photo, (CANVAS_W - w) / 2, (PHOTO_H - h) / 2, w, h);
+      ctx.drawImage(photo, (CANVAS_W - w) / 2, (photoH - h) / 2, w, h);
     }
     ctx.restore();
   }
 
   ctx.textBaseline = "top";
   ctx.fillStyle = NAVY;
-  let y = PHOTO_H + 48;
-  const tf = fitTitle(ctx, o.name);
+  let y = photoH + 48;
   ctx.font = `700 ${tf.size}px Jost`;
   for (const ln of fitLines(ctx, tf.lines, MAX_TITLE_WIDTH, MAX_TITLE_WIDTH)) {
     ctx.fillText(ln, MARGIN, y);
@@ -483,7 +491,7 @@ export default function BreadCardGenerator({
   const [statusMsg, setStatusMsg] = useState("");
   const [resultMsg, setResultMsg] = useState("");
   const [scale, setScale] = useState(420 / CANVAS_W);
-  const [titleFitState, setTitleFitState] = useState({ size: 52, lh: 56 });
+  const [titleFitState, setTitleFitState] = useState({ size: 52, lh: 56, lines: [""] });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
 
@@ -507,7 +515,7 @@ export default function BreadCardGenerator({
     const t = setTimeout(() => {
       try {
         const f = measureTitle(name || "PAN DE CENTENO 100%");
-        setTitleFitState({ size: f.size, lh: f.lh });
+        setTitleFitState(f);
       } catch {
         /* noop */
       }
@@ -529,7 +537,7 @@ export default function BreadCardGenerator({
   const handleDownload = useCallback(async () => {
     setGenerating(true);
     setResultMsg("");
-    setStatusMsg("Generando JPG 1080×1350…");
+    setStatusMsg("Generando JPG 1080×1920…");
     try {
       const canvas = await renderCard({
         name,
@@ -549,7 +557,7 @@ export default function BreadCardGenerator({
       link.href = canvas.toDataURL("image/jpeg", 0.92);
       link.click();
       setStatusMsg("");
-      setResultMsg("JPG 1080×1350 descargado — brot74-card.jpg");
+      setResultMsg("JPG 1080×1920 descargado — brot74-card.jpg");
       setTimeout(() => setResultMsg(""), 6000);
     } catch (err) {
       console.error(err);
@@ -573,7 +581,7 @@ export default function BreadCardGenerator({
           </div>
           <div className="flex items-center gap-4">
             <span className="text-[11px] tracking-[0.1em]" style={{ color: STONE }}>
-              1080×1350 · Canvas nativo · sin estiramiento
+              1080×1920 · Canvas nativo · sin estiramiento
             </span>
             {onClose && (
               <button onClick={onClose} className="text-[12px] font-semibold px-2 py-1 transition-colors" style={{ color: STONE }}>
@@ -715,7 +723,7 @@ export default function BreadCardGenerator({
                     <p className="text-[10.5px] mt-1.5 leading-[1.4]" style={{ color: STONE }}>
                       {fitMode === "cover"
                         ? "COVER real: recorta sin estirar. El slider mueve el encuadre vertical."
-                        : "CONTAIN: entra completa, centrada sobre crema. Ideal para fotos verticales."}
+                        : "CONTAIN: entra completa, con franjas crema a los costados si es muy vertical."}
                     </p>
                   </div>
 
@@ -809,7 +817,7 @@ export default function BreadCardGenerator({
                   )}
                 </button>
                 <p className="text-[11px] text-center mt-2.5 tracking-[0.04em]" style={{ color: STONE }}>
-                  1080×1350 · radio 40px · JPG 0.92
+                  1080×1920 · radio 40px · JPG 0.92
                 </p>
                 {statusMsg && (
                   <p className="mt-3 text-[11.5px] leading-[1.4] rounded-[8px] px-2.5 py-2" style={{ background: CREAM, color: NAVY }}>
@@ -837,7 +845,7 @@ export default function BreadCardGenerator({
 
             <div
               className="relative overflow-hidden rounded-[24px]"
-              style={{ width: "min(420px, 92vw)", boxShadow: "0 24px 64px rgba(14,35,60,.14), 0 2px 8px rgba(14,35,60,.06)" }}
+              style={{ width: "min(420px, 92vw, max(260px, calc((100dvh - 190px) * 9 / 16)))", boxShadow: "0 24px 64px rgba(14,35,60,.14), 0 2px 8px rgba(14,35,60,.06)" }}
             >
               <div
                 ref={frameRef}
@@ -853,7 +861,7 @@ export default function BreadCardGenerator({
                     background: CREAM,
                   }}
                 >
-                  <div className="relative shrink-0 overflow-hidden" style={{ width: CANVAS_W, height: PHOTO_H, background: CREAM }}>
+                  <div className="relative shrink-0 overflow-hidden" style={{ width: CANVAS_W, height: photoHeight(titleFitState, Boolean(note)), background: CREAM }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       // js/xss-through-dom false positive dismissed on GitHub: opaque blob: URL from URL.createObjectURL(file), or the static DEFAULT_IMAGE constant — never attacker-controlled text, not HTML
