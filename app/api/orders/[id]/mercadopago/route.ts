@@ -35,10 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!request) return NextResponse.json(NOT_FOUND, { status: 404 });
   const { orderId, token } = request;
 
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { items: { include: { product: { select: { name: true } } } } },
-  });
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
   // Token incorrecto y pedido inexistente responden igual: no se revela qué IDs existen.
   if (!order || !orderTokenMatches(order.publicToken, token)) {
     return NextResponse.json(NOT_FOUND, { status: 404 });
@@ -68,7 +65,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // otra base que tenga el mismo número (dev vs. prod, base reseteada).
       idempotencyKey: `brot74-order-${order.id}-${order.publicToken!.slice(0, 16)}`,
       total: order.total,
-      items: order.items.map((i) => ({ title: i.product.name, quantity: i.quantity, unitPrice: i.unitPrice })),
       returnUrl: `${publicOrigin(req)}/confirmacion?order=${order.id}&pago=mp`,
     });
 
