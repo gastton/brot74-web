@@ -66,6 +66,7 @@ El build de producción corre `prisma migrate deploy` (ver [Scripts](#scripts)),
 | `MP_ACCESS_TOKEN` | Access Token de Mercado Pago (Checkout Pro, API de Orders). Solo servidor. En dev, el de la cuenta vendedora de prueba (`APP_USR-…`) |
 | `MP_WEBHOOK_SECRET` | "Firma secreta" de Webhooks de la aplicación de MP, para validar el `x-signature` de los avisos |
 | `NEXT_PUBLIC_ALIAS` / `NEXT_PUBLIC_CVU` / `NEXT_PUBLIC_CUIT` / `NEXT_PUBLIC_TITULAR` | Datos de la cuenta bancaria mostrados en el checkout por transferencia |
+| `WHATSAPP_GROUP_INVITE_URL` | Link de invitación al grupo de WhatsApp (`https://chat.whatsapp.com/…`) para `/grupo` |
 | `NEXT_PUBLIC_WHATSAPP` | Número de WhatsApp mostrado en el sitio |
 | `NEXT_PUBLIC_BASE_URL` | URL base del sitio |
 

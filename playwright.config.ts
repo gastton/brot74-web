@@ -16,6 +16,7 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: { WHATSAPP_GROUP_INVITE_URL: "https://chat.whatsapp.com/E2E" },
   },
   use: {
     baseURL: "http://localhost:3000",
