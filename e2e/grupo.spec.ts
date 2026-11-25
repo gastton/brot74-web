@@ -17,9 +17,9 @@ test("/grupo responde 200 sin redirect y con su propia vista previa", async ({ p
   await expect(og("image:height")).toHaveAttribute("content", "630");
 });
 
-test("/grupo tiene el botón al grupo y el link al sitio", async ({ page }) => {
+test("/grupo tiene el botón al grupo y ningún otro link a pedidos", async ({ page }) => {
   await page.goto("/grupo");
 
   await expect(page.getByRole("link", { name: "Unirme al grupo" })).toHaveAttribute("href", /^https:\/\/chat\.whatsapp\.com\//);
-  await expect(page.getByRole("link", { name: "Ver panes y hacer un pedido" })).toHaveAttribute("href", "/");
+  await expect(page.getByRole("link", { name: "Ver panes y hacer un pedido" })).toHaveCount(0);
 });
