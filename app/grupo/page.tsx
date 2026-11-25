@@ -41,8 +41,8 @@ export default function GrupoPage() {
 
   return (
     <main className="min-h-screen bg-white flex justify-center">
-      <div className="w-full max-w-[480px] px-5 pt-[18px] pb-[30px] flex flex-col min-h-screen">
-        <div className="flex-1 flex flex-col justify-center py-4">
+      <div className="w-full max-w-[480px] px-5 pt-[18px] pb-[30px]">
+        <div className="pb-[30px]">
           <Image
             src="/assets/logo-sello-mono-navy-transparente.png"
             alt="BROT 74"
