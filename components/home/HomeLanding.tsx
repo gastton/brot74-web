@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import "./HomeLanding.css";
-import { howItWorksSteps } from "@/lib/howItWorks";
+import { howItWorksSteps, type HowItWorksStep } from "@/lib/howItWorks";
+import WhatsAppIcon from "@/components/WhatsAppIcon";
 
 // v59: estado de pedidos, calculado en el servidor (app/page.tsx) con la misma
 // fuente que el flujo de pedidos. open = hay una fecha para pedir.
@@ -36,6 +37,21 @@ function StatusButton({ open, onClick, btnRef }: { open: boolean; onClick: () =>
       <span className="st-dot" aria-hidden="true" />
       {open ? "Elegí tu BROT" : "Tu próximo BROT"}
     </button>
+  );
+}
+
+// Descripción de un paso; si trae link, esa palabra va linkeada (paso 1 → /grupo).
+// Link interno a /grupo (no directo a chat.whatsapp.com) para reusar su respaldo y su medición.
+function stepDescription({ d, link }: HowItWorksStep) {
+  if (!link) return d;
+  const i = d.indexOf(link.text);
+  if (i < 0) return d;
+  return (
+    <>
+      {d.slice(0, i)}
+      <a href={link.href}>{link.text}</a>
+      {d.slice(i + link.text.length)}
+    </>
   );
 }
 
@@ -233,12 +249,12 @@ export default function HomeLanding({ onReservar, status, mpCheckout }: HomeLand
                 con pedidos anticipados. Así tu BROT lo retirás recién hecho.
               </p>
               <ol className="steps">
-                {howItWorksSteps(mpCheckout).map((s) => (
+                {howItWorksSteps(mpCheckout, { whatsappGroup: true }).map((s) => (
                   <li key={s.n} className="step">
                     <span className="step-n">0{s.n}</span>
                     <div>
                       <h3>{s.t}</h3>
-                      <p>{s.d}</p>
+                      <p>{stepDescription(s)}</p>
                     </div>
                   </li>
                 ))}
@@ -281,6 +297,15 @@ export default function HomeLanding({ onReservar, status, mpCheckout }: HomeLand
                       <circle cx="17.9" cy="6.1" r="1.45" fill="currentColor" stroke="none" />
                     </svg>
                     <span>@brot.74</span>
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt>Pedidos</dt>
+                <dd>
+                  <a href="/grupo" className="ico">
+                    <WhatsAppIcon size={18} />
+                    <span>Grupo de WhatsApp</span>
                   </a>
                 </dd>
               </div>

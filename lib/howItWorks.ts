@@ -6,6 +6,8 @@ export interface HowItWorksStep {
   n: string;
   t: string;
   d: string;
+  /** Palabra de `d` que se muestra como link (solo la landing la usa). */
+  link?: { text: string; href: string };
 }
 
 const PAY_ALIAS: HowItWorksStep = {
@@ -20,9 +22,17 @@ const PAY_MP: HowItWorksStep = {
   d: "Con dinero en tu cuenta de Mercado Pago el pedido se confirma al instante. Si preferís, transferís al alias y lo confirmamos nosotros.",
 };
 
-export function howItWorksSteps(mpCheckout: boolean): HowItWorksStep[] {
+// La landing también ofrece el grupo de WhatsApp (/grupo) como canal de pedidos;
+// el panel de la pantalla de fechas no, porque ahí ya se está pidiendo online.
+const CHOOSE_WEB = "Elegís la fecha y armás tu pedido online, según lo que haya disponible para esa tanda.";
+const CHOOSE_WEB_OR_GROUP =
+  "Elegís la fecha y armás tu pedido online, o lo pedís por privado desde el grupo de WhatsApp cuando avisamos la tanda.";
+
+export function howItWorksSteps(mpCheckout: boolean, { whatsappGroup = false } = {}): HowItWorksStep[] {
   return [
-    { n: "1", t: "Elegí tu BROT", d: "Elegís la fecha y armás tu pedido online, según lo que haya disponible para esa tanda." },
+    whatsappGroup
+      ? { n: "1", t: "Elegí tu BROT", d: CHOOSE_WEB_OR_GROUP, link: { text: "WhatsApp", href: "/grupo" } }
+      : { n: "1", t: "Elegí tu BROT", d: CHOOSE_WEB },
     mpCheckout ? PAY_MP : PAY_ALIAS,
     { n: "3", t: "Retiralo o recibilo", d: "Según la fecha, pasás a buscarlo o te lo llevamos, en la franja horaria indicada. Horneamos por tandas, no hay local abierto." },
   ];

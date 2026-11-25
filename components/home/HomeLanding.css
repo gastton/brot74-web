@@ -178,3 +178,7 @@ html:has(.brot-landing)::-webkit-scrollbar{display:none}
 /* v61 · desktop: bloque 74% junto a la foto de masa madre */
 @media (min-width:861px){.brot-landing .porque-num{grid-column:1 / span 5;grid-row:2;align-self:start;margin-top:clamp(40px,5vw,72px);padding-top:clamp(64px,7vw,112px)}.brot-landing .mm{grid-row:2}.brot-landing .cierre{grid-column:1 / span 6;grid-row:2;align-self:end;margin:0;padding-bottom:clamp(80px,8vw,128px)}.brot-landing .cierre p{flex-direction:row;flex-wrap:nowrap;justify-content:flex-end}.brot-landing .porque-num .num{margin:0;grid-template-columns:minmax(0,1fr);gap:clamp(20px,2vw,32px)}.brot-landing .porque-num .num strong{font-size:clamp(170px,18vw,280px)}.brot-landing .porque-num .num p{max-width:32ch;font-size:clamp(18px,1.5vw,22px)}}
 @media (max-width:860px){.brot-landing .porque-num .num{margin:12px 0 32px}}
+
+/* /grupo · link a "WhatsApp" dentro del paso 1 de "Cómo pedir" */
+.brot-landing .step p a{color:var(--navy);border-bottom:1px solid currentColor;padding-bottom:1px}
+.brot-landing .step p a:hover{color:var(--amber)}
