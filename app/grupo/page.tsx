@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import JoinGroupLink from "@/components/JoinGroupLink";
 import { getGroupInviteUrl } from "@/lib/whatsappGroup";
 
@@ -32,9 +31,9 @@ export const metadata: Metadata = {
 };
 
 const HOW_IT_WORKS = [
-  "Cada semana avisamos en el grupo qué sale en la hornada.",
-  "Pedís por la web o por privado, hasta la fecha límite de cada hornada.",
-  "Retiro o entrega, según la hornada.",
+  "Cada semana aviso en el grupo qué panes salen en la tanda.",
+  "Pedís por privado, hasta la fecha límite de cada tanda.",
+  "Retirás tu pan o te lo llevo.",
 ];
 
 export default function GrupoPage() {
@@ -59,7 +58,7 @@ export default function GrupoPage() {
           </h1>
 
           <p className="text-[16px] leading-[1.5] text-stone mt-[14px] mb-0">
-            Pan de masa madre. Harina, agua, sal y tiempo.
+            Panes sin conservantes ni aditivos. <span className="whitespace-nowrap">Preventa semanal.</span>
           </p>
 
           <h2 className="brot-mlabel brot-mlabel-amber mt-[22px] mb-0">Cómo funciona</h2>
@@ -78,16 +77,18 @@ export default function GrupoPage() {
         </div>
 
         {inviteUrl ? (
-          <JoinGroupLink href={inviteUrl} />
+          <>
+            <JoinGroupLink href={inviteUrl} />
+            <p className="text-center text-[14px] leading-[1.4] text-stone mt-[12px] mb-0">
+              Solo escribo yo. Podés salir cuando quieras.
+            </p>
+          </>
         ) : (
           <p className="text-center text-[16px] leading-[1.5] text-navy m-0">
             Escribinos por Instagram{" "}
             <a href="https://www.instagram.com/brot.74" className="underline" rel="noopener">@brot.74</a> para sumarte.
           </p>
         )}
-        <Link href="/" className="brot-pill brot-pill--ghost no-underline mt-3">
-          Ver panes y hacer un pedido
-        </Link>
       </div>
     </main>
   );
