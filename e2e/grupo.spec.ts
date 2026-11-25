@@ -8,7 +8,7 @@ test("/grupo responde 200 sin redirect y con su propia vista previa", async ({ p
 
   await page.goto("/grupo");
   const og = (property: string) => page.locator(`meta[property="og:${property}"]`);
-  await expect(og("title")).toHaveAttribute("content", "BROT74 · Pan de masa madre");
+  await expect(og("title")).toHaveAttribute("content", "BROT 74 · Pan de masa madre");
   await expect(og("description")).toHaveAttribute("content", "Sin conservantes ni aditivos. Preventa semanal · @brot.74");
   await expect(og("url")).toHaveAttribute("content", "https://brot74.com/grupo");
   // En dev la URL absoluta usa localhost; en producción, metadataBase.

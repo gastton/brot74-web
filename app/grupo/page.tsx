@@ -8,7 +8,7 @@ import { getGroupInviteUrl } from "@/lib/whatsappGroup";
 // No agregar un redirect del servidor a chat.whatsapp.com: el bot de WhatsApp
 // lo seguiría y mostraría la vista previa genérica del grupo.
 // La imagen sale de opengraph-image.jpg / twitter-image.jpg de esta carpeta.
-const OG_TITLE = "BROT74 · Pan de masa madre";
+const OG_TITLE = "BROT 74 · Pan de masa madre";
 const OG_DESCRIPTION = "Sin conservantes ni aditivos. Preventa semanal · @brot.74";
 const DESCRIPTION = "Pan de masa madre hecho con harina, agua, sal y tiempo. Avisamos cada hornada por acá.";
 
