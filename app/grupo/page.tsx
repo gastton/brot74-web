@@ -58,7 +58,7 @@ export default function GrupoPage() {
           </h1>
 
           <p className="text-[16px] leading-[1.5] text-stone mt-[14px] mb-0">
-            Panes sin conservantes ni aditivos. Preventa semanal.
+            Panes sin conservantes ni aditivos. <span className="whitespace-nowrap">Preventa semanal.</span>
           </p>
 
           <h2 className="brot-mlabel brot-mlabel-amber mt-[22px] mb-0">Cómo funciona</h2>
