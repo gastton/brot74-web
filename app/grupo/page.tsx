@@ -8,7 +8,8 @@ import { getGroupInviteUrl } from "@/lib/whatsappGroup";
 // No agregar un redirect del servidor a chat.whatsapp.com: el bot de WhatsApp
 // lo seguiría y mostraría la vista previa genérica del grupo.
 // La imagen sale de opengraph-image.jpg / twitter-image.jpg de esta carpeta.
-const OG_TITLE = "Sumate al grupo de BROT 74 🍞";
+const OG_TITLE = "BROT 74 · Pan de masa madre";
+const OG_DESCRIPTION = "Sin conservantes ni aditivos. Preventa semanal · @brot.74";
 const DESCRIPTION = "Pan de masa madre hecho con harina, agua, sal y tiempo. Avisamos cada hornada por acá.";
 
 // El openGraph de la ruta reemplaza entero al del layout: se repiten siteName, locale y type.
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   openGraph: {
     title: OG_TITLE,
-    description: DESCRIPTION,
+    description: OG_DESCRIPTION,
     url: "/grupo",
     siteName: "BROT 74",
     locale: "es_AR",
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: OG_TITLE,
-    description: DESCRIPTION,
+    description: OG_DESCRIPTION,
   },
 };
 
