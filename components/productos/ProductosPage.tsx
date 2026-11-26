@@ -110,7 +110,6 @@ export default function ProductosPage({ products, open }: { products: ProductoEd
 
       <main>
         <div className="wrap intro">
-          <div className="rule" />
           <div className="eyebrow">Productos</div>
           <h1>Lo que sale del horno.</h1>
           <p>
