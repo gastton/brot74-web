@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { parseDiscount } from "@/lib/pricing";
+import { parseFlourType } from "@/lib/flourType";
 import { syncProductStockForDays } from "@/lib/productStock";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -13,6 +14,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const data = await req.json();
   const discount = parseDiscount(data);
   if ("error" in discount) return NextResponse.json({ error: discount.error }, { status: 400 });
+  const flour = parseFlourType(data.flourType);
+  if ("error" in flour) return NextResponse.json({ error: flour.error }, { status: 400 });
 
   const prevProduct = await prisma.product.findUnique({ where: { id: productId } });
   const prevDays = new Set<string>((prevProduct?.availableDays ?? "").split(",").filter(Boolean));
@@ -35,6 +38,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       sortOrder: data.sortOrder,
       discountActive: discount.discountActive,
       discountPrice: discount.discountPrice,
+      flourType: flour.flourType,
     },
   });
 

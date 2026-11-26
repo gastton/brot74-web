@@ -33,7 +33,12 @@ interface Product {
   sortOrder: number;
   discountActive: boolean;
   discountPrice: number | null;
+  flourType: string;
 }
+
+// v69 · Descripción: una frase. Aviso (sin bloquear) pasado este largo, para
+// que entre en 2 líneas en las tarjetas de /productos.
+const DESCRIPTION_SOFT_MAX = 100;
 
 const emptyForm = {
   name: "",
@@ -50,6 +55,7 @@ const emptyForm = {
   sortOrder: "0",
   discountActive: false,
   discountPrice: "",
+  flourType: "",
 };
 
 export default function ProductosPage() {
@@ -107,6 +113,7 @@ export default function ProductosPage() {
       sortOrder: String(p.sortOrder),
       discountActive: p.discountActive ?? false,
       discountPrice: p.discountPrice != null ? String(p.discountPrice) : "",
+      flourType: p.flourType ?? "",
     });
     setImagePreview(p.imageUrl);
     setShowForm(true);
@@ -349,10 +356,32 @@ export default function ProductosPage() {
               </div>
 
               <Field label="Nombre *" value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder="Full Integral" />
-              <Field label="Descripción" value={form.description} onChange={(v) => setForm({ ...form, description: v })} placeholder="Pan de trigo integral con semillas" textarea />
+              <div>
+                <Field label="Descripción" value={form.description} onChange={(v) => setForm({ ...form, description: v })} placeholder="Pan de campo clásico con miga abierta y corteza dorada." textarea />
+                <p className={`text-xs mt-1 ${form.description.length > DESCRIPTION_SOFT_MAX ? "text-red-700" : "text-muted"}`}>
+                  {form.description.length} / {DESCRIPTION_SOFT_MAX} · una frase
+                  {form.description.length > DESCRIPTION_SOFT_MAX && " — más larga, en las tarjetas de /productos se corta"}
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Precio (ARS) *" value={form.price} onChange={(v) => setForm({ ...form, price: v })} placeholder="6500" type="number" />
                 <Field label="Peso" value={form.weight} onChange={(v) => setForm({ ...form, weight: v })} placeholder="700g" />
+              </div>
+
+              {/* v69 · Tipo de harina: la escala de 3 pasos de las tarjetas de /productos. */}
+              <div>
+                <label htmlFor="flourType" className="block text-sm font-semibold text-charcoal mb-1">Tipo de harina</label>
+                <select
+                  id="flourType"
+                  value={form.flourType}
+                  onChange={(e) => setForm({ ...form, flourType: e.target.value })}
+                  className="w-full border-2 border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber bg-white"
+                >
+                  <option value="">Sin dato (no muestra la escala)</option>
+                  <option value="blanco">Blanco</option>
+                  <option value="semi">Semi integral</option>
+                  <option value="integral">Integral</option>
+                </select>
               </div>
 
               {/* Descuento (v51): switch + precio con descuento. OFF = campo deshabilitado. */}

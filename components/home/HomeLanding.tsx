@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import "./HomeLanding.css";
 import { howItWorksSteps, type HowItWorksStep } from "@/lib/howItWorks";
@@ -125,6 +126,7 @@ export default function HomeLanding({ onReservar, status, mpCheckout }: HomeLand
             <span>BROT <em>74</em></span>
           </a>
           <nav className="nav">
+            <Link className="hide-m" href="/productos">Productos</Link>
             <a className="hide-m" href="#pedir">Cómo pedir</a>
             <a className="ig hide-m" href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <InstagramIcon strokeWidth={1.6} />
@@ -152,6 +154,8 @@ export default function HomeLanding({ onReservar, status, mpCheckout }: HomeLand
           <h1>Panes de fermentación natural, <i>como debe ser.</i></h1>
           <div className="hero-actions">
             <StatusButton open={status.open} onClick={onReservar} btnRef={heroBtnRef} />
+            {/* v70 · acceso al catálogo fijo (/productos): link secundario, el botón sigue siendo el CTA */}
+            <Link className="link" href="/productos">Ver productos</Link>
           </div>
         </div>
       </div>
