@@ -26,7 +26,7 @@
     "@vercel/blob": "^2.8.2",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
-    "cookie": "^2.0.1",
+    "cookie": "^2.0.2",
     "jose": "^6.2.13",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.61.0",
