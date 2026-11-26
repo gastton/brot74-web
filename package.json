@@ -52,7 +52,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.1"
   },
   "overrides": {
     "mysql2": "^3.23.1"
