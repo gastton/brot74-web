@@ -17,6 +17,7 @@ export interface ProductoEditorial {
   imageUrl: string;
   focalX: number;
   focalY: number;
+  imageScale: number;
   flourType: string;
 }
 
@@ -68,7 +69,10 @@ function Tarjeta({ p, n, total }: { p: ProductoEditorial; n: number; total: numb
             fill
             sizes="(min-width: 861px) 45vw, 100vw"
             priority={n <= 2}
-            style={{ objectFit: "cover", objectPosition: `${p.focalX}% ${p.focalY}%` }}
+            // Mismo encuadre y zoom que la vista previa del admin (FocalPicker).
+            style={p.imageScale < 1
+              ? { objectFit: "contain" }
+              : { objectFit: "cover", objectPosition: `${p.focalX}% ${p.focalY}%`, transform: `scale(${p.imageScale})`, transformOrigin: `${p.focalX}% ${p.focalY}%` }}
           />
         ) : (
           <span className="foto-vacia" aria-hidden="true">{p.name}</span>

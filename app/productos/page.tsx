@@ -28,6 +28,7 @@ export default async function Page() {
     imageUrl: p.imageUrl,
     focalX: p.focalX,
     focalY: p.focalY,
+    imageScale: p.imageScale,
     flourType: p.flourType,
   }));
 
