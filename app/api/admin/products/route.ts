@@ -3,6 +3,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { parseDiscount } from "@/lib/pricing";
+import { parseFlourType } from "@/lib/flourType";
 import { isIdConflict, resyncIdSequence } from "@/lib/idSequence";
 import { syncProductStockForDays } from "@/lib/productStock";
 
@@ -23,6 +24,8 @@ export async function POST(req: NextRequest) {
   const data = await req.json();
   const discount = parseDiscount(data);
   if ("error" in discount) return NextResponse.json({ error: discount.error }, { status: 400 });
+  const flour = parseFlourType(data.flourType);
+  if ("error" in flour) return NextResponse.json({ error: flour.error }, { status: 400 });
   const productData: Prisma.ProductCreateInput = {
     name: data.name,
     description: data.description ?? "",
@@ -38,6 +41,7 @@ export async function POST(req: NextRequest) {
     sortOrder: data.sortOrder ?? 0,
     discountActive: discount.discountActive,
     discountPrice: discount.discountPrice,
+    flourType: flour.flourType ?? "",
   };
 
   let product;

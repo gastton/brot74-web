@@ -295,3 +295,51 @@ describe("DELETE /api/admin/products/[id]", () => {
     expect(remaining).toBeNull();
   });
 });
+
+// v69 · Tipo de harina (escala de las tarjetas de /productos).
+describe("tipo de harina (flourType)", () => {
+  it("POST lo persiste y sin dato queda vacío", async () => {
+    const auth = await adminCookieHeader();
+    const conTipo = await POST(postRequest({ name: "Integral", price: "1500", flourType: "integral" }, auth));
+    const sinTipo = await POST(postRequest({ name: "Sin dato", price: "1500" }, auth));
+
+    expect(conTipo.status).toBe(201);
+    expect((await conTipo.json()).flourType).toBe("integral");
+    expect(sinTipo.status).toBe(201);
+    expect((await sinTipo.json()).flourType).toBe("");
+  });
+
+  it("POST rechaza un valor inválido y no crea el producto", async () => {
+    const res = await POST(postRequest({ name: "Raro", price: "1500", flourType: "centeno" }, await adminCookieHeader()));
+
+    expect(res.status).toBe(400);
+    expect(await prisma.product.count({ where: { name: "Raro" } })).toBe(0);
+  });
+
+  it("PUT lo actualiza, y si no viene en el pedido lo deja como estaba", async () => {
+    const product = await createProduct({ flourType: "blanco" });
+    const params = { params: Promise.resolve({ id: String(product.id) }) };
+    const auth = await adminCookieHeader();
+
+    const res = await PUT(putRequest({ name: product.name, price: product.price, flourType: "semi" }, auth), params);
+    expect(res.status).toBe(200);
+    expect((await res.json()).flourType).toBe("semi");
+
+    await PUT(putRequest({ name: "Renombrado", price: product.price }, auth), params);
+    const after = await prisma.product.findUnique({ where: { id: product.id } });
+    expect(after?.flourType).toBe("semi");
+  });
+
+  it("PUT rechaza un valor inválido sin tocar el producto", async () => {
+    const product = await createProduct({ flourType: "integral" });
+
+    const res = await PUT(
+      putRequest({ name: product.name, price: product.price, flourType: "INTEGRAL" }, await adminCookieHeader()),
+      { params: Promise.resolve({ id: String(product.id) }) }
+    );
+
+    expect(res.status).toBe(400);
+    const after = await prisma.product.findUnique({ where: { id: product.id } });
+    expect(after?.flourType).toBe("integral");
+  });
+});
